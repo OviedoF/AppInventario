@@ -1,5 +1,12 @@
 import React from "react";
-import { Alert, Modal, Text, View, TouchableOpacity } from "react-native";
+import {
+  Alert,
+  Modal,
+  Text,
+  View,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 
 const ErrorModal = ({ message, setModalFailVisible, modalFailVisible }) => {
   return (
