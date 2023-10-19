@@ -26,6 +26,7 @@ const Login = () => {
     try {
       // ! crear funcion login en api
       /* const res = await login(data); */
+      const res = true;
       if (res) {
         navigate(routes.home);
       } else {
@@ -36,7 +37,7 @@ const Login = () => {
 
   return (
     <>
-      <View style={styles.backBtnContainer}>
+      <View style={styles.topSectionContainer}>
         <Text style={[styles.subtitle, styles.white, styles.mxSm, styles.pySm]}>
           ID:
         </Text>

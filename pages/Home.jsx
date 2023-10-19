@@ -2,30 +2,49 @@ import React from "react";
 import { Text, View, TouchableOpacity } from "react-native";
 import { useNavigate, Link } from "react-router-native";
 import routes from "../router/routes";
+import styles from "../styles/styles";
 
 const Home = () => {
   const navigate = useNavigate();
 
   return (
     <>
-      <View>
-        <Link to={routes.home}>
-          //? reemplazar home por ruta inventario
+      <View style={styles.topSectionContainer}>
+        <Text style={[styles.subtitle, styles.white, styles.mxSm, styles.pySm]}>
+          ID:
+        </Text>
+      </View>
+      <View style={styles.container}>
+        <Text>Administrador:</Text>
+        <Text>Operador:</Text>
+        <Link to={routes.home} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
-            <Text>Inventario</Text>
+            {/* //? reemplazar home por ruta inventario */}
+            <Text style={styles.white}>INVENTARIO</Text>
           </View>
         </Link>
-      </View>
-      <View>
+        <Link to={routes.home} style={styles.primaryBtn}>
+          <View style={{ flexDirection: "row", justifyContent: "center" }}>
+            {/* //? reemplazar home por ruta inventario */}
+            <Text style={styles.white}>CD</Text>
+          </View>
+        </Link>
+        <Link to={routes.home} style={styles.primaryBtn}>
+          <View style={{ flexDirection: "row", justifyContent: "center" }}>
+            {/* //? reemplazar home por ruta inventario */}
+            <Text style={styles.white}>ENVIAR CONTEO WIFI</Text>
+          </View>
+        </Link>
         <TouchableOpacity
           onPress={() => {
             //! Crear función de logout
             /* logout(); */
             navigate(routes.login);
           }}
+          style={styles.mySm}
         >
           <Text>
-            ¿Desea cerrar sesión? Click <Text>AQUÍ</Text>
+            ¿Desea cerrar sesión? Click <Text style={styles.link}>AQUÍ</Text>
           </Text>
         </TouchableOpacity>
       </View>

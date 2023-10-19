@@ -97,12 +97,12 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   //? estilos para id superior
-  backBtnContainer: {
+  topSectionContainer: {
     display: "flex",
     marginTop: Constants.statusBarHeight,
     zIndex: 1111,
     width: "100%",
-    backgroundColor: "#3EDA86",
+    backgroundColor: "#075E55",
   },
   SearchField: {
     width: 250,
