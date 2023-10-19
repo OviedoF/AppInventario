@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-native";
 import logo from "../assets/logo.png"; //! agregar logo.png a la carpeta assets
 import ErrorModal from "../components/ErrorModal";
 import routes from "../router/routes";
+import styles from "../styles/styles";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -35,14 +36,12 @@ const Login = () => {
 
   return (
     <>
-      <View>
-        <Image source={logo} />
+      <View style={styles.container}>
+        <Image style={styles.img} source={logo} />
       </View>
+      <View style={styles.container}>
+        <Text style={styles.title}>Iniciar Sesión</Text>
 
-      <View>
-        <View>
-          <Text>Iniciar Sesión</Text>
-        </View>
         <Text>Usuario</Text>
         <Controller
           control={control}
@@ -51,12 +50,13 @@ const Login = () => {
               onBlur={onBlur}
               onChangeText={(value) => onChange(value)}
               value={value}
+              style={styles.input}
             />
           )}
           name="user"
           rules={{ required: true }}
         />
-        {errors.user && <Text>* Campo obligatorio.</Text>}
+        {errors.user && <Text style={styles.red}>* Campo obligatorio.</Text>}
         <Text>Contraseña</Text>
         <Controller
           control={control}
@@ -66,17 +66,18 @@ const Login = () => {
               onChangeText={(value) => onChange(value)}
               value={value}
               secureTextEntry={true}
+              style={styles.input}
             />
           )}
           name="password"
           rules={{ required: true }}
         />
-        {errors.password && <Text>* Campo obligatorio.</Text>}
-      </View>
-      <View>
+        {errors.password && (
+          <Text style={styles.red}>* Campo obligatorio.</Text>
+        )}
         <TouchableOpacity
           accessibilityLabel="Botón de Ingreso"
-          /* onPress={handleSubmit(handleLogin)} */
+          onPress={handleSubmit(handleLogin)}
         >
           <Text>Ingresar</Text>
         </TouchableOpacity>
