@@ -25,7 +25,7 @@ const Home = () => {
             <Text style={styles.white}>INVENTARIO</Text>
           </View>
         </Link>
-        <Link to={routes.home} style={styles.primaryBtn}>
+        <Link to={routes.captureMenu} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             {/* //? reemplazar home por ruta inventario */}
             <Text style={styles.white}>CD</Text>

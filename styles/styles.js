@@ -85,6 +85,12 @@ const styles = StyleSheet.create({
   BgBlue: {
     backgroundColor: "#272459",
   },
+  backBtn: {
+    width: 58,
+    height: 58,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   btnShadow: {
     shadowColor: "#000",
     shadowOffset: {
