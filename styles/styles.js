@@ -99,16 +99,10 @@ const styles = StyleSheet.create({
   //? estilos para id superior
   backBtnContainer: {
     display: "flex",
-    paddingTop: Constants.statusBarHeight,
+    marginTop: Constants.statusBarHeight,
     zIndex: 1111,
     width: "100%",
-    backgroundColor: "white",
-  },
-  backBtn: {
-    width: 58,
-    height: 58,
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "#3EDA86",
   },
   SearchField: {
     width: 250,

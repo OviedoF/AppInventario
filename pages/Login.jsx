@@ -36,13 +36,16 @@ const Login = () => {
 
   return (
     <>
+      <View style={styles.backBtnContainer}>
+        <Text style={[styles.subtitle, styles.white, styles.mxSm, styles.pySm]}>
+          ID:
+        </Text>
+      </View>
       <View style={styles.container}>
         <Image style={styles.img} source={logo} />
       </View>
       <View style={styles.container}>
         <Text style={styles.title}>Iniciar Sesión</Text>
-
-        <Text>Usuario</Text>
         <Controller
           control={control}
           render={({ field: { onChange, onBlur, value } }) => (
@@ -51,13 +54,13 @@ const Login = () => {
               onChangeText={(value) => onChange(value)}
               value={value}
               style={styles.input}
+              placeholder="Operador"
             />
           )}
           name="user"
           rules={{ required: true }}
         />
         {errors.user && <Text style={styles.red}>* Campo obligatorio.</Text>}
-        <Text>Contraseña</Text>
         <Controller
           control={control}
           render={({ field: { onChange, onBlur, value } }) => (
@@ -67,6 +70,7 @@ const Login = () => {
               value={value}
               secureTextEntry={true}
               style={styles.input}
+              placeholder="Contraseña"
             />
           )}
           name="password"
@@ -78,8 +82,9 @@ const Login = () => {
         <TouchableOpacity
           accessibilityLabel="Botón de Ingreso"
           onPress={handleSubmit(handleLogin)}
+          style={styles.logBtn}
         >
-          <Text>Ingresar</Text>
+          <Text style={[styles.white, styles.textCenter]}>INGRESAR</Text>
         </TouchableOpacity>
       </View>
       <ErrorModal
