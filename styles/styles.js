@@ -58,15 +58,14 @@ const styles = StyleSheet.create({
   primaryBtn: {
     marginTop: 15,
     width: "90%",
-    /* backgroundColor: "linear-gradient(98.34deg, #4960F9 -14.39%, #4033FF 113.22%)", */
-    backgroundColor: "#4960F9",
+    backgroundColor: "#005DA6",
     borderRadius: 18,
     padding: 15,
   },
   logBtn: {
     marginTop: 15,
     width: "45%",
-    backgroundColor: "#4960F9",
+    backgroundColor: "#005DA6",
     borderRadius: 18,
     padding: 15,
     margin: 10,

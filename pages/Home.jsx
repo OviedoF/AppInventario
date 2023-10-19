@@ -3,6 +3,7 @@ import { Text, View, TouchableOpacity } from "react-native";
 import { useNavigate, Link } from "react-router-native";
 import routes from "../router/routes";
 import styles from "../styles/styles";
+import SectionBar from "../components/SectionBar";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Home = () => {
           ID:
         </Text>
       </View>
+      <SectionBar section={"Home"} />
       <View style={styles.container}>
         <Text>Administrador:</Text>
         <Text>Operador:</Text>
