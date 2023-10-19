@@ -15,7 +15,7 @@ const Home = () => {
           ID:
         </Text>
       </View>
-      <SectionBar section={"Home"} />
+      <SectionBar section={"Home"} backTo={routes.login} />
       <View style={styles.container}>
         <Text>Administrador:</Text>
         <Text>Operador:</Text>

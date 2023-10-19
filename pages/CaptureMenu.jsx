@@ -16,7 +16,7 @@ const CaptureMenu = () => {
           ID:
         </Text>
       </View>
-      <SectionBar section={"Menu Captura"} />
+      <SectionBar section={"Menu Captura"} backTo={routes.home} />
       <View style={styles.container}>
         <Link to={routes.home} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
