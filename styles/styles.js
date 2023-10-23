@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   },
   logBtn: {
     marginTop: 15,
-    width: "45%",
+    width: "80%",
     backgroundColor: "#005DA6",
     borderRadius: 18,
     padding: 15,
