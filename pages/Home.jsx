@@ -60,20 +60,6 @@ const Home = () => {
           </View>
         </Link>
 
-        <Link to={routes.captureMenu} style={styles.primaryBtn}>
-          <View style={{ flexDirection: "row", justifyContent: "center" }}>
-            {/* //? reemplazar home por ruta inventario */}
-            <Text
-              style={{
-                ...styles.white,
-                fontWeight: "bold",
-              }}
-            >
-              INVENTARIO
-            </Text>
-          </View>
-        </Link>
-
         <Link to={routes.cD} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             {/* //? reemplazar home por ruta inventario */}
