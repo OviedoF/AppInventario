@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Text, View, TextInput, Image, TouchableOpacity } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { useNavigate } from "react-router-native";
@@ -10,6 +10,10 @@ import styles from "../styles/styles";
 const Login = () => {
   const navigate = useNavigate();
   const [errorModal, setErrorModal] = useState(false);
+  const refs = {
+    user: useRef(null),
+    password: useRef(null)
+  }
 
   const {
     handleSubmit,
@@ -21,10 +25,11 @@ const Login = () => {
       password: "",
     },
   });
+
   const handleLogin = async (data) => {
     // Si los datos estan bien devuelve true y navega a home
     try {
-      // ! crear funcion login en api
+      // TODO: crear funcion login en api
       /* const res = await login(data); */
       const res = true;
       if (res) {
@@ -34,6 +39,14 @@ const Login = () => {
       }
     } catch (error) {}
   };
+
+  const handleFocus = (ref) => {
+    ref.current.focus();
+  };
+
+  useEffect(() => {
+    refs.user.current.focus();
+  }, [errors, control])
 
   return (
     <>
@@ -55,9 +68,12 @@ const Login = () => {
             <TextInput
               onBlur={onBlur}
               onChangeText={(value) => onChange(value)}
+              onSubmitEditing={() => handleFocus(refs.password)}
               value={value}
               style={styles.input}
               placeholder="Operador"
+              autoFocus={true}
+              ref={refs.user}
             />
           )}
           name="user"
@@ -70,6 +86,8 @@ const Login = () => {
             <TextInput
               onBlur={onBlur}
               onChangeText={(value) => onChange(value)}
+              onSubmitEditing={handleSubmit(handleLogin)}
+              ref={refs.password}
               value={value}
               secureTextEntry={true}
               style={styles.input}
@@ -90,6 +108,7 @@ const Login = () => {
           <Text style={[styles.white, styles.textCenter]}>INGRESAR</Text>
         </TouchableOpacity>
       </View>
+
       <ErrorModal
         message={"Los datos ingresados son incorrectos, intente nuevamente."}
         modalFailVisible={errorModal}

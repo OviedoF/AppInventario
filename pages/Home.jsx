@@ -14,8 +14,8 @@ const Home = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      large_prod: 0,
-      large_tag: 0,
+      large_prod: "",
+      large_tag: "",
     },
   });
 
@@ -45,6 +45,20 @@ const Home = () => {
         >
           Operador:
         </Text>
+
+        <Link to={routes.captureMenu} style={styles.primaryBtn}>
+          <View style={{ flexDirection: "row", justifyContent: "center" }}>
+            {/* //? reemplazar home por ruta inventario */}
+            <Text
+              style={{
+                ...styles.white,
+                fontWeight: "bold",
+              }}
+            >
+              INVENTARIO
+            </Text>
+          </View>
+        </Link>
 
         <Link to={routes.captureMenu} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
@@ -120,13 +134,7 @@ const Home = () => {
             width: "50%",
           }}
         >
-          <Text
-            style={{
-              marginRight: 10,
-            }}
-          >
-            Largo Prod
-          </Text>
+          <Text>Largo Prod</Text>
 
           <Controller
             control={control}
@@ -136,7 +144,10 @@ const Home = () => {
                 onChangeText={(value) => console.log(value)}
                 value={value}
                 secureTextEntry={true}
-                style={styles.input}
+                style={{
+                  ...styles.input,
+                  marginLeft: 10,
+                }}
                 placeholder="Largo Prod"
               />
             )}
@@ -160,13 +171,7 @@ const Home = () => {
             width: "50%",
           }}
         >
-          <Text
-            style={{
-              marginRight: 10,
-            }}
-          >
-            Largo Tag
-          </Text>
+          <Text>Largo Tag</Text>
 
           <Controller
             control={control}
@@ -176,7 +181,10 @@ const Home = () => {
                 onChangeText={(value) => console.log(value)}
                 value={value}
                 secureTextEntry={true}
-                style={styles.input}
+                style={{
+                  ...styles.input,
+                  marginLeft: 10,
+                }}
                 placeholder="Largo Tag"
               />
             )}
