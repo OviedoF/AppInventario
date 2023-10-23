@@ -42,9 +42,11 @@ const Login = () => {
           ID:
         </Text>
       </View>
+      
       <View style={styles.container}>
         <Image style={styles.img} source={logo} />
       </View>
+
       <View style={styles.container}>
         <Text style={styles.title}>Iniciar Sesión</Text>
         <Controller

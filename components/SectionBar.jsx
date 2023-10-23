@@ -2,6 +2,8 @@ import { View, Text } from "react-native";
 import React from "react";
 import styles from "../styles/styles";
 import { Link } from "react-router-native";
+import { Image } from "react-native";
+import arrowLeft from "../assets/left-arrow.png";
 
 const SectionBar = ({ section, backTo }) => {
   return (
@@ -16,8 +18,12 @@ const SectionBar = ({ section, backTo }) => {
       ]}
     >
       <Link to={backTo} style={styles.backBtn}>
-        <Text>Volver</Text>
+        <Image style={{
+          width: 20,
+          height: 20,
+        }} source={arrowLeft} />
       </Link>
+
       <Text style={[styles.white, styles.title, styles.mxSm]}>
         {section && section}
       </Text>
