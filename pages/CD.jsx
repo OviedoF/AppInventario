@@ -1,0 +1,136 @@
+import { View, Text, TouchableOpacity, TextInput } from "react-native";
+import React, { useState } from "react";
+import styles from "../styles/styles";
+import routes from "../router/routes";
+import SectionBar from "../components/SectionBar";
+import { Controller, useForm } from "react-hook-form";
+import ErrorModal from "../components/ErrorModal";
+
+const CD = () => {
+  const [errorModal, setErrorModal] = useState(false);
+  const {
+    handleSubmit,
+    resetField,
+    control,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      position: "",
+      box: "",
+      area: "",
+    },
+  });
+
+  const handleCD = async (data) => {
+    try {
+      // ! crear funcion para ingresar datos
+      /* const res = await login(data); */
+      const res = true;
+      if (res) {
+        navigate(routes.home);
+      } else {
+        setErrorModal(true);
+      }
+    } catch (error) {}
+  };
+  return (
+    <View>
+      <View style={styles.topSectionContainer}>
+        <Text style={[styles.subtitle, styles.white, styles.mxSm, styles.pySm]}>
+          ID:
+        </Text>
+      </View>
+      <SectionBar section={"Ingreso CD"} backTo={routes.home} />
+      <View>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <>
+                <TouchableOpacity
+                  accessibilityLabel="Posición"
+                  style={styles.cdBtn}
+                  onPress={() => resetField("position")}
+                >
+                  <Text>Posición</Text>
+                </TouchableOpacity>
+                <TextInput
+                  onBlur={onBlur}
+                  onChangeText={(value) => onChange(value)}
+                  value={value}
+                  style={styles.cdField}
+                />
+              </>
+            )}
+            name="position"
+            rules={{ required: true }}
+          />
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <>
+                <TouchableOpacity
+                  accessibilityLabel="Caja o Pallet"
+                  style={styles.cdBtn}
+                  onPress={() => resetField("box")}
+                >
+                  <Text>Caja o Pallet</Text>
+                </TouchableOpacity>
+                <TextInput
+                  onBlur={onBlur}
+                  onChangeText={(value) => onChange(value)}
+                  value={value}
+                  style={styles.cdField}
+                />
+              </>
+            )}
+            name="box"
+            rules={{ required: true }}
+          />
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <>
+                <TouchableOpacity
+                  accessibilityLabel="Área"
+                  style={styles.cdBtn}
+                  onPress={() => resetField("area")}
+                >
+                  <Text>Área</Text>
+                </TouchableOpacity>
+                <TextInput
+                  onBlur={onBlur}
+                  onChangeText={(value) => onChange(value)}
+                  value={value}
+                  style={styles.cdField}
+                />
+              </>
+            )}
+            name="area"
+            rules={{ required: true }}
+          />
+        </View>
+        <View style={{ alignItems: "center" }}>
+          <TouchableOpacity
+            accessibilityLabel="Aceptar"
+            onPress={handleSubmit(handleCD)}
+            style={styles.logBtn}
+          >
+            <Text style={[styles.white, styles.textCenter]}>ACEPTAR</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <ErrorModal
+        message={"Los datos ingresados son incorrectos, intente nuevamente."}
+        modalFailVisible={errorModal}
+        setModalFailVisible={setErrorModal}
+      />
+    </View>
+  );
+};
+
+export default CD;

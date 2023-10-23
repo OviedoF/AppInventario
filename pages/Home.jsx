@@ -30,41 +30,61 @@ const Home = () => {
       <SectionBar section={"Menu Operador"} backTo={routes.login} />
 
       <View style={styles.container}>
-        <Text style={{
-          marginBottom: 10,
-        }}>Administrador:</Text>
+        <Text
+          style={{
+            marginBottom: 10,
+          }}
+        >
+          Administrador:
+        </Text>
 
-        <Text style={{
-          marginBottom: 10,
-        }}>Operador:</Text>
-
-        <Link to={routes.home} style={styles.primaryBtn}>
-          <View style={{ flexDirection: "row", justifyContent: "center" }}>
-            {/* //? reemplazar home por ruta inventario */}
-            <Text style={{
-              ...styles.white,
-              fontWeight: 'bold'
-            }}>INVENTARIO</Text>
-          </View>
-        </Link>
+        <Text
+          style={{
+            marginBottom: 10,
+          }}
+        >
+          Operador:
+        </Text>
 
         <Link to={routes.captureMenu} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             {/* //? reemplazar home por ruta inventario */}
-            <Text style={{
-              ...styles.white,
-              fontWeight: 'bold'
-            }}>CD</Text>
+            <Text
+              style={{
+                ...styles.white,
+                fontWeight: "bold",
+              }}
+            >
+              INVENTARIO
+            </Text>
+          </View>
+        </Link>
+
+        <Link to={routes.cD} style={styles.primaryBtn}>
+          <View style={{ flexDirection: "row", justifyContent: "center" }}>
+            {/* //? reemplazar home por ruta inventario */}
+            <Text
+              style={{
+                ...styles.white,
+                fontWeight: "bold",
+              }}
+            >
+              CD
+            </Text>
           </View>
         </Link>
 
         <Link to={routes.home} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             {/* //? reemplazar home por ruta inventario */}
-            <Text style={{
-              ...styles.white,
-              fontWeight: 'bold'
-            }}>ENVIAR CONTEO WIFI</Text>
+            <Text
+              style={{
+                ...styles.white,
+                fontWeight: "bold",
+              }}
+            >
+              ENVIAR CONTEO WIFI
+            </Text>
           </View>
         </Link>
 
@@ -82,25 +102,31 @@ const Home = () => {
         </TouchableOpacity>
       </View>
 
-      {
-        /* 
+      {/* 
         TODO: Estos inputs van a manejar variables globales 
-        */
-      }
+        */}
 
-      <View style={{
-        display: 'flex',
-        alignItems: 'center',
-      }}>
-        <View style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          width: '50%',
-        }}>
-          <Text style={{
-            marginRight: 10,
-          }}>Largo Prod</Text>
+      <View
+        style={{
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            width: "50%",
+          }}
+        >
+          <Text
+            style={{
+              marginRight: 10,
+            }}
+          >
+            Largo Prod
+          </Text>
 
           <Controller
             control={control}
@@ -120,19 +146,27 @@ const Home = () => {
         </View>
       </View>
 
-      <View style={{
-        display: 'flex',
-        alignItems: 'center',
-      }}>
-        <View style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          width: '50%',
-        }}>
-          <Text style={{
-            marginRight: 10,
-          }}>Largo Tag</Text>
+      <View
+        style={{
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            width: "50%",
+          }}
+        >
+          <Text
+            style={{
+              marginRight: 10,
+            }}
+          >
+            Largo Tag
+          </Text>
 
           <Controller
             control={control}

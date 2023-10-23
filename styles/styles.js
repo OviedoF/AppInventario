@@ -19,7 +19,6 @@ const styles = StyleSheet.create({
     height: 48,
     borderBottomWidth: 1,
     marginBottom: 10,
-    color: "blue",
   },
   img: {
     width: 200,
@@ -69,6 +68,20 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 15,
     margin: 10,
+  },
+  cdBtn: {
+    marginTop: 15,
+    width: "45%",
+    backgroundColor: "#FAA153",
+    borderRadius: 18,
+    padding: 15,
+    margin: 10,
+    alignItems: "center",
+  },
+  cdField: {
+    width: "45%",
+    height: 48,
+    borderBottomWidth: 1,
   },
   red: {
     color: "red",

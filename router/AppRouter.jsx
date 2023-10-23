@@ -4,6 +4,7 @@ import Login from "../pages/Login";
 import Home from "../pages/Home";
 import CaptureMenu from "../pages/CaptureMenu";
 import ProductEntry from "../pages/ProductEntry";
+import CD from "../pages/CD";
 
 const AppRouter = () => {
   return (
@@ -13,6 +14,7 @@ const AppRouter = () => {
       {/* ---------------- USER ---------------- */}
       <Route exact path={routes.home} element={<Home />} />
       <Route exact path={routes.captureMenu} element={<CaptureMenu />} />
+      <Route exact path={routes.cD} element={<CD />} />
       <Route
         exact
         path={routes.singleProductEntry}
