@@ -18,12 +18,12 @@ const CaptureMenu = () => {
       </View>
       <SectionBar section={"Menu Captura"} backTo={routes.home} />
       <View style={styles.container}>
-        <Link to={routes.home} style={styles.primaryBtn}>
+        <Link to={routes.singleProductEntry} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             <Text style={styles.white}>INGRESO 1 A 1</Text>
           </View>
         </Link>
-        <Link to={routes.home} style={styles.primaryBtn}>
+        <Link to={routes.multipleProductEntry} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             <Text style={styles.white}>INGRESO POR CANTIDAD</Text>
           </View>

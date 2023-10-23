@@ -3,6 +3,7 @@ import routes from "./routes";
 import Login from "../pages/Login";
 import Home from "../pages/Home";
 import CaptureMenu from "../pages/CaptureMenu";
+import ProductEntry from "../pages/ProductEntry";
 
 const AppRouter = () => {
   return (
@@ -12,6 +13,16 @@ const AppRouter = () => {
       {/* ---------------- USER ---------------- */}
       <Route exact path={routes.home} element={<Home />} />
       <Route exact path={routes.captureMenu} element={<CaptureMenu />} />
+      <Route
+        exact
+        path={routes.singleProductEntry}
+        element={<ProductEntry type="single" />}
+      />
+      <Route
+        exact
+        path={routes.multipleProductEntry}
+        element={<ProductEntry type="multi" />}
+      />
     </Routes>
   );
 };
