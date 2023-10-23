@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, TextInput } from "react-native";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import styles from "../styles/styles";
 import routes from "../router/routes";
 import SectionBar from "../components/SectionBar";
@@ -20,6 +20,16 @@ const CD = () => {
       area: "",
     },
   });
+
+  const refs = {
+    position: useRef(null),
+    box: useRef(null),
+    area: useRef(null),
+  };
+
+  const handleFocus = (ref) => {
+    ref.current.focus();
+  };
 
   const handleCD = async (data) => {
     try {
@@ -59,6 +69,9 @@ const CD = () => {
                   onChangeText={(value) => onChange(value)}
                   value={value}
                   style={styles.cdField}
+                  onSubmitEditing={() => handleFocus(refs.box)}
+                  ref={refs.position}
+                  autoFocus
                 />
               </>
             )}
@@ -83,6 +96,8 @@ const CD = () => {
                   onChangeText={(value) => onChange(value)}
                   value={value}
                   style={styles.cdField}
+                  onSubmitEditing={() => handleFocus(refs.area)}
+                  ref={refs.box}
                 />
               </>
             )}
@@ -107,6 +122,7 @@ const CD = () => {
                   onChangeText={(value) => onChange(value)}
                   value={value}
                   style={styles.cdField}
+                  ref={refs.area}
                 />
               </>
             )}
