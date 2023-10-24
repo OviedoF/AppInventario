@@ -384,9 +384,11 @@ const ProductEntry = ({ type }) => {
           </View>
         </View>
       )}
+      
       <Calculator
         setModalCalculatorVisible={setCalculatorModal}
         modalCalculatorVisible={calculatorModal}
+        setQuantity={setQuantity}
       />
 
       {confirmingClose && (

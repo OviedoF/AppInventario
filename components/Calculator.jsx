@@ -8,7 +8,7 @@ import {
   Button,
 } from "react-native";
 
-const Calculator = ({ setModalCalculatorVisible, modalCalculatorVisible }) => {
+const Calculator = ({ setModalCalculatorVisible, modalCalculatorVisible, setQuantity }) => {
   const [displayText, setDisplayText] = useState("");
 
   const handleButtonPress = (text) => {
@@ -29,6 +29,7 @@ const Calculator = ({ setModalCalculatorVisible, modalCalculatorVisible }) => {
     try {
       const result = eval(displayText);
       setDisplayText(result.toString());
+      setQuantity(parseFloat(result.toString()));
     } catch (error) {
       setDisplayText("Error");
     }
