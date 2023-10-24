@@ -14,8 +14,8 @@ const Home = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      large_prod: '',
-      large_tag: '',
+      large_prod: "",
+      large_tag: "",
     },
   });
 
@@ -30,41 +30,61 @@ const Home = () => {
       <SectionBar section={"Menu Operador"} backTo={routes.login} />
 
       <View style={styles.container}>
-        <Text style={{
-          marginBottom: 10,
-        }}>Administrador:</Text>
+        <Text
+          style={{
+            marginBottom: 10,
+          }}
+        >
+          Administrador:
+        </Text>
 
-        <Text style={{
-          marginBottom: 10,
-        }}>Operador:</Text>
+        <Text
+          style={{
+            marginBottom: 10,
+          }}
+        >
+          Operador:
+        </Text>
 
         <Link to={routes.captureMenu} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             {/* //? reemplazar home por ruta inventario */}
-            <Text style={{
-              ...styles.white,
-              fontWeight: 'bold'
-            }}>INVENTARIO</Text>
+            <Text
+              style={{
+                ...styles.white,
+                fontWeight: "bold",
+              }}
+            >
+              INVENTARIO
+            </Text>
           </View>
         </Link>
 
-        <Link to={routes.captureMenu} style={styles.primaryBtn}>
+        <Link to={routes.cD} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             {/* //? reemplazar home por ruta inventario */}
-            <Text style={{
-              ...styles.white,
-              fontWeight: 'bold'
-            }}>CD</Text>
+            <Text
+              style={{
+                ...styles.white,
+                fontWeight: "bold",
+              }}
+            >
+              CD
+            </Text>
           </View>
         </Link>
 
         <Link to={routes.home} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             {/* //? reemplazar home por ruta inventario */}
-            <Text style={{
-              ...styles.white,
-              fontWeight: 'bold'
-            }}>ENVIAR CONTEO WIFI</Text>
+            <Text
+              style={{
+                ...styles.white,
+                fontWeight: "bold",
+              }}
+            >
+              ENVIAR CONTEO WIFI
+            </Text>
           </View>
         </Link>
 
@@ -82,22 +102,24 @@ const Home = () => {
         </TouchableOpacity>
       </View>
 
-      {
-        /* 
+      {/* 
         TODO: Estos inputs van a manejar variables globales 
-        */
-      }
+        */}
 
-      <View style={{
-        display: 'flex',
-        alignItems: 'center',
-      }}>
-        <View style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          width: '50%',
-        }}>
+      <View
+        style={{
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            width: "50%",
+          }}
+        >
           <Text>Largo Prod</Text>
 
           <Controller
@@ -110,7 +132,7 @@ const Home = () => {
                 secureTextEntry={true}
                 style={{
                   ...styles.input,
-                  marginLeft: 10
+                  marginLeft: 10,
                 }}
                 placeholder="Largo Prod"
               />
@@ -121,16 +143,20 @@ const Home = () => {
         </View>
       </View>
 
-      <View style={{
-        display: 'flex',
-        alignItems: 'center',
-      }}>
-        <View style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          width: '50%',
-        }}>
+      <View
+        style={{
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            width: "50%",
+          }}
+        >
           <Text>Largo Tag</Text>
 
           <Controller
@@ -143,7 +169,7 @@ const Home = () => {
                 secureTextEntry={true}
                 style={{
                   ...styles.input,
-                  marginLeft: 10
+                  marginLeft: 10,
                 }}
                 placeholder="Largo Tag"
               />

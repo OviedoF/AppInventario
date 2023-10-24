@@ -4,5 +4,6 @@ const routes = {
   captureMenu: "/capture",
   singleProductEntry: "/singleProductEntry",
   multipleProductEntry: "/multipleProductEntry",
+  cD: "/CD",
 };
 export default routes;
