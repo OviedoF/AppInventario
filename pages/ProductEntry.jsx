@@ -5,11 +5,14 @@ import SectionBar from "../components/SectionBar";
 import routes from "../router/routes";
 import { StyleSheet } from "react-native";
 import { useNavigate } from "react-router-native";
+import ConfirmCloseAreaModal from "../components/ConfirmCloseAreaModal";
 
 const ProductEntry = ({ type }) => {
+  console.log(type === 'single');
   const [modal, setModal] = useState(true)
   const [area, setArea] = useState('');
   const [code, setCode] = useState('')
+  const [confirmingClose, setConfirmingClose] = useState(false)
   const navigate = useNavigate();
   const refs = {
     area: useRef(null),
@@ -108,7 +111,7 @@ const ProductEntry = ({ type }) => {
             justifyContent: 'center',
             flexWrap: 'wrap',
           }}>
-            {type === "single" && <TouchableOpacity style={{
+            {type === "multi" && <TouchableOpacity style={{
               ...styles.logBtn,
               width: '40%',
               width: 50,
@@ -122,7 +125,7 @@ const ProductEntry = ({ type }) => {
               }}>-</Text>
             </TouchableOpacity>}
 
-            {type === "single" ? <TextInput style={{
+            {type === "multi" ? <TextInput style={{
               ...styles.input,
               fontWeight: 'bold',
               fontSize: 38,
@@ -137,7 +140,7 @@ const ProductEntry = ({ type }) => {
               color: '#000'
             }}>+ 1</Text>}
 
-            {type === "single" && <TouchableOpacity style={{
+            {type === "multi" && <TouchableOpacity style={{
               ...styles.logBtn,
               width: 50,
               height: 50,
@@ -150,7 +153,7 @@ const ProductEntry = ({ type }) => {
               }}>+</Text>
             </TouchableOpacity>}
 
-            {type === "single" && <TouchableOpacity style={{
+            {type === "multi" && <TouchableOpacity style={{
               ...styles.logBtn,
               width: 70,
               height: 50,
@@ -184,7 +187,7 @@ const ProductEntry = ({ type }) => {
             width: '30%',
             height: 50,
             borderRadius: 5
-          }}>
+          }} onPress={() => setConfirmingClose(true)}>
             <Text style={{
               ...styles.white,
               textAlign: 'center',
@@ -254,6 +257,8 @@ const ProductEntry = ({ type }) => {
 
         </View>
       </View>}
+
+      {confirmingClose && <ConfirmCloseAreaModal area={area} onClose={() => setConfirmingClose(false)} />}
     </View>
   );
 };
