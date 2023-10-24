@@ -5,17 +5,22 @@ import SectionBar from "../components/SectionBar";
 import routes from "../router/routes";
 import { StyleSheet } from "react-native";
 import { useNavigate } from "react-router-native";
+import ConfirmCloseAreaModal from "../components/ConfirmCloseAreaModal";
 import Calculator from "../components/Calculator";
 
 const ProductEntry = ({ type }) => {
+  console.log(type === "single");
   const [modal, setModal] = useState(true);
   const [calculatorModal, setCalculatorModal] = useState(false);
   const [area, setArea] = useState("");
   const [code, setCode] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [confirmingClose, setConfirmingClose] = useState(false);
   const navigate = useNavigate();
   const refs = {
     area: useRef(null),
     code: useRef(null),
+    quantity: useRef(null),
   };
 
   useEffect(() => {
@@ -99,6 +104,7 @@ const ProductEntry = ({ type }) => {
             </TouchableOpacity>
 
             <TextInput
+              keyboardType="numeric"
               style={{
                 ...styles.input,
                 width: "70%",
@@ -107,7 +113,15 @@ const ProductEntry = ({ type }) => {
               value={code}
               ref={refs.code}
               placeholder="Código"
-              onSubmitEditing={confirmArea}
+              onSubmitEditing={() => {
+                if (type === "single") {
+                  alert("Grabar producto");
+                  refs.code.current.clear();
+                  refs.code.current.focus();
+                } else {
+                  refs.quantity.current.focus();
+                }
+              }}
             />
           </View>
 
@@ -131,7 +145,7 @@ const ProductEntry = ({ type }) => {
               flexWrap: "wrap",
             }}
           >
-            {type === "single" && (
+            {type === "multi" && (
               <TouchableOpacity
                 style={{
                   ...styles.logBtn,
@@ -139,6 +153,10 @@ const ProductEntry = ({ type }) => {
                   width: 50,
                   height: 50,
                   borderRadius: 5,
+                }}
+                onPress={() => {
+                  if (quantity === 1) return;
+                  setQuantity(quantity - 1);
                 }}
               >
                 <Text
@@ -153,8 +171,13 @@ const ProductEntry = ({ type }) => {
               </TouchableOpacity>
             )}
 
-            {type === "single" ? (
+            {type === "multi" ? (
               <TextInput
+                onChange={(e) => {
+                  setQuantity(parseInt(e.nativeEvent.text));
+                }}
+                keyboardType="numeric"
+                ref={refs.quantity}
                 style={{
                   ...styles.input,
                   fontWeight: "bold",
@@ -163,8 +186,9 @@ const ProductEntry = ({ type }) => {
                   textAlign: "center",
                   color: "#000",
                 }}
+                onEndEditing={() => setConfirmingClose(true)}
               >
-                1
+                {quantity}
               </TextInput>
             ) : (
               <Text
@@ -176,17 +200,20 @@ const ProductEntry = ({ type }) => {
                   color: "#000",
                 }}
               >
-                + 1
+                + {quantity}
               </Text>
             )}
 
-            {type === "single" && (
+            {type === "multi" && (
               <TouchableOpacity
                 style={{
                   ...styles.logBtn,
                   width: 50,
                   height: 50,
                   borderRadius: 5,
+                }}
+                onPress={() => {
+                  setQuantity(quantity + 1);
                 }}
               >
                 <Text
@@ -201,9 +228,8 @@ const ProductEntry = ({ type }) => {
               </TouchableOpacity>
             )}
 
-            {type === "single" && (
+            {type === "multi" && (
               <TouchableOpacity
-                onPress={() => setCalculatorModal(!calculatorModal)}
                 style={{
                   ...styles.logBtn,
                   width: 70,
@@ -259,6 +285,7 @@ const ProductEntry = ({ type }) => {
               height: 50,
               borderRadius: 5,
             }}
+            onPress={() => setConfirmingClose(true)}
           >
             <Text
               style={{
@@ -313,6 +340,7 @@ const ProductEntry = ({ type }) => {
             </Text>
 
             <TextInput
+              keyboardType="numeric"
               style={styles.input}
               onChangeText={setArea}
               value={area}
@@ -357,6 +385,13 @@ const ProductEntry = ({ type }) => {
         setModalCalculatorVisible={setCalculatorModal}
         modalCalculatorVisible={calculatorModal}
       />
+
+      {confirmingClose && (
+        <ConfirmCloseAreaModal
+          area={area}
+          onClose={() => setConfirmingClose(false)}
+        />
+      )}
     </View>
   );
 };

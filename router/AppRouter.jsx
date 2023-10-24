@@ -5,7 +5,7 @@ import Home from "../pages/Home";
 import CaptureMenu from "../pages/CaptureMenu";
 import ProductEntry from "../pages/ProductEntry";
 import CD from "../pages/CD";
-import Calculator from "../components/Calculator";
+import SendWIFI from "../pages/SendWIFI";
 
 const AppRouter = () => {
   return (
@@ -26,6 +26,7 @@ const AppRouter = () => {
         path={routes.multipleProductEntry}
         element={<ProductEntry type="multi" />}
       />
+      <Route exact path={routes.sentWifi} element={<SendWIFI />} />
     </Routes>
   );
 };
