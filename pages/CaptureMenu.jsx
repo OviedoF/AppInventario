@@ -57,7 +57,7 @@ const CaptureMenu = () => {
           </Link>
         ) : null}
 
-        <Link to={routes.home} style={styles.primaryBtn}>
+        <Link to={routes.sentWifi} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             <Text style={styles.white}>ENVIAR CONTEO WIFI</Text>
           </View>

@@ -11,12 +11,14 @@ const ProductEntry = ({ type }) => {
   console.log(type === 'single');
   const [modal, setModal] = useState(true)
   const [area, setArea] = useState('');
-  const [code, setCode] = useState('')
+  const [code, setCode] = useState('');
+  const [quantity, setQuantity] = useState(1)
   const [confirmingClose, setConfirmingClose] = useState(false)
   const navigate = useNavigate();
   const refs = {
     area: useRef(null),
-    code: useRef(null)
+    code: useRef(null),
+    quantity: useRef(null),
   }
 
   useEffect(() => {
@@ -91,10 +93,18 @@ const ProductEntry = ({ type }) => {
               }}>B</Text>
             </TouchableOpacity>
 
-            <TextInput style={{
+            <TextInput keyboardType="numeric" style={{
               ...styles.input,
               width: '70%',
-            }} onChangeText={setCode} value={code} ref={refs.code} placeholder="Código" onSubmitEditing={confirmArea} />
+            }} onChangeText={setCode} value={code} ref={refs.code} placeholder="Código" onSubmitEditing={() => {
+              if (type === "single") {
+                alert('Grabar producto');
+                refs.code.current.clear();
+                refs.code.current.focus();
+              } else {
+                refs.quantity.current.focus();
+              }
+            }} />
           </View>
 
           <Text style={{
@@ -117,6 +127,9 @@ const ProductEntry = ({ type }) => {
               width: 50,
               height: 50,
               borderRadius: 5
+            }} onPress={() => {
+              if (quantity === 1) return;
+              setQuantity(quantity - 1);
             }}>
               <Text style={{
                 ...styles.white,
@@ -125,26 +138,30 @@ const ProductEntry = ({ type }) => {
               }}>-</Text>
             </TouchableOpacity>}
 
-            {type === "multi" ? <TextInput style={{
+            {type === "multi" ? <TextInput onChange={(e) => {
+              setQuantity(parseInt(e.nativeEvent.text));
+            }} keyboardType="numeric" ref={refs.quantity} style={{
               ...styles.input,
               fontWeight: 'bold',
               fontSize: 38,
               width: 70,
               textAlign: 'center',
               color: '#000'
-            }}>1</TextInput> : <Text style={{
+            }} onEndEditing={() => setConfirmingClose(true)}>{quantity}</TextInput> : <Text style={{
               fontWeight: 'bold',
               fontSize: 38,
               width: 70,
               textAlign: 'center',
               color: '#000'
-            }}>+ 1</Text>}
+            }}>+ {quantity}</Text>}
 
             {type === "multi" && <TouchableOpacity style={{
               ...styles.logBtn,
               width: 50,
               height: 50,
               borderRadius: 5
+            }} onPress={() => {
+              setQuantity(quantity + 1);
             }}>
               <Text style={{
                 ...styles.white,
@@ -223,7 +240,7 @@ const ProductEntry = ({ type }) => {
             Ingresar Área
           </Text>
 
-          <TextInput style={styles.input} onChangeText={setArea} value={area} ref={refs.area} placeholder="Área" onSubmitEditing={confirmArea} />
+          <TextInput keyboardType="numeric" style={styles.input} onChangeText={setArea} value={area} ref={refs.area} placeholder="Área" onSubmitEditing={confirmArea} />
 
           <View style={{
             display: 'flex',

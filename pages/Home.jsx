@@ -74,7 +74,7 @@ const Home = () => {
           </View>
         </Link>
 
-        <Link to={routes.home} style={styles.primaryBtn}>
+        <Link to={routes.sentWifi} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             {/* //? reemplazar home por ruta inventario */}
             <Text
@@ -126,6 +126,7 @@ const Home = () => {
             control={control}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
+              keyboardType="numeric"
                 onBlur={onBlur}
                 onChangeText={(value) => console.log(value)}
                 value={value}
@@ -163,6 +164,7 @@ const Home = () => {
             control={control}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
+              keyboardType="numeric"
                 onBlur={onBlur}
                 onChangeText={(value) => console.log(value)}
                 value={value}
