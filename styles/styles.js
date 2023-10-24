@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 import Constants from "expo-constants";
 
 const styles = StyleSheet.create({
@@ -115,6 +115,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "gray",
     padding: 10,
+  },
+  modal: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,.5)",
+    position: "absolute",
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height + 100,
+    top: Constants.statusBarHeight,
+    left: 0
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    width: "80%",
+    borderRadius: 10,
+    padding: 10,
+    alignItems: "center",
+  },
+  flex_row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "left",
   },
   /* dropdown: {
       position: "absolute",
