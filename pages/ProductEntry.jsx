@@ -236,6 +236,9 @@ const ProductEntry = ({ type }) => {
                   height: 50,
                   borderRadius: 5,
                 }}
+                onPress={() => {
+                  setCalculatorModal(true);
+                }}
               >
                 <Text
                   style={{
