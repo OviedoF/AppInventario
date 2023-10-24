@@ -5,6 +5,7 @@ import Home from "../pages/Home";
 import CaptureMenu from "../pages/CaptureMenu";
 import ProductEntry from "../pages/ProductEntry";
 import CD from "../pages/CD";
+import Calculator from "../components/Calculator";
 
 const AppRouter = () => {
   return (

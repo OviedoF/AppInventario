@@ -74,7 +74,7 @@ const Home = () => {
           </View>
         </Link>
 
-        <Link to={routes.home} style={styles.primaryBtn}>
+        <Link to={routes.calculator} style={styles.primaryBtn}>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             {/* //? reemplazar home por ruta inventario */}
             <Text
