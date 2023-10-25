@@ -12,8 +12,8 @@ const Login = () => {
   const [errorModal, setErrorModal] = useState(false);
   const refs = {
     user: useRef(null),
-    password: useRef(null)
-  }
+    password: useRef(null),
+  };
 
   const {
     handleSubmit,
@@ -46,7 +46,7 @@ const Login = () => {
 
   useEffect(() => {
     refs.user.current.focus();
-  }, [errors, control])
+  }, [errors, control]);
 
   return (
     <>
@@ -55,7 +55,7 @@ const Login = () => {
           ID:
         </Text>
       </View>
-      
+
       <View style={styles.container}>
         <Image style={styles.img} source={logo} />
       </View>
@@ -72,7 +72,7 @@ const Login = () => {
               value={value}
               style={styles.input}
               placeholder="Operador"
-              autoFocus={true}
+              showSoftInputOnFocus={false}
               ref={refs.user}
             />
           )}
@@ -87,6 +87,7 @@ const Login = () => {
               onBlur={onBlur}
               onChangeText={(value) => onChange(value)}
               onSubmitEditing={handleSubmit(handleLogin)}
+              showSoftInputOnFocus={false}
               ref={refs.password}
               value={value}
               secureTextEntry={true}

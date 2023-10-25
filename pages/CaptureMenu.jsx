@@ -4,32 +4,35 @@ import React, { useState, useMemo } from "react";
 import styles from "../styles/styles";
 import SectionBar from "../components/SectionBar";
 import routes from "../router/routes";
-import RadioGroup from 'react-native-radio-buttons-group';
+import RadioGroup from "react-native-radio-buttons-group";
 
 const CaptureMenu = () => {
   const navigate = useNavigate();
   const [isEnabled, setIsEnabled] = useState(false);
-  const [selectedId, setSelectedId] = useState(3)
+  const [selectedId, setSelectedId] = useState(3);
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
 
-  const optionsRadio = useMemo(() => ([
-    {
-      id: 1,
-      label: 'Ingreso 1 a 1',
-      value: 'single'
-    },
-    {
-      id: 2,
-      label: 'Ingreso por cantidad',
-      value: 'multiple'
-    },
-    {
-      id: 3,
-      label: 'Ambos',
-      value: 'both',
-      default: true
-    }
-  ]), [])
+  const optionsRadio = useMemo(
+    () => [
+      {
+        id: 1,
+        label: "Ingreso 1 a 1",
+        value: "single",
+      },
+      {
+        id: 2,
+        label: "Ingreso por cantidad",
+        value: "multiple",
+      },
+      {
+        id: 3,
+        label: "Ambos",
+        value: "both",
+        default: true,
+      },
+    ],
+    []
+  );
 
   return (
     <>
@@ -79,12 +82,11 @@ const CaptureMenu = () => {
             value={isEnabled}
           />
         </View>
-
         <RadioGroup
           radioButtons={optionsRadio}
           onPress={setSelectedId}
           selectedId={selectedId}
-          layout="row"
+          containerStyle={{ alignItems: "baseline" }}
         />
       </View>
     </>

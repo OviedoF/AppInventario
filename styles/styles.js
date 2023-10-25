@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
   },
   container: {
     alignItems: "center",
-    marginTop: 30,
+    marginTop: 20,
   },
   input: {
     width: "80%",
@@ -21,9 +21,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   img: {
-    width: 200,
-    height: 200,
-    marginTop: 50,
+    width: 150,
+    height: 150,
+    marginTop: 20,
   },
   logoIcon: {
     width: 100,
@@ -56,25 +56,23 @@ const styles = StyleSheet.create({
   },
   primaryBtn: {
     marginTop: 15,
-    width: "90%",
-    backgroundColor: "#005DA6",
-    borderRadius: 18,
-    padding: 15,
-  },
-  logBtn: {
-    marginTop: 15,
     width: "80%",
     backgroundColor: "#005DA6",
     borderRadius: 18,
-    padding: 15,
+    padding: 10,
+  },
+  logBtn: {
+    width: "80%",
+    backgroundColor: "#005DA6",
+    borderRadius: 18,
+    padding: 10,
     margin: 10,
   },
   cdBtn: {
-    marginTop: 15,
-    width: "45%",
+    width: "35%",
     backgroundColor: "#FAA153",
     borderRadius: 18,
-    padding: 15,
+    padding: 10,
     margin: 10,
     alignItems: "center",
   },
@@ -99,8 +97,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#272459",
   },
   backBtn: {
-    width: 58,
-    height: 58,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -138,7 +134,7 @@ const styles = StyleSheet.create({
     width: Dimensions.get("window").width,
     height: Dimensions.get("window").height + 100,
     top: Constants.statusBarHeight,
-    left: 0
+    left: 0,
   },
   modalContent: {
     backgroundColor: "#fff",

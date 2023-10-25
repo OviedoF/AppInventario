@@ -35,7 +35,6 @@ const ProductEntry = ({ type }) => {
     }
 
     setModal(false);
-    refs.code.current.focus();
   };
 
   return (
@@ -87,9 +86,10 @@ const ProductEntry = ({ type }) => {
             <TouchableOpacity
               style={{
                 ...styles.logBtn,
-                width: 50,
-                height: 50,
+                width: 40,
+                height: 40,
                 borderRadius: 5,
+                alignItems: "center",
               }}
             >
               <Text
@@ -149,10 +149,10 @@ const ProductEntry = ({ type }) => {
               <TouchableOpacity
                 style={{
                   ...styles.logBtn,
-                  width: "40%",
-                  width: 50,
-                  height: 50,
+                  width: 40,
+                  height: 40,
                   borderRadius: 5,
+                  alignItems: "center",
                 }}
                 onPress={() => {
                   if (quantity === 1) return;
@@ -208,9 +208,10 @@ const ProductEntry = ({ type }) => {
               <TouchableOpacity
                 style={{
                   ...styles.logBtn,
-                  width: 50,
-                  height: 50,
+                  width: 40,
+                  height: 40,
                   borderRadius: 5,
+                  alignItems: "center",
                 }}
                 onPress={() => {
                   setQuantity(quantity + 1);
@@ -233,8 +234,8 @@ const ProductEntry = ({ type }) => {
                 style={{
                   ...styles.logBtn,
                   width: 70,
-                  height: 50,
                   borderRadius: 5,
+                  alignItems: "center",
                 }}
                 onPress={() => {
                   setCalculatorModal(true);
@@ -259,6 +260,7 @@ const ProductEntry = ({ type }) => {
             width: "80%",
             justifyContent: "center",
             display: "flex",
+            alignItems: "center",
             flexDirection: "row",
           }}
         >
@@ -266,7 +268,6 @@ const ProductEntry = ({ type }) => {
             style={{
               ...styles.logBtn,
               width: "30%",
-              height: 50,
               borderRadius: 5,
             }}
           >
@@ -285,8 +286,8 @@ const ProductEntry = ({ type }) => {
             style={{
               ...styles.logBtn,
               width: "30%",
-              height: 50,
               borderRadius: 5,
+              alignItems: "center",
             }}
             onPress={() => setConfirmingClose(true)}
           >
@@ -305,8 +306,8 @@ const ProductEntry = ({ type }) => {
             style={{
               ...styles.logBtn,
               width: "30%",
-              height: 50,
               borderRadius: 5,
+              alignItems: "center",
             }}
           >
             <Text
@@ -384,7 +385,7 @@ const ProductEntry = ({ type }) => {
           </View>
         </View>
       )}
-      
+
       <Calculator
         setModalCalculatorVisible={setCalculatorModal}
         modalCalculatorVisible={calculatorModal}

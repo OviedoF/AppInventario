@@ -87,7 +87,90 @@ const Home = () => {
             </Text>
           </View>
         </Link>
+      </View>
 
+      {/* 
+        TODO: Estos inputs van a manejar variables globales 
+        */}
+
+      <View style={{ alignItems: "center", marginVertical: 5 }}>
+        <View
+          style={{
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              width: "40%",
+            }}
+          >
+            <Text>Largo Prod</Text>
+
+            <Controller
+              control={control}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  keyboardType="numeric"
+                  onBlur={onBlur}
+                  onChangeText={(value) => console.log(value)}
+                  value={value}
+                  secureTextEntry={true}
+                  style={{
+                    ...styles.input,
+                    marginLeft: 10,
+                  }}
+                  placeholder="Largo Prod"
+                />
+              )}
+              name="large_prod"
+              rules={{ required: true }}
+            />
+          </View>
+        </View>
+
+        <View
+          style={{
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              width: "40%",
+            }}
+          >
+            <Text>Largo Tag</Text>
+
+            <Controller
+              control={control}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  keyboardType="numeric"
+                  onBlur={onBlur}
+                  onChangeText={(value) => console.log(value)}
+                  value={value}
+                  secureTextEntry={true}
+                  style={{
+                    ...styles.input,
+                    marginLeft: 10,
+                  }}
+                  placeholder="Largo Tag"
+                />
+              )}
+              name="large_tag"
+              rules={{ required: true }}
+            />
+          </View>
+        </View>
+      </View>
+      <View style={styles.container}>
         <TouchableOpacity
           onPress={() => {
             //! Crear función de logout
@@ -100,86 +183,6 @@ const Home = () => {
             ¿Desea cerrar sesión? Click <Text style={styles.link}>AQUÍ</Text>
           </Text>
         </TouchableOpacity>
-      </View>
-
-      {/* 
-        TODO: Estos inputs van a manejar variables globales 
-        */}
-
-      <View
-        style={{
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
-        <View
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            width: "50%",
-          }}
-        >
-          <Text>Largo Prod</Text>
-
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                keyboardType="numeric"
-                onBlur={onBlur}
-                onChangeText={(value) => console.log(value)}
-                value={value}
-                secureTextEntry={true}
-                style={{
-                  ...styles.input,
-                  marginLeft: 10,
-                }}
-                placeholder="Largo Prod"
-              />
-            )}
-            name="large_prod"
-            rules={{ required: true }}
-          />
-        </View>
-      </View>
-
-      <View
-        style={{
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
-        <View
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            width: "50%",
-          }}
-        >
-          <Text>Largo Tag</Text>
-
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                keyboardType="numeric"
-                onBlur={onBlur}
-                onChangeText={(value) => console.log(value)}
-                value={value}
-                secureTextEntry={true}
-                style={{
-                  ...styles.input,
-                  marginLeft: 10,
-                }}
-                placeholder="Largo Tag"
-              />
-            )}
-            name="large_tag"
-            rules={{ required: true }}
-          />
-        </View>
       </View>
     </>
   );

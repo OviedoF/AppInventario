@@ -51,7 +51,7 @@ const CD = () => {
         </Text>
       </View>
       <SectionBar section={"Ingreso CD"} backTo={routes.home} />
-      <View>
+      <View style={styles.mySm}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Controller
             control={control}
@@ -71,7 +71,6 @@ const CD = () => {
                   style={styles.cdField}
                   onSubmitEditing={() => handleFocus(refs.box)}
                   ref={refs.position}
-                  autoFocus
                 />
               </>
             )}

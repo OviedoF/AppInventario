@@ -9,19 +9,22 @@ const SectionBar = ({ section, backTo }) => {
   return (
     <View
       style={[
-        styles.pySm,
         {
           backgroundColor: "#005DA6",
           flexDirection: "row",
           alignItems: "center",
+          padding: 5,
         },
       ]}
     >
       <Link to={backTo} style={styles.backBtn}>
-        <Image style={{
-          width: 20,
-          height: 20,
-        }} source={arrowLeft} />
+        <Image
+          style={{
+            width: 20,
+            height: 20,
+          }}
+          source={arrowLeft}
+        />
       </Link>
 
       <Text style={[styles.white, styles.title, styles.mxSm]}>
