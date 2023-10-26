@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Text, View, TextInput, Image, TouchableOpacity } from "react-native";
+import { Text, View, TextInput, Image, TouchableOpacity, Keyboard } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { useNavigate } from "react-router-native";
 import logo from "../assets/logo.png"; //! agregar logo.png a la carpeta assets
@@ -67,12 +67,15 @@ const Login = () => {
           render={({ field: { onChange, onBlur, value } }) => (
             <TextInput
               onBlur={onBlur}
-              onChangeText={(value) => onChange(value)}
+              onChangeText={(value) => {
+                onChange(value)
+              }}
               onSubmitEditing={() => handleFocus(refs.password)}
               value={value}
               style={styles.input}
               placeholder="Operador"
               showSoftInputOnFocus={false}
+              
               ref={refs.user}
             />
           )}

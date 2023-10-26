@@ -20,14 +20,14 @@ const SectionBar = ({ section, backTo }) => {
       <Link to={backTo} style={styles.backBtn}>
         <Image
           style={{
-            width: 20,
-            height: 20,
+            width: 15,
+            height: 15,
           }}
           source={arrowLeft}
         />
       </Link>
 
-      <Text style={[styles.white, styles.title, styles.mxSm]}>
+      <Text style={[styles.white, styles.subtitle, styles.mxSm]}>
         {section && section}
       </Text>
     </View>
