@@ -5,6 +5,9 @@ import { useForm, Controller } from "react-hook-form";
 import routes from "../router/routes";
 import styles from "../styles/styles";
 import SectionBar from "../components/SectionBar";
+import TopBar from "../components/TopBar";
+import { KeyboardAvoidingView } from "react-native";
+import { ScrollView } from "react-native";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -20,171 +23,172 @@ const Home = () => {
   });
 
   return (
-    <>
-      <View style={styles.topSectionContainer}>
-        <Text style={[styles.subtitle, styles.white, styles.mxSm, styles.pySm]}>
-          ID:
-        </Text>
-      </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <ScrollView>
+        <TopBar text={"ID:"} />
 
-      <SectionBar section={"Menu Operador"} backTo={routes.login} />
+        <SectionBar section={"Menu Operador"} backTo={routes.login} />
 
-      <View style={styles.container}>
-        <Text
-          style={{
-            marginBottom: 10,
-          }}
-        >
-          Administrador:
-        </Text>
+        <View style={styles.container}>
+          <Text
+            style={{
+              marginBottom: 10,
+            }}
+          >
+            Administrador:
+          </Text>
 
-        <Text
-          style={{
-            marginBottom: 10,
-          }}
-        >
-          Operador:
-        </Text>
+          <Text
+            style={{
+              marginBottom: 10,
+            }}
+          >
+            Operador:
+          </Text>
 
-        <Link to={routes.captureMenu} style={styles.primaryBtn}>
-          <View style={{ flexDirection: "row", justifyContent: "center" }}>
-            {/* //? reemplazar home por ruta inventario */}
-            <Text
-              style={{
-                ...styles.white,
-                fontWeight: "bold",
-              }}
-            >
-              INVENTARIO
-            </Text>
-          </View>
-        </Link>
+          <Link to={routes.captureMenu} style={styles.primaryBtn}>
+            <View style={{ flexDirection: "row", justifyContent: "center" }}>
+              {/* //? reemplazar home por ruta inventario */}
+              <Text
+                style={{
+                  ...styles.white,
+                  fontWeight: "bold",
+                }}
+              >
+                INVENTARIO
+              </Text>
+            </View>
+          </Link>
 
-        <Link to={routes.cD} style={styles.primaryBtn}>
-          <View style={{ flexDirection: "row", justifyContent: "center" }}>
-            {/* //? reemplazar home por ruta inventario */}
-            <Text
-              style={{
-                ...styles.white,
-                fontWeight: "bold",
-              }}
-            >
-              CD
-            </Text>
-          </View>
-        </Link>
+          <Link to={routes.cD} style={styles.primaryBtn}>
+            <View style={{ flexDirection: "row", justifyContent: "center" }}>
+              {/* //? reemplazar home por ruta inventario */}
+              <Text
+                style={{
+                  ...styles.white,
+                  fontWeight: "bold",
+                }}
+              >
+                CD
+              </Text>
+            </View>
+          </Link>
 
-        <Link to={routes.sentWifi} style={styles.primaryBtn}>
-          <View style={{ flexDirection: "row", justifyContent: "center" }}>
-            {/* //? reemplazar home por ruta inventario */}
-            <Text
-              style={{
-                ...styles.white,
-                fontWeight: "bold",
-              }}
-            >
-              ENVIAR CONTEO WIFI
-            </Text>
-          </View>
-        </Link>
-      </View>
+          <Link to={routes.sentWifi} style={styles.primaryBtn}>
+            <View style={{ flexDirection: "row", justifyContent: "center" }}>
+              {/* //? reemplazar home por ruta inventario */}
+              <Text
+                style={{
+                  ...styles.white,
+                  fontWeight: "bold",
+                }}
+              >
+                ENVIAR CONTEO WIFI
+              </Text>
+            </View>
+          </Link>
+        </View>
 
-      {/* 
+        {/* 
         TODO: Estos inputs van a manejar variables globales 
         */}
 
-      <View style={{ alignItems: "center", marginVertical: 5 }}>
-        <View
-          style={{
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
+        <View style={{ alignItems: "center", marginVertical: 5 }}>
           <View
             style={{
               display: "flex",
-              flexDirection: "row",
               alignItems: "center",
-              width: "40%",
             }}
           >
-            <Text>Largo Prod</Text>
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                width: "40%",
+              }}
+            >
+              <Text>Largo Prod</Text>
 
-            <Controller
-              control={control}
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  keyboardType="numeric"
-                  onBlur={onBlur}
-                  onChangeText={(value) => console.log(value)}
-                  value={value}
-                  secureTextEntry={true}
-                  style={{
-                    ...styles.input,
-                    marginLeft: 10,
-                  }}
-                  placeholder="Largo Prod"
-                />
-              )}
-              name="large_prod"
-              rules={{ required: true }}
-            />
+              <Controller
+                control={control}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    keyboardType="numeric"
+                    onBlur={onBlur}
+                    onChangeText={(value) => console.log(value)}
+                    value={value}
+                    secureTextEntry={true}
+                    style={{
+                      ...styles.input,
+                      marginLeft: 10,
+                    }}
+                    placeholder="Largo Prod"
+                  />
+                )}
+                name="large_prod"
+                rules={{ required: true }}
+              />
+            </View>
           </View>
-        </View>
 
-        <View
-          style={{
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
           <View
             style={{
               display: "flex",
-              flexDirection: "row",
               alignItems: "center",
-              width: "40%",
             }}
           >
-            <Text>Largo Tag</Text>
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                width: "40%",
+              }}
+            >
+              <Text>Largo Tag</Text>
 
-            <Controller
-              control={control}
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  keyboardType="numeric"
-                  onBlur={onBlur}
-                  onChangeText={(value) => console.log(value)}
-                  value={value}
-                  secureTextEntry={true}
-                  style={{
-                    ...styles.input,
-                    marginLeft: 10,
-                  }}
-                  placeholder="Largo Tag"
-                />
-              )}
-              name="large_tag"
-              rules={{ required: true }}
-            />
+              <Controller
+                control={control}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    keyboardType="numeric"
+                    onBlur={onBlur}
+                    onChangeText={(value) => console.log(value)}
+                    value={value}
+                    secureTextEntry={true}
+                    style={{
+                      ...styles.input,
+                      marginLeft: 10,
+                    }}
+                    placeholder="Largo Tag"
+                  />
+                )}
+                name="large_tag"
+                rules={{ required: true }}
+              />
+            </View>
           </View>
         </View>
-      </View>
-      <View style={styles.container}>
-        <TouchableOpacity
-          onPress={() => {
-            //! Crear función de logout
-            /* logout(); */
-            navigate(routes.login);
-          }}
-          style={styles.mySm}
-        >
-          <Text>
-            ¿Desea cerrar sesión? Click <Text style={styles.link}>AQUÍ</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </>
+        <View style={styles.container}>
+          <TouchableOpacity
+            onPress={() => {
+              //! Crear función de logout
+              /* logout(); */
+              navigate(routes.login);
+            }}
+            style={styles.mySm}
+          >
+            <Text>
+              ¿Desea cerrar sesión? Click <Text style={styles.link}>AQUÍ</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
