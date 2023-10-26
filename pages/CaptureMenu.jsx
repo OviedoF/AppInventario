@@ -5,6 +5,7 @@ import styles from "../styles/styles";
 import SectionBar from "../components/SectionBar";
 import routes from "../router/routes";
 import RadioGroup from "react-native-radio-buttons-group";
+import TopBar from "../components/TopBar";
 
 const CaptureMenu = () => {
   const navigate = useNavigate();
@@ -36,11 +37,7 @@ const CaptureMenu = () => {
 
   return (
     <>
-      <View style={styles.topSectionContainer}>
-        <Text style={[styles.subtitle, styles.white, styles.mxSm, styles.pySm]}>
-          ID:
-        </Text>
-      </View>
+      <TopBar text={"ID:"} />
       <SectionBar section={"Menu Captura"} backTo={routes.home} />
 
       <View style={styles.container}>
