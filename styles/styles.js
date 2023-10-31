@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
   },
   container: {
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 10,
   },
   input: {
     width: "80%",

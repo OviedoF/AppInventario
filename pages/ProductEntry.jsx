@@ -18,7 +18,7 @@ import { dataContext } from "../context/dataContext";
 
 const ProductEntry = ({ type }) => {
   console.log(type === "single");
-  const { area, setArea } = useContext(dataContext);
+  const { area } = useContext(dataContext);
   const [calculatorModal, setCalculatorModal] = useState(false);
   const [code, setCode] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -58,18 +58,6 @@ const ProductEntry = ({ type }) => {
             }}
           >
             <Text style={styles.subtitle}>Área: {area}</Text>
-
-            <TouchableOpacity
-              onPress={() => {
-                setModal(true);
-              }}
-              style={{
-                ...styles.logBtn,
-                width: "40%",
-              }}
-            >
-              <Text style={[styles.white, styles.textCenter]}>CAMBIAR</Text>
-            </TouchableOpacity>
           </View>
 
           <View style={{ width: "80%", justifyContent: "center" }}>
