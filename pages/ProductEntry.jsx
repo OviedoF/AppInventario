@@ -14,7 +14,7 @@ import { StyleSheet } from "react-native";
 import ConfirmCloseAreaModal from "../components/ConfirmCloseAreaModal";
 import Calculator from "../components/Calculator";
 import TopBar from "../components/TopBar";
-import { dataContext } from "../context/dataContext";
+import { dataContext } from "../context/DataContext";
 
 const ProductEntry = ({ type }) => {
   console.log(type === "single");
