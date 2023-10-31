@@ -4,6 +4,7 @@ const routes = {
   captureMenu: "/capture",
   singleProductEntry: "/singleProductEntry",
   multipleProductEntry: "/multipleProductEntry",
+  review: "/review/:type",
   cD: "/CD",
   sentWifi: "/sentWifi",
 };

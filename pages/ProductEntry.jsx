@@ -15,9 +15,9 @@ import ConfirmCloseAreaModal from "../components/ConfirmCloseAreaModal";
 import Calculator from "../components/Calculator";
 import TopBar from "../components/TopBar";
 import { dataContext } from "../context/dataContext";
+import { Link } from "react-router-native";
 
 const ProductEntry = ({ type }) => {
-  console.log(type === "single");
   const { area } = useContext(dataContext);
   const [calculatorModal, setCalculatorModal] = useState(false);
   const [code, setCode] = useState("");
@@ -249,17 +249,20 @@ const ProductEntry = ({ type }) => {
                 borderRadius: 5,
               }}
             >
-              <Text
-                style={{
-                  ...styles.white,
-                  textAlign: "center",
-                  fontWeight: "bold",
-                }}
+              <Link
+                to={type === "single" ? "/review/single" : "/review/multiple"}
               >
-                REVISAR
-              </Text>
+                <Text
+                  style={{
+                    ...styles.white,
+                    textAlign: "center",
+                    fontWeight: "bold",
+                  }}
+                >
+                  REVISAR
+                </Text>
+              </Link>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={{
                 ...styles.logBtn,
