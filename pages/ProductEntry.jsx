@@ -6,44 +6,26 @@ import {
   KeyboardAvoidingView,
   ScrollView,
 } from "react-native";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useContext, useRef, useState } from "react";
 import styles from "../styles/styles";
 import SectionBar from "../components/SectionBar";
 import routes from "../router/routes";
 import { StyleSheet } from "react-native";
-import { useNavigate } from "react-router-native";
 import ConfirmCloseAreaModal from "../components/ConfirmCloseAreaModal";
 import Calculator from "../components/Calculator";
 import TopBar from "../components/TopBar";
-import { Dimensions } from "react-native";
+import { dataContext } from "../context/dataContext";
 
 const ProductEntry = ({ type }) => {
   console.log(type === "single");
-  const [modal, setModal] = useState(true);
+  const { area, setArea } = useContext(dataContext);
   const [calculatorModal, setCalculatorModal] = useState(false);
-  const [area, setArea] = useState("");
   const [code, setCode] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [confirmingClose, setConfirmingClose] = useState(false);
-  const navigate = useNavigate();
   const refs = {
-    area: useRef(null),
     code: useRef(null),
     quantity: useRef(null),
-  };
-
-  useEffect(() => {
-    if (modal) refs.area.current.focus();
-  }, [modal]);
-
-  const confirmArea = () => {
-    console.log("Area: ", area);
-    if (area === "") {
-      alert("Ingrese un área");
-      return;
-    }
-
-    setModal(false);
   };
 
   return (
@@ -340,62 +322,6 @@ const ProductEntry = ({ type }) => {
             </Text>
           </View>
         </View>
-
-        {modal && (
-          <View style={styles.modal}>
-            <View style={styles.modalContent}>
-              <Text
-                style={{
-                  fontSize: 16,
-                }}
-              >
-                Ingresar Área
-              </Text>
-
-              <TextInput
-                keyboardType="numeric"
-                style={styles.input}
-                onChangeText={setArea}
-                value={area}
-                ref={refs.area}
-                placeholder="Área"
-                onSubmitEditing={confirmArea}
-              />
-
-              <View
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                }}
-              >
-                <TouchableOpacity
-                  onPress={confirmArea}
-                  style={{
-                    ...styles.logBtn,
-                    width: "40%",
-                  }}
-                >
-                  <Text style={[styles.white, styles.textCenter]}>
-                    INGRESAR
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    navigate(routes.captureMenu);
-                  }}
-                  style={{
-                    ...styles.logBtn,
-                    width: "40%",
-                    backgroundColor: "#ccc",
-                  }}
-                >
-                  <Text style={[styles.white, styles.textCenter]}>VOLVER</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        )}
 
         <Calculator
           setModalCalculatorVisible={setCalculatorModal}
