@@ -14,7 +14,7 @@ import { StyleSheet } from "react-native";
 import ConfirmCloseAreaModal from "../components/ConfirmCloseAreaModal";
 import Calculator from "../components/Calculator";
 import TopBar from "../components/TopBar";
-import { dataContext } from "../context/DataContext";
+import { dataContext } from "../context/dataContext";
 
 const ProductEntry = ({ type }) => {
   console.log(type === "single");
@@ -118,7 +118,6 @@ const ProductEntry = ({ type }) => {
 
             <Text
               style={{
-                ...styles.subtitle,
                 marginTop: 5,
                 marginBottom: 5,
                 textAlign: "center",
@@ -314,10 +313,10 @@ const ProductEntry = ({ type }) => {
           </View>
 
           <View style={{ width: "80%" }}>
-            <Text style={{ fontSize: 18, marginTop: 5 }}>
+            <Text style={{ fontSize: 16, marginTop: 5 }}>
               Cantidad Prod Grabados: 2.0
             </Text>
-            <Text style={{ fontSize: 18, marginTop: 5 }}>
+            <Text style={{ fontSize: 16, marginTop: 5 }}>
               Cantidad de Scan Realizados: 2
             </Text>
           </View>

@@ -6,7 +6,7 @@ import SectionBar from "../components/SectionBar";
 import routes from "../router/routes";
 import RadioGroup from "react-native-radio-buttons-group";
 import TopBar from "../components/TopBar";
-import { dataContext } from "../context/DataContext";
+import { dataContext } from "../context/dataContext";
 
 const CaptureMenu = () => {
   const navigate = useNavigate();
