@@ -1,7 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-<<<<<<< HEAD
-import { Text, View, TextInput, Image, TouchableOpacity, Keyboard } from "react-native";
-=======
 import {
   Text,
   View,
@@ -11,7 +8,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
 } from "react-native";
->>>>>>> fe0f856e7eb28c4dbd6788f385babfe0035166d3
 import { useForm, Controller } from "react-hook-form";
 import { useNavigate } from "react-router-native";
 import logo from "../assets/logo.png"; //! agregar logo.png a la carpeta assets
@@ -19,10 +15,16 @@ import ErrorModal from "../components/ErrorModal";
 import routes from "../router/routes";
 import styles from "../styles/styles";
 import TopBar from "../components/TopBar";
+import * as SQLite from 'expo-sqlite';
+import executeQuery from '../helpers/ExecuteQuery';
+import * as FileSystem from 'expo-file-system';
+import { Platform } from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
+import { Snackbar } from 'react-native-paper';
 
 const Login = () => {
   const navigate = useNavigate();
-  const [errorModal, setErrorModal] = useState(false);
+  const [errorSnackbar, setErrorSnackbar] = useState(false);
   const refs = {
     user: useRef(null),
     password: useRef(null),
@@ -40,22 +42,59 @@ const Login = () => {
   });
 
   const handleLogin = async (data) => {
-    // Si los datos estan bien devuelve true y navega a home
     try {
-      // TODO: crear funcion login en api
-      /* const res = await login(data); */
-      const res = true;
-      if (res) {
-        navigate(routes.home);
-      } else {
-        setErrorModal(true);
-      }
-    } catch (error) {}
+      const openDb = await SQLite.openDatabase(`Maestro.db`);
+
+      executeQuery(
+        openDb,
+        `SELECT * FROM OPERADOR`,
+        [],
+        (result) => {
+          console.log(result.rows._array);
+        },
+        (error) => {
+          console.log(error)
+        }
+      )
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleFocus = (ref) => {
     ref.current.focus();
   };
+
+  useEffect(() => {
+    const openOrCreateDB = async () => {
+      // Pedir permisos de lectura y escritura
+      const db = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/Maestro.db`, { size: true });
+      console.log(`${FileSystem.documentDirectory}SQLite/Maestro.db`);
+
+      if (!db.exists) {
+        console.log('No existe la base de datos, se procede a copiarla');
+        const document = await DocumentPicker.getDocumentAsync();
+        console.log(document);
+
+        if (!document.canceled) {
+          console.log('Documento seleccionado:', document);
+          await FileSystem.copyAsync(
+            { from: document.assets[0].uri, to: `${FileSystem.documentDirectory}SQLite/Maestro.db` }
+          ).then(() => {
+            console.log('Base de datos copiada correctamente');
+          })
+            .catch((error) => {
+              console.log(error);
+            });
+        } else {
+          console.log('No se seleccionó ningún documento');
+        }
+      }
+    };
+
+    openOrCreateDB();
+    setErrorSnackbar(true);
+  }, []);
 
   useEffect(() => {
     refs.user.current.focus();
@@ -123,11 +162,13 @@ const Login = () => {
           </TouchableOpacity>
         </View>
 
-        <ErrorModal
-          message={"Los datos ingresados son incorrectos, intente nuevamente."}
-          modalFailVisible={errorModal}
-          setModalFailVisible={setErrorModal}
-        />
+        <Snackbar
+          visible={errorSnackbar}
+          onDismiss={() => setErrorSnackbar(false)}
+          duration={3000}
+        >
+          Hey there! I'm a Snackbar.
+        </Snackbar>
       </ScrollView>
     </KeyboardAvoidingView>
   );
