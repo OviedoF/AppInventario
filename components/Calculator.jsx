@@ -8,7 +8,11 @@ import {
   Button,
 } from "react-native";
 
-const Calculator = ({ setModalCalculatorVisible, modalCalculatorVisible, setQuantity }) => {
+const Calculator = ({
+  setModalCalculatorVisible,
+  modalCalculatorVisible,
+  setQuantity,
+}) => {
   const [displayText, setDisplayText] = useState("");
 
   const handleButtonPress = (text) => {
@@ -86,10 +90,12 @@ const Calculator = ({ setModalCalculatorVisible, modalCalculatorVisible, setQuan
 const styles = StyleSheet.create({
   closeBtn: {
     alignItems: "flex-end",
+    margin: 2,
   },
   container: {
     flex: 1,
-    marginVertical: 100,
+    marginTop: 80,
+    marginBottom: 50,
     marginHorizontal: 50,
     backgroundColor: "white",
     borderRadius: 20,
@@ -126,13 +132,13 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
     borderWidth: 1,
     borderColor: "#999",
   },
   buttonText: {
     fontSize: 32,
     color: "white",
+    lineHeight: 40,
   },
 });
 

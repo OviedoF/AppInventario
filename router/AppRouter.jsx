@@ -6,6 +6,7 @@ import CaptureMenu from "../pages/CaptureMenu";
 import ProductEntry from "../pages/ProductEntry";
 import CD from "../pages/CD";
 import SendWIFI from "../pages/SendWIFI";
+import Review from "../pages/Review";
 
 const AppRouter = () => {
   return (
@@ -16,6 +17,7 @@ const AppRouter = () => {
       <Route exact path={routes.home} element={<Home />} />
       <Route exact path={routes.captureMenu} element={<CaptureMenu />} />
       <Route exact path={routes.cD} element={<CD />} />
+      <Route exact path={routes.review} element={<Review />} />
       <Route
         exact
         path={routes.singleProductEntry}

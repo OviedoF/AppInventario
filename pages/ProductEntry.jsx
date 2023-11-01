@@ -6,44 +6,26 @@ import {
   KeyboardAvoidingView,
   ScrollView,
 } from "react-native";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useContext, useRef, useState } from "react";
 import styles from "../styles/styles";
 import SectionBar from "../components/SectionBar";
 import routes from "../router/routes";
 import { StyleSheet } from "react-native";
-import { useNavigate } from "react-router-native";
 import ConfirmCloseAreaModal from "../components/ConfirmCloseAreaModal";
 import Calculator from "../components/Calculator";
 import TopBar from "../components/TopBar";
-import { Dimensions } from "react-native";
+import { dataContext } from "../context/dataContext";
+import { Link } from "react-router-native";
 
 const ProductEntry = ({ type }) => {
-  console.log(type === "single");
-  const [modal, setModal] = useState(true);
+  const { area } = useContext(dataContext);
   const [calculatorModal, setCalculatorModal] = useState(false);
-  const [area, setArea] = useState("");
   const [code, setCode] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [confirmingClose, setConfirmingClose] = useState(false);
-  const navigate = useNavigate();
   const refs = {
-    area: useRef(null),
     code: useRef(null),
     quantity: useRef(null),
-  };
-
-  useEffect(() => {
-    if (modal) refs.area.current.focus();
-  }, [modal]);
-
-  const confirmArea = () => {
-    console.log("Area: ", area);
-    if (area === "") {
-      alert("Ingrese un área");
-      return;
-    }
-
-    setModal(false);
   };
 
   return (
@@ -76,18 +58,6 @@ const ProductEntry = ({ type }) => {
             }}
           >
             <Text style={styles.subtitle}>Área: {area}</Text>
-
-            <TouchableOpacity
-              onPress={() => {
-                setModal(true);
-              }}
-              style={{
-                ...styles.logBtn,
-                width: "40%",
-              }}
-            >
-              <Text style={[styles.white, styles.textCenter]}>CAMBIAR</Text>
-            </TouchableOpacity>
           </View>
 
           <View style={{ width: "80%", justifyContent: "center" }}>
@@ -136,7 +106,6 @@ const ProductEntry = ({ type }) => {
 
             <Text
               style={{
-                ...styles.subtitle,
                 marginTop: 5,
                 marginBottom: 5,
                 textAlign: "center",
@@ -280,17 +249,20 @@ const ProductEntry = ({ type }) => {
                 borderRadius: 5,
               }}
             >
-              <Text
-                style={{
-                  ...styles.white,
-                  textAlign: "center",
-                  fontWeight: "bold",
-                }}
+              <Link
+                to={type === "single" ? "/review/single" : "/review/multiple"}
               >
-                REVISAR
-              </Text>
+                <Text
+                  style={{
+                    ...styles.white,
+                    textAlign: "center",
+                    fontWeight: "bold",
+                  }}
+                >
+                  REVISAR
+                </Text>
+              </Link>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={{
                 ...styles.logBtn,
@@ -332,70 +304,14 @@ const ProductEntry = ({ type }) => {
           </View>
 
           <View style={{ width: "80%" }}>
-            <Text style={{ fontSize: 18, marginTop: 5 }}>
+            <Text style={{ fontSize: 16, marginTop: 5 }}>
               Cantidad Prod Grabados: 2.0
             </Text>
-            <Text style={{ fontSize: 18, marginTop: 5 }}>
+            <Text style={{ fontSize: 16, marginTop: 5 }}>
               Cantidad de Scan Realizados: 2
             </Text>
           </View>
         </View>
-
-        {modal && (
-          <View style={styles.modal}>
-            <View style={styles.modalContent}>
-              <Text
-                style={{
-                  fontSize: 16,
-                }}
-              >
-                Ingresar Área
-              </Text>
-
-              <TextInput
-                keyboardType="numeric"
-                style={styles.input}
-                onChangeText={setArea}
-                value={area}
-                ref={refs.area}
-                placeholder="Área"
-                onSubmitEditing={confirmArea}
-              />
-
-              <View
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                }}
-              >
-                <TouchableOpacity
-                  onPress={confirmArea}
-                  style={{
-                    ...styles.logBtn,
-                    width: "40%",
-                  }}
-                >
-                  <Text style={[styles.white, styles.textCenter]}>
-                    INGRESAR
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    navigate(routes.captureMenu);
-                  }}
-                  style={{
-                    ...styles.logBtn,
-                    width: "40%",
-                    backgroundColor: "#ccc",
-                  }}
-                >
-                  <Text style={[styles.white, styles.textCenter]}>VOLVER</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        )}
 
         <Calculator
           setModalCalculatorVisible={setCalculatorModal}
