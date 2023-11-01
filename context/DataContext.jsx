@@ -4,6 +4,12 @@ export const dataContext = createContext();
 
 export const DataProvider = ({ children }) => {
   const [area, setArea] = useState(undefined);
+  const [user, setUser] = useState(undefined);
+  const [snackbar, setSnackbar] = useState({
+    visible: false,
+    text: "",
+    type: "success",
+  });
   /* const [cart, setCart] = useState([]);
   const [cartCant, setCartCant] = useState();
   //Verificar si esta en carrito
@@ -47,6 +53,10 @@ export const DataProvider = ({ children }) => {
       value={{
         area,
         setArea,
+        user,
+        setUser,
+        snackbar,
+        setSnackbar,
         /* cartCant,
         addToCart,
         clearCart,

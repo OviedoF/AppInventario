@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import {
   Text,
   View,
@@ -21,10 +21,12 @@ import * as FileSystem from 'expo-file-system';
 import { Platform } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { Snackbar } from 'react-native-paper';
+import { dataContext } from "../context/dataContext";
+import SnackbarComponent from "../components/SnackbarComponent";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [errorSnackbar, setErrorSnackbar] = useState(false);
+  const { user, setUser, snackbar, setSnackbar } = useContext(dataContext);
   const refs = {
     user: useRef(null),
     password: useRef(null),
@@ -50,7 +52,27 @@ const Login = () => {
         `SELECT * FROM OPERADOR`,
         [],
         (result) => {
-          console.log(result.rows._array);
+          const users = result.rows._array;
+
+          const user = users.find((user) => user.NOMBRES === data.user && user.CLAVE === data.password);
+          console.log(user)
+
+          if(!user) {
+            setSnackbar({
+              visible: true,
+              text: "Usuario o contraseña incorrectos.",
+              type: "error",
+            });
+            return;
+          }
+
+          setUser(user);
+          setSnackbar({
+            visible: true,
+            text: "Sesión iniciada correctamente.",
+            type: "success",
+          });
+          navigate(routes.home);
         },
         (error) => {
           console.log(error)
@@ -81,19 +103,26 @@ const Login = () => {
           await FileSystem.copyAsync(
             { from: document.assets[0].uri, to: `${FileSystem.documentDirectory}SQLite/Maestro.db` }
           ).then(() => {
-            console.log('Base de datos copiada correctamente');
+            setSnackbar({
+              visible: true,
+              text: "Base de datos copiada correctamente.",
+              type: "success",
+            });
           })
             .catch((error) => {
               console.log(error);
             });
         } else {
-          console.log('No se seleccionó ningún documento');
+          setSnackbar({
+            visible: true,
+            text: "No se seleccionó ningún documento. La aplicación no funcionará correctamente.",
+            type: "error",
+          });
         }
       }
     };
 
     openOrCreateDB();
-    setErrorSnackbar(true);
   }, []);
 
   useEffect(() => {
@@ -161,14 +190,6 @@ const Login = () => {
             <Text style={[styles.white, styles.textCenter]}>INGRESAR</Text>
           </TouchableOpacity>
         </View>
-
-        <Snackbar
-          visible={errorSnackbar}
-          onDismiss={() => setErrorSnackbar(false)}
-          duration={3000}
-        >
-          Hey there! I'm a Snackbar.
-        </Snackbar>
       </ScrollView>
     </KeyboardAvoidingView>
   );
