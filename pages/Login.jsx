@@ -14,16 +14,18 @@ import logo from "../assets/logo.png"; //! agregar logo.png a la carpeta assets
 import routes from "../router/routes";
 import styles from "../styles/styles";
 import TopBar from "../components/TopBar";
-import * as SQLite from 'expo-sqlite';
-import executeQuery from '../helpers/ExecuteQuery';
-import * as FileSystem from 'expo-file-system';
-import { Platform } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
+import * as SQLite from "expo-sqlite";
+import executeQuery from "../helpers/ExecuteQuery";
+import * as FileSystem from "expo-file-system";
+import { Platform } from "react-native";
+import * as DocumentPicker from "expo-document-picker";
 import { dataContext } from "../context/dataContext";
+import { cargarInventario } from "../api/db";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, setUser, snackbar, setSnackbar, setConfig } = useContext(dataContext);
+  const { user, setUser, snackbar, setSnackbar, setConfig } =
+    useContext(dataContext);
   const refs = {
     user: useRef(null),
     password: useRef(null),
@@ -51,9 +53,13 @@ const Login = () => {
         (result) => {
           const users = result.rows._array;
 
-          const user = users.find((user) => user.NOMBRES.toLowerCase() === data.user.toLowerCase() && user.CLAVE === data.password);
+          const user = users.find(
+            (user) =>
+              user.NOMBRES.toLowerCase() === data.user.toLowerCase() &&
+              user.CLAVE === data.password
+          );
 
-          if(!user) {
+          if (!user) {
             setSnackbar({
               visible: true,
               text: "Usuario o contraseña incorrectos.",
@@ -64,7 +70,7 @@ const Login = () => {
 
           setUser({
             ...user,
-            admin: user._id === 1 || user._id === 2 ? true : false
+            admin: user._id === 1 || user._id === 2 ? true : false,
           });
 
           setSnackbar({
@@ -75,9 +81,9 @@ const Login = () => {
           navigate(routes.home);
         },
         (error) => {
-          console.log(error)
+          console.log(error);
         }
-      )
+      );
     } catch (error) {
       console.log(error);
     }
@@ -90,25 +96,30 @@ const Login = () => {
   useEffect(() => {
     const openOrCreateDB = async () => {
       // Pedir permisos de lectura y escritura
-      const db = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/Maestro.db`, { size: true });
+      const db = await FileSystem.getInfoAsync(
+        `${FileSystem.documentDirectory}SQLite/Maestro.db`,
+        { size: true }
+      );
       console.log(`${FileSystem.documentDirectory}SQLite/Maestro.db`);
 
       if (!db.exists) {
-        console.log('No existe la base de datos, se procede a copiarla');
+        console.log("No existe la base de datos, se procede a copiarla");
         const document = await DocumentPicker.getDocumentAsync();
         console.log(document);
 
         if (!document.canceled) {
-          console.log('Documento seleccionado:', document);
-          await FileSystem.copyAsync(
-            { from: document.assets[0].uri, to: `${FileSystem.documentDirectory}SQLite/Maestro.db` }
-          ).then( async () => {
-            setSnackbar({
-              visible: true,
-              text: "Base de datos copiada correctamente.",
-              type: "success",
-            });
+          console.log("Documento seleccionado:", document);
+          await FileSystem.copyAsync({
+            from: document.assets[0].uri,
+            to: `${FileSystem.documentDirectory}SQLite/Maestro.db`,
           })
+            .then(async () => {
+              setSnackbar({
+                visible: true,
+                text: "Base de datos copiada correctamente.",
+                type: "success",
+              });
+            })
             .catch((error) => {
               console.log(error);
             });
@@ -136,19 +147,42 @@ const Login = () => {
           setConfig({
             largo_tag: config[0].LARGO_CAMPO,
             largo_prod: config[1].LARGO_CAMPO,
-            buttons_config: isNaN(config[2].LARGO_CAMPO) ? 3 : parseInt(config[2].LARGO_CAMPO),
-            catalog_products: config[3].LARGO_CAMPO === 'N' ? false : true,
-            index_capt: isNaN(parseInt(config[4].LARGO_CAMPO)) ? 1 : parseInt(config[4].LARGO_CAMPO),
-          })
+            buttons_config: isNaN(config[2].LARGO_CAMPO)
+              ? 3
+              : parseInt(config[2].LARGO_CAMPO),
+            catalog_products: config[3].LARGO_CAMPO === "N" ? false : true,
+            index_capt: isNaN(parseInt(config[4].LARGO_CAMPO))
+              ? 1
+              : parseInt(config[4].LARGO_CAMPO),
+          });
         },
         (error) => {
-          console.log(error)
+          console.log(error);
         }
-      )
-    }
+      );
+    };
+
+    //? DB para carga de inventario
+    const createOrLoadCapturadoraDB = async () => {
+      const dbLocal = await SQLite.openDatabase({
+        name: "capturadora.db",
+        location: "default",
+      });
+
+      dbLocal.transaction((tx) => {
+        tx.executeSql(
+          "CREATE TABLE IF NOT EXISTS INVENTARIO (_id INTEGER PRIMARY KEY AUTOINCREMENT, PRODUCTOS_CARGADOS TEXT, ID_AREA INTEGER)",
+          [],
+          () => console.log("Tabla INVENTARIO creada"),
+          (error) => console.error("Error al crear la tabla: " + error)
+        );
+      });
+      cargarInventario(dbLocal);
+    };
 
     openOrCreateDB();
     saveConfig();
+    createOrLoadCapturadoraDB();
   }, []);
 
   useEffect(() => {
