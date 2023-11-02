@@ -12,18 +12,15 @@ import { KeyboardAvoidingView } from "react-native";
 
 const CaptureMenu = () => {
   const navigate = useNavigate();
-  const { area, setArea } = useContext(dataContext);
+  const { area, setArea, config, setConfig } = useContext(dataContext);
   const [modal, setModal] = useState(false);
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [selectedId, setSelectedId] = useState(3);
-  const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
+  const [selectedId, setSelectedId] = useState(parseInt(config.buttons_config));
 
   const refs = {
     area: useRef(null),
   };
 
   useEffect(() => {
-    console.log(area);
     if (!area) setModal(true);
     if (modal) refs.area.current.focus();
   }, [modal]);
@@ -135,13 +132,17 @@ const CaptureMenu = () => {
             <Text>No Catalogados</Text>
             <Switch
               trackColor={{ false: "#767577", true: "#81b0ff" }}
-              onValueChange={toggleSwitch}
-              value={isEnabled}
+              onValueChange={() => setConfig({ ...config, catalog_products: !config.catalog_products })}
+              value={config.catalog_products}
             />
           </View>
+
           <RadioGroup
             radioButtons={optionsRadio}
-            onPress={setSelectedId}
+            onPress={(value) => {
+              setSelectedId(value);
+              setConfig({ ...config, buttons_config: value });
+            }}
             selectedId={selectedId}
             containerStyle={{ alignItems: "baseline" }}
           />
@@ -187,7 +188,7 @@ const CaptureMenu = () => {
 
                 <TouchableOpacity
                   onPress={() => {
-                    navigate(routes.captureMenu);
+                    navigate(routes.home);
                   }}
                   style={{
                     ...styles.logBtn,

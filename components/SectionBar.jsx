@@ -9,8 +9,8 @@ const SectionBar = ({ section, backTo }) => {
   return (
     <View
       style={[
+        styles.BgBlue,
         {
-          backgroundColor: "#005DA6",
           flexDirection: "row",
           alignItems: "center",
           padding: 5,

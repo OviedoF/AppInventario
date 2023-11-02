@@ -1,4 +1,4 @@
-import React, { useState, createContext } from "react";
+import React, { useState, createContext, useEffect } from "react";
 
 export const dataContext = createContext();
 
@@ -10,6 +10,18 @@ export const DataProvider = ({ children }) => {
     text: "",
     type: "success",
   });
+  const [config, setConfig] = useState({
+    largo_tag: 0,
+    largo_prod: 0,
+    buttons_config: '',
+    catalog_products: true,
+    index_capt: 1
+  })
+
+  useEffect(() => {
+    console.log('Contexto de datos cargado.');
+    console.log(config)
+  }, [config])
   /* const [cart, setCart] = useState([]);
   const [cartCant, setCartCant] = useState();
   //Verificar si esta en carrito
@@ -57,6 +69,8 @@ export const DataProvider = ({ children }) => {
         setUser,
         snackbar,
         setSnackbar,
+        config,
+        setConfig
         /* cartCant,
         addToCart,
         clearCart,

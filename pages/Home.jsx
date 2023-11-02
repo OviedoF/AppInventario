@@ -8,8 +8,11 @@ import SectionBar from "../components/SectionBar";
 import TopBar from "../components/TopBar";
 import { KeyboardAvoidingView } from "react-native";
 import { ScrollView } from "react-native";
+import { useContext } from "react";
+import { dataContext } from "../context/dataContext";
 
 const Home = () => {
+  const { config, setConfig, user } = useContext(dataContext);
   const navigate = useNavigate();
   const {
     handleSubmit,
@@ -38,7 +41,7 @@ const Home = () => {
               marginBottom: 10,
             }}
           >
-            Administrador:
+            Administrador: {user.admin ? "Si" : "No"}
           </Text>
 
           <Text
@@ -46,7 +49,7 @@ const Home = () => {
               marginBottom: 10,
             }}
           >
-            Operador:
+            Operador: {user.NOMBRES}
           </Text>
 
           <Link to={routes.captureMenu} style={styles.primaryBtn}>
@@ -119,9 +122,8 @@ const Home = () => {
                   <TextInput
                     keyboardType="numeric"
                     onBlur={onBlur}
-                    onChangeText={(value) => console.log(value)}
-                    value={value}
-                    secureTextEntry={true}
+                    onChangeText={(value) => setConfig({ ...config, largo_prod: value })}
+                    value={config.largo_prod}
                     style={{
                       ...styles.input,
                       marginLeft: 10,
@@ -157,9 +159,8 @@ const Home = () => {
                   <TextInput
                     keyboardType="numeric"
                     onBlur={onBlur}
-                    onChangeText={(value) => console.log(value)}
-                    value={value}
-                    secureTextEntry={true}
+                    onChangeText={(value) => setConfig({ ...config, largo_tag: value })}
+                    value={config.largo_tag}
                     style={{
                       ...styles.input,
                       marginLeft: 10,
@@ -173,6 +174,7 @@ const Home = () => {
             </View>
           </View>
         </View>
+
         <View style={styles.container}>
           <TouchableOpacity
             onPress={() => {

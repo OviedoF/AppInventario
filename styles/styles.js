@@ -57,13 +57,13 @@ const styles = StyleSheet.create({
   primaryBtn: {
     marginTop: 15,
     width: "80%",
-    backgroundColor: "#005DA6",
+    backgroundColor: "#2E97A7",
     borderRadius: 18,
     padding: 10,
   },
   logBtn: {
     width: "80%",
-    backgroundColor: "#005DA6",
+    backgroundColor: "#2E97A7",
     borderRadius: 18,
     padding: 10,
     margin: 10,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     color: "blue",
   },
   BgBlue: {
-    backgroundColor: "#272459",
+    backgroundColor: "#2E97A7",
   },
   backBtn: {
     alignItems: "center",
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     marginTop: Constants.statusBarHeight,
     zIndex: 1111,
     width: "100%",
-    backgroundColor: "#075E55",
+    backgroundColor: "#053B50",
   },
   SearchField: {
     width: 250,

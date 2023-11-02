@@ -57,7 +57,7 @@ const ProductEntry = ({ type }) => {
               marginTop: 10,
             }}
           >
-            <Text style={styles.subtitle}>Área: {area}</Text>
+            <Text style={styles.subtitle}>Serie-Área-Digito: {area}</Text>
           </View>
 
           <View style={{ width: "80%", justifyContent: "center" }}>

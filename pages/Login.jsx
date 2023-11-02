@@ -11,7 +11,6 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { useNavigate } from "react-router-native";
 import logo from "../assets/logo.png"; //! agregar logo.png a la carpeta assets
-import ErrorModal from "../components/ErrorModal";
 import routes from "../router/routes";
 import styles from "../styles/styles";
 import TopBar from "../components/TopBar";
@@ -20,13 +19,11 @@ import executeQuery from '../helpers/ExecuteQuery';
 import * as FileSystem from 'expo-file-system';
 import { Platform } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import { Snackbar } from 'react-native-paper';
 import { dataContext } from "../context/dataContext";
-import SnackbarComponent from "../components/SnackbarComponent";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, setUser, snackbar, setSnackbar } = useContext(dataContext);
+  const { user, setUser, snackbar, setSnackbar, setConfig } = useContext(dataContext);
   const refs = {
     user: useRef(null),
     password: useRef(null),
@@ -54,8 +51,7 @@ const Login = () => {
         (result) => {
           const users = result.rows._array;
 
-          const user = users.find((user) => user.NOMBRES === data.user && user.CLAVE === data.password);
-          console.log(user)
+          const user = users.find((user) => user.NOMBRES.toLowerCase() === data.user.toLowerCase() && user.CLAVE === data.password);
 
           if(!user) {
             setSnackbar({
@@ -66,7 +62,11 @@ const Login = () => {
             return;
           }
 
-          setUser(user);
+          setUser({
+            ...user,
+            admin: user._id === 1 || user._id === 2 ? true : false
+          });
+
           setSnackbar({
             visible: true,
             text: "Sesión iniciada correctamente.",
@@ -102,7 +102,7 @@ const Login = () => {
           console.log('Documento seleccionado:', document);
           await FileSystem.copyAsync(
             { from: document.assets[0].uri, to: `${FileSystem.documentDirectory}SQLite/Maestro.db` }
-          ).then(() => {
+          ).then( async () => {
             setSnackbar({
               visible: true,
               text: "Base de datos copiada correctamente.",
@@ -122,7 +122,33 @@ const Login = () => {
       }
     };
 
+    const saveConfig = async () => {
+      const openDb = await SQLite.openDatabase(`Maestro.db`);
+
+      executeQuery(
+        openDb,
+        "SELECT * FROM CONFIG",
+        [],
+        (data) => {
+          console.log(data.rows._array);
+          const config = data.rows._array;
+
+          setConfig({
+            largo_tag: config[0].LARGO_CAMPO,
+            largo_prod: config[1].LARGO_CAMPO,
+            buttons_config: isNaN(config[2].LARGO_CAMPO) ? 3 : parseInt(config[2].LARGO_CAMPO),
+            catalog_products: config[3].LARGO_CAMPO === 'N' ? false : true,
+            index_capt: isNaN(parseInt(config[4].LARGO_CAMPO)) ? 1 : parseInt(config[4].LARGO_CAMPO),
+          })
+        },
+        (error) => {
+          console.log(error)
+        }
+      )
+    }
+
     openOrCreateDB();
+    saveConfig();
   }, []);
 
   useEffect(() => {
