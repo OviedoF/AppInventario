@@ -20,6 +20,7 @@ import * as FileSystem from 'expo-file-system';
 import { Platform } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { dataContext } from "../context/dataContext";
+import InitLocalDB from "../helpers/InitLocalDB";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -91,7 +92,6 @@ const Login = () => {
     const openOrCreateDB = async () => {
       // Pedir permisos de lectura y escritura
       const db = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/Maestro.db`, { size: true });
-      console.log(`${FileSystem.documentDirectory}SQLite/Maestro.db`);
 
       if (!db.exists) {
         console.log('No existe la base de datos, se procede a copiarla');
@@ -130,7 +130,6 @@ const Login = () => {
         "SELECT * FROM CONFIG",
         [],
         (data) => {
-          console.log(data.rows._array);
           const config = data.rows._array;
 
           setConfig({
@@ -149,6 +148,7 @@ const Login = () => {
 
     openOrCreateDB();
     saveConfig();
+    InitLocalDB();
   }, []);
 
   useEffect(() => {

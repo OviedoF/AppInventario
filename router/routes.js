@@ -6,6 +6,8 @@ const routes = {
   multipleProductEntry: "/multipleProductEntry",
   review: "/review/:type",
   cD: "/CD",
+  cdSingleProductEntry: "/cdSingleProductEntry",
+  cdMultipleProductEntry: "/cdMultipleProductEntry",
   sentWifi: "/sentWifi",
 };
 export default routes;

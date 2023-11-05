@@ -17,11 +17,12 @@ export const DataProvider = ({ children }) => {
     catalog_products: true,
     index_capt: 1
   })
+  const [cdInfo, setCdInfo] = useState({})
 
-  useEffect(() => {
-    console.log('Contexto de datos cargado.');
-    console.log(config)
-  }, [config])
+  // useEffect(() => {
+  //   console.log('Contexto de datos cargado.');
+  //   console.log(config)
+  // }, [config])
   /* const [cart, setCart] = useState([]);
   const [cartCant, setCartCant] = useState();
   //Verificar si esta en carrito
@@ -70,7 +71,9 @@ export const DataProvider = ({ children }) => {
         snackbar,
         setSnackbar,
         config,
-        setConfig
+        setConfig,
+        cdInfo,
+        setCdInfo,
         /* cartCant,
         addToCart,
         clearCart,

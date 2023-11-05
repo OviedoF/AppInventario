@@ -127,15 +127,18 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   modal: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,.5)",
     position: "absolute",
+    zIndex: 9999,
     width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height + 100,
+    height: '100%',
     top: Constants.statusBarHeight,
     left: 0,
+  },
+  allHeight: {
+    height: Dimensions.get("window").height,
   },
   modalContent: {
     backgroundColor: "#fff",
@@ -143,6 +146,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     alignItems: "center",
+    position: "relative",
   },
   flex_row: {
     flexDirection: "row",

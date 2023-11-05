@@ -1,4 +1,4 @@
-import { View, Text, Switch, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, Switch, TextInput, TouchableOpacity, Image } from "react-native";
 import { Link, useNavigate } from "react-router-native";
 import React, { useState, useMemo, useEffect, useRef, useContext } from "react";
 import styles from "../styles/styles";
@@ -9,6 +9,7 @@ import TopBar from "../components/TopBar";
 import { dataContext } from "../context/dataContext";
 import { ScrollView } from "react-native";
 import { KeyboardAvoidingView } from "react-native";
+import edit_icon from "../assets/edit.png";
 
 const CaptureMenu = () => {
   const navigate = useNavigate();
@@ -89,12 +90,19 @@ const CaptureMenu = () => {
               }}
               style={{
                 ...styles.logBtn,
-                width: "40%",
+                backgroundColor: "transparent",
+                width: 30,
                 padding: 5,
                 margin: 5,
               }}
             >
-              <Text style={[styles.white, styles.textCenter]}>CAMBIAR</Text>
+              <Image
+                style={{
+                  width: 15,
+                  height: 15,
+                }}
+                source={edit_icon}
+              />
             </TouchableOpacity>
           </View>
         </View>
