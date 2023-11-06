@@ -8,6 +8,7 @@ const routes = {
   cD: "/CD",
   cdSingleProductEntry: "/cdSingleProductEntry",
   cdMultipleProductEntry: "/cdMultipleProductEntry",
+  cdReview: "/cdReview/:type",
   sentWifi: "/sentWifi",
 };
 export default routes;

@@ -15,13 +15,12 @@ import routes from "../router/routes";
 import styles from "../styles/styles";
 import TopBar from "../components/TopBar";
 import * as SQLite from "expo-sqlite";
-import executeQuery from "../helpers/ExecuteQuery";
+import ExecuteQuery from "../helpers/ExecuteQuery";
 import * as FileSystem from "expo-file-system";
 import { Platform } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { dataContext } from "../context/dataContext";
-import InitLocalDB from "../helpers/InitLocalDB";
-import { cargarInventario } from "../api/db";
+// import { cargarInventario } from "../api/db";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -45,9 +44,21 @@ const Login = () => {
 
   const handleLogin = async (data) => {
     try {
-      const openDb = await SQLite.openDatabase(`Maestro.db`);
+      const openDb = SQLite.openDatabase(`Maestro.db`);
 
-      executeQuery(
+      await ExecuteQuery(
+        openDb,
+        `CREATE TABLE IF NOT EXISTS INVENTARIO_APP (id INTEGER PRIMARY KEY AUTOINCREMENT, operator TEXT, name TEXT, quantity INT, date TEXT, posicion TEXT, area TEXT, pallet TEXT, caja TEXT, type TEXT);`,
+        [],
+        (result) => {
+          console.log("Tabla INVENTARIO_APP creada correctamente.");
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+
+      await ExecuteQuery(
         openDb,
         `SELECT * FROM OPERADOR`,
         [],
@@ -133,7 +144,7 @@ const Login = () => {
     const saveConfig = async () => {
       const openDb = await SQLite.openDatabase(`Maestro.db`);
 
-      executeQuery(
+      ExecuteQuery(
         openDb,
         "SELECT * FROM CONFIG",
         [],
@@ -158,28 +169,8 @@ const Login = () => {
       );
     };
 
-    //? DB para carga de inventario
-    const createOrLoadCapturadoraDB = async () => {
-      const dbLocal = await SQLite.openDatabase({
-        name: "capturadora.db",
-        location: "default",
-      });
-
-      dbLocal.transaction((tx) => {
-        tx.executeSql(
-          "CREATE TABLE IF NOT EXISTS INVENTARIO (_id INTEGER PRIMARY KEY AUTOINCREMENT, PRODUCTOS_CARGADOS TEXT, ID_AREA INTEGER)",
-          [],
-          () => console.log("Tabla INVENTARIO creada"),
-          (error) => console.error("Error al crear la tabla: " + error)
-        );
-      });
-      cargarInventario(dbLocal);
-    };
-
     openOrCreateDB();
     saveConfig();
-    InitLocalDB();
-    createOrLoadCapturadoraDB();
   }, []);
 
   useEffect(() => {

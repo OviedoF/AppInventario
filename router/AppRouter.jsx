@@ -5,6 +5,7 @@ import Home from "../pages/Home";
 import CaptureMenu from "../pages/CaptureMenu";
 import ProductEntry from "../pages/ProductEntry";
 import CDProductEntry from "../pages/CDProductEntry";
+import CDReview from "../pages/CDReview";
 import CD from "../pages/CD";
 import SendWIFI from "../pages/SendWIFI";
 import Review from "../pages/Review";
@@ -34,6 +35,7 @@ const AppRouter = () => {
       <Route exact path={routes.cD} element={<CD />} />
       <Route exact path={routes.cdSingleProductEntry} element={<CDProductEntry type="single" />} />
       <Route exact path={routes.cdMultipleProductEntry} element={<CDProductEntry type="multi" />} />
+      <Route exact path={routes.cdReview} element={<CDReview />} />
     </Routes>
   );
 };
