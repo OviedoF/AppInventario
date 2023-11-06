@@ -17,25 +17,6 @@ const CDReview = () => {
   const [products, setProducts] = useState(null);
   const { area } = useContext(dataContext);
   const { type } = useParams();
-  const productsList = [
-    {
-      name: "Cigarro Marlboro Premier Box 20u",
-      id: "1523465",
-      date: "16/10/23, 16:00",
-      cant: "1",
-    },
-    { name: "Cigarro", id: "1523465", date: "16/10/23, 16:00", cant: -1 },
-    { name: "Cigarro", id: "1523465", date: "16/10/23, 16:00", cant: 1 },
-    { name: "Cigarro", id: "1523465", date: "16/10/23, 16:00", cant: 1 },
-    { name: "Cigarro", id: "1523465", date: "16/10/23, 16:00", cant: 1 },
-    { name: "Cigarro", id: "1523465", date: "16/10/23, 16:00", cant: 1 },
-    { name: "Cigarro", id: "1523465", date: "16/10/23, 16:00", cant: 1 },
-    { name: "Cigarro", id: "1523465", date: "16/10/23, 16:00", cant: 1 },
-    { name: "Cigarro", id: "1523465", date: "16/10/23, 16:00", cant: 1 },
-    { name: "Cigarro", id: "1523465", date: "16/10/23, 16:00", cant: 1 },
-    { name: "Cigarro", id: "1523465", date: "16/10/23, 16:00", cant: -1 },
-  ];
-  //? Lista de productos agregados al area
 
   useEffect(() => { 
     const getCDProducts = async () => {

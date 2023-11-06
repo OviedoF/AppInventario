@@ -235,38 +235,44 @@ const ProductEntry = ({ type }) => {
 
     useEffect(() => {
         switch (config.index_capt) {
-            case 1:
-                setDataToShow({
-                    posicion: true,
-                })
-                break;
             case 2:
                 setDataToShow({
                     posicion: true,
-                    area: true,
                 })
                 break;
             case 3:
                 setDataToShow({
                     posicion: true,
-                    pallet: true,
-                    caja: true,
+                    area: true,
                 })
                 break;
             case 4:
                 setDataToShow({
                     posicion: true,
                     pallet: true,
-                    area: true,
+                    caja: true,
                 })
                 break;
             case 5:
+                setDataToShow({
+                    posicion: true,
+                    pallet: true,
+                    area: true,
+                })
+                break;
+            case 6:
                 setDataToShow({
                     posicion: true,
                     caja: true,
                 })
                 break;
             default:
+                setSnackbar({
+                    visible: true,
+                    text: 'Error al obtener la configuración, el índice de captura no es válido',
+                    type: "error",
+                });
+                navigate(routes.home);
                 break;
         }
     }, [config]);

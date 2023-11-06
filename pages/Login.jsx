@@ -158,9 +158,7 @@ const Login = () => {
               ? 3
               : parseInt(config[2].LARGO_CAMPO),
             catalog_products: config[3].LARGO_CAMPO === "N" ? false : true,
-            index_capt: isNaN(parseInt(config[4].LARGO_CAMPO))
-              ? 1
-              : parseInt(config[4].LARGO_CAMPO),
+            index_capt: 2,
           });
         },
         (error) => {

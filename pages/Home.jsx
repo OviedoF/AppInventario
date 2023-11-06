@@ -52,7 +52,9 @@ const Home = () => {
             Operador: {user.NOMBRES}
           </Text>
 
-          <Link to={routes.captureMenu} style={styles.primaryBtn}>
+          <Link to={
+            config.index_capt === 1 ? routes.captureMenu : routes.cD
+          } style={styles.primaryBtn}>
             <View style={{ flexDirection: "row", justifyContent: "center" }}>
               {/* //? reemplazar home por ruta inventario */}
               <Text
@@ -66,9 +68,9 @@ const Home = () => {
             </View>
           </Link>
 
-          <Link to={routes.cD} style={styles.primaryBtn}>
+          {/* <Link to={routes.cD} style={styles.primaryBtn}>
             <View style={{ flexDirection: "row", justifyContent: "center" }}>
-              {/* //? reemplazar home por ruta inventario */}
+              //? reemplazar home por ruta inventario
               <Text
                 style={{
                   ...styles.white,
@@ -78,7 +80,7 @@ const Home = () => {
                 CD
               </Text>
             </View>
-          </Link>
+          </Link> */}
 
           <Link to={routes.sentWifi} style={styles.primaryBtn}>
             <View style={{ flexDirection: "row", justifyContent: "center" }}>
