@@ -108,7 +108,10 @@ const Login = () => {
   useEffect(() => {
     const openOrCreateDB = async () => {
       // Pedir permisos de lectura y escritura
-      const db = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/Maestro.db`, { size: true });
+      const db = await FileSystem.getInfoAsync(
+        `${FileSystem.documentDirectory}SQLite/Maestro.db`,
+        { size: true }
+      );
 
       if (!db.exists) {
         console.log("No existe la base de datos, se procede a copiarla");
