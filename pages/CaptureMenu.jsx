@@ -1,4 +1,11 @@
-import { View, Text, Switch, TextInput, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  Text,
+  Switch,
+  TextInput,
+  TouchableOpacity,
+  Image,
+} from "react-native";
 import { Link, useNavigate } from "react-router-native";
 import React, { useState, useMemo, useEffect, useRef, useContext } from "react";
 import styles from "../styles/styles";
@@ -108,26 +115,35 @@ const CaptureMenu = () => {
         </View>
         <View style={styles.container}>
           {selectedId === 1 || selectedId === 3 ? (
-            <Link to={routes.singleProductEntry} style={styles.primaryBtn}>
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={() => navigate(routes.singleProductEntry)}
+            >
               <View style={{ flexDirection: "row", justifyContent: "center" }}>
                 <Text style={styles.white}>INGRESO 1 A 1</Text>
               </View>
-            </Link>
+            </TouchableOpacity>
           ) : null}
 
           {selectedId === 2 || selectedId === 3 ? (
-            <Link to={routes.multipleProductEntry} style={styles.primaryBtn}>
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={() => navigate(routes.multipleProductEntry)}
+            >
               <View style={{ flexDirection: "row", justifyContent: "center" }}>
                 <Text style={styles.white}>INGRESO POR CANTIDAD</Text>
               </View>
-            </Link>
+            </TouchableOpacity>
           ) : null}
 
-          <Link to={routes.sentWifi} style={styles.primaryBtn}>
+          <TouchableOpacity
+            style={styles.primaryBtn}
+            onPress={() => navigate(routes.sentWifi)}
+          >
             <View style={{ flexDirection: "row", justifyContent: "center" }}>
               <Text style={styles.white}>ENVIAR CONTEO WIFI</Text>
             </View>
-          </Link>
+          </TouchableOpacity>
 
           <View
             style={{
@@ -140,7 +156,12 @@ const CaptureMenu = () => {
             <Text>No Catalogados</Text>
             <Switch
               trackColor={{ false: "#767577", true: "#81b0ff" }}
-              onValueChange={() => setConfig({ ...config, catalog_products: !config.catalog_products })}
+              onValueChange={() =>
+                setConfig({
+                  ...config,
+                  catalog_products: !config.catalog_products,
+                })
+              }
               value={config.catalog_products}
             />
           </View>

@@ -51,10 +51,14 @@ const Home = () => {
           >
             Operador: {user.NOMBRES}
           </Text>
-
-          <Link to={
-            config.index_capt === 1 ? routes.captureMenu : routes.cD
-          } style={styles.primaryBtn}>
+          <TouchableOpacity
+            style={styles.primaryBtn}
+            onPress={() => {
+              navigate(
+                config.index_capt === 1 ? routes.captureMenu : routes.cD
+              );
+            }}
+          >
             <View style={{ flexDirection: "row", justifyContent: "center" }}>
               {/* //? reemplazar home por ruta inventario */}
               <Text
@@ -66,8 +70,7 @@ const Home = () => {
                 INVENTARIO
               </Text>
             </View>
-          </Link>
-
+          </TouchableOpacity>
           {/* <Link to={routes.cD} style={styles.primaryBtn}>
             <View style={{ flexDirection: "row", justifyContent: "center" }}>
               //? reemplazar home por ruta inventario
@@ -81,8 +84,12 @@ const Home = () => {
               </Text>
             </View>
           </Link> */}
-
-          <Link to={routes.sentWifi} style={styles.primaryBtn}>
+          <TouchableOpacity
+            onPress={() => {
+              navigate(routes.sentWifi);
+            }}
+            style={styles.primaryBtn}
+          >
             <View style={{ flexDirection: "row", justifyContent: "center" }}>
               {/* //? reemplazar home por ruta inventario */}
               <Text
@@ -94,7 +101,7 @@ const Home = () => {
                 ENVIAR CONTEO WIFI
               </Text>
             </View>
-          </Link>
+          </TouchableOpacity>
         </View>
 
         {/* 
@@ -124,7 +131,9 @@ const Home = () => {
                   <TextInput
                     keyboardType="numeric"
                     onBlur={onBlur}
-                    onChangeText={(value) => setConfig({ ...config, largo_prod: value })}
+                    onChangeText={(value) =>
+                      setConfig({ ...config, largo_prod: value })
+                    }
                     value={config.largo_prod}
                     style={{
                       ...styles.input,
@@ -161,7 +170,9 @@ const Home = () => {
                   <TextInput
                     keyboardType="numeric"
                     onBlur={onBlur}
-                    onChangeText={(value) => setConfig({ ...config, largo_tag: value })}
+                    onChangeText={(value) =>
+                      setConfig({ ...config, largo_tag: value })
+                    }
                     value={config.largo_tag}
                     style={{
                       ...styles.input,
