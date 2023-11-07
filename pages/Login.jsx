@@ -105,6 +105,66 @@ const Login = () => {
     ref.current.focus();
   };
 
+  const saveConfig = async () => {
+    const openDb = await SQLite.openDatabase(`Maestro.db`);
+
+    ExecuteQuery(
+      openDb,
+      "SELECT * FROM CONFIG",
+      [],
+      (data) => {
+        const config = data.rows._array;
+        console.log(config[4])
+
+        setConfig({
+          largo_tag: config[0].LARGO_CAMPO,
+          largo_prod: config[1].LARGO_CAMPO,
+          buttons_config: isNaN(config[2].LARGO_CAMPO)
+            ? 3
+            : parseInt(config[2].LARGO_CAMPO),
+          catalog_products: config[3].LARGO_CAMPO === "N" ? false : true,
+          index_capt: 2,
+          pesables: config[5] ? config[5].LARGO_CAMPO === "N" ? false : true : false,
+        });
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+  };
+
+  const loadDB = async () => {
+    const document = await DocumentPicker.getDocumentAsync();
+    console.log(document);
+
+    if (!document.canceled) {
+      console.log("Documento seleccionado:", document);
+      await FileSystem.copyAsync({
+        from: document.assets[0].uri,
+        to: `${FileSystem.documentDirectory}SQLite/Maestro.db`,
+      })
+        .then(async () => {
+          setSnackbar({
+            visible: true,
+            text: "Base de datos copiada correctamente.",
+            type: "success",
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else {
+      setSnackbar({
+        visible: true,
+        text: "No se seleccionó ningún documento. La aplicación no funcionará correctamente.",
+        type: "error",
+      });
+    }
+
+    saveConfig();
+
+  };
+
   useEffect(() => {
     const openOrCreateDB = async () => {
       // Pedir permisos de lectura y escritura
@@ -141,34 +201,6 @@ const Login = () => {
       }
     };
 
-    const saveConfig = async () => {
-      const openDb = await SQLite.openDatabase(`Maestro.db`);
-
-      ExecuteQuery(
-        openDb,
-        "SELECT * FROM CONFIG",
-        [],
-        (data) => {
-          const config = data.rows._array;
-          console.log(config[4])
-
-          setConfig({
-            largo_tag: config[0].LARGO_CAMPO,
-            largo_prod: config[1].LARGO_CAMPO,
-            buttons_config: isNaN(config[2].LARGO_CAMPO)
-              ? 3
-              : parseInt(config[2].LARGO_CAMPO),
-            catalog_products: config[3].LARGO_CAMPO === "N" ? false : true,
-            index_capt: 2,
-            pesables: config[5] ? config[5].LARGO_CAMPO === "N" ? false : true : false,
-          });
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
-    };
-
     openOrCreateDB();
     saveConfig();
   }, []);
@@ -189,10 +221,11 @@ const Login = () => {
           <Image style={{
             ...styles.img,
             objectFit: "contain",
+            height: 120,
           }} source={logo} />
         </View>
 
-        <View style={styles.container}>
+        <View style={[styles.container]}>
           <Text style={styles.title}>Iniciar Sesión</Text>
           <Controller
             control={control}
@@ -241,6 +274,18 @@ const Login = () => {
             <Text style={[styles.white, styles.textCenter]}>INGRESAR</Text>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity
+          accessibilityLabel="Botón de Configuración"
+          onPress={() => loadDB()}
+          style={{
+            height: 20,
+            marginTop: 5,
+            padding: 0,
+          }}
+        >
+          <Text style={[styles.textCenter]}>ABRIR NUEVA BASE DE DATOS</Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
