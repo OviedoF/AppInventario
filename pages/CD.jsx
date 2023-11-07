@@ -24,7 +24,9 @@ const CD = () => {
   const { config, setConfig, cdInfo, setCdInfo, setSnackbar, user } =
     useContext(dataContext);
   const [modal, setModal] = useState(false);
-  const [modalSupervisor, setModalSupervisor] = useState(true);
+  const [idDesired, setIdDesired] = useState("");
+  const [authType, setAuthType] = useState("");
+  const [modalSupervisor, setModalSupervisor] = useState(false);
   const [selectedId, setSelectedId] = useState(parseInt(config.buttons_config));
   const [dataToShow, setDataToShow] = useState({});
   const refs = {
@@ -286,12 +288,17 @@ const CD = () => {
             <Text>No Catalogados</Text>
             <Switch
               trackColor={{ false: "#767577", true: "#81b0ff" }}
-              onValueChange={() =>
-                setConfig({
-                  ...config,
-                  catalog_products: !config.catalog_products,
-                })
-              }
+              onValueChange={() => {
+                if (!user.admin) {
+                  setAuthType("pesables");
+                  setModalSupervisor(true);
+                } else {
+                  setConfig({
+                    ...config,
+                    catalog_products: !config.catalog_products,
+                  });
+                }
+              }}
               value={config.catalog_products}
             />
 
@@ -299,14 +306,19 @@ const CD = () => {
             <Switch
               trackColor={{ false: "#767577", true: "#81b0ff" }}
               onValueChange={() => {
-                setConfig({
+                if (!user.admin) {
+                  setAuthType("pesables");
+                  setModalSupervisor(true);
+                } else {
+                  setConfig({
+                    ...config,
+                    pesables: !config.pesables,
+                  });
+                }
+                /* console.log({
                   ...config,
                   pesables: !config.pesables,
-                });
-                console.log({
-                  ...config,
-                  pesables: !config.pesables,
-                });
+                }); */
               }}
               value={config.pesables}
             />
@@ -315,8 +327,14 @@ const CD = () => {
           <RadioGroup
             radioButtons={optionsRadio}
             onPress={(value) => {
-              setSelectedId(value);
-              setConfig({ ...config, buttons_config: value });
+              if (!user.admin) {
+                setAuthType("buttons");
+                setIdDesired(value);
+                setModalSupervisor(true);
+              } else {
+                setSelectedId(value);
+                setConfig({ ...config, buttons_config: value });
+              }
             }}
             selectedId={selectedId}
             containerStyle={{ alignItems: "baseline" }}
@@ -477,6 +495,12 @@ const CD = () => {
         modalVisible={modalSupervisor}
         setSnackbar={setSnackbar}
         user={user}
+        idDesired={idDesired}
+        setSelectedId={setSelectedId}
+        setConfig={setConfig}
+        config={config}
+        authType={authType}
+        setAuthType={setAuthType}
       />
     </KeyboardAvoidingView>
   );

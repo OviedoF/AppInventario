@@ -15,6 +15,12 @@ const SupervisorApprobalModal = ({
   modalVisible,
   setSnackbar,
   user,
+  idDesired,
+  setSelectedId,
+  setConfig,
+  config,
+  authType,
+  setAuthType,
 }) => {
   const [code, setCode] = useState("");
   const input = useRef(null);
@@ -29,11 +35,28 @@ const SupervisorApprobalModal = ({
     }
     if (code === user.CLAVE) {
       setModalVisible(false);
+      if (authType === "buttons") {
+        setSelectedId(idDesired);
+        setConfig({ ...config, buttons_config: idDesired });
+      }
+      if (authType === "pesables") {
+        setConfig({
+          ...config,
+          pesables: !config.pesables,
+        });
+      }
+      if (authType === "catalog_products") {
+        setConfig({
+          ...config,
+          catalog_products: !config.catalog_products,
+        });
+      }
       setSnackbar({
         visible: true,
         text: `Permisos de supervisor conseguidos`,
         type: "success",
       });
+      setAuthType("");
     } else {
       setModalVisible(false);
       setSnackbar({
