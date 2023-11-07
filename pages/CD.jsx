@@ -17,22 +17,22 @@ import { dataContext } from "../context/dataContext";
 import { ScrollView } from "react-native";
 import { KeyboardAvoidingView } from "react-native";
 import edit_icon from "../assets/edit.png";
+import SupervisorApprobalModal from "../components/SupervisorApprobalModal";
 
 const CD = () => {
   const navigate = useNavigate();
-  const { config, setConfig, cdInfo, setCdInfo, setSnackbar } =
+  const { config, setConfig, cdInfo, setCdInfo, setSnackbar, user } =
     useContext(dataContext);
   const [modal, setModal] = useState(false);
+  const [modalSupervisor, setModalSupervisor] = useState(true);
   const [selectedId, setSelectedId] = useState(parseInt(config.buttons_config));
   const [dataToShow, setDataToShow] = useState({});
-
   const refs = {
     posicion: useRef(null),
     pallet: useRef(null),
     caja: useRef(null),
     area: useRef(null),
   };
-
   const openModal = (ref) => {
     setModal(true);
     setTimeout(() => {
@@ -302,12 +302,11 @@ const CD = () => {
                 setConfig({
                   ...config,
                   pesables: !config.pesables,
-                })
+                });
                 console.log({
                   ...config,
                   pesables: !config.pesables,
-                })
-
+                });
               }}
               value={config.pesables}
             />
@@ -473,6 +472,12 @@ const CD = () => {
           </View>
         )}
       </ScrollView>
+      <SupervisorApprobalModal
+        setModalVisible={setModalSupervisor}
+        modalVisible={modalSupervisor}
+        setSnackbar={setSnackbar}
+        user={user}
+      />
     </KeyboardAvoidingView>
   );
 };
