@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Alert,
   Modal,
@@ -18,6 +18,8 @@ const EditEntryModal = ({
   editEntryFromInventario,
   selectedId,
 }) => {
+  const inputEdit = useRef(null);
+
   return (
     <>
       <View style={stylesModal.centeredView}>
@@ -50,6 +52,12 @@ const EditEntryModal = ({
                 value={quantity.toString()}
                 style={styles.input}
                 showSoftInputOnFocus={false}
+                ref={inputEdit}
+                autoFocus
+                onSubmitEditing={() => {
+                  editEntryFromInventario(parseInt(quantity), selectedId);
+                  setModalVisible(!modalVisible);
+                }}
               />
               <View style={{ flexDirection: "row" }}>
                 <TouchableOpacity

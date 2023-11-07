@@ -20,7 +20,7 @@ import edit_icon from "../assets/edit.png";
 
 const CaptureMenu = () => {
   const navigate = useNavigate();
-  const { area, setArea, config, setConfig } = useContext(dataContext);
+  const { area, setArea, config, setConfig, setSnackbar } = useContext(dataContext);
   const [modal, setModal] = useState(false);
   const [selectedId, setSelectedId] = useState(parseInt(config.buttons_config));
 
@@ -35,7 +35,11 @@ const CaptureMenu = () => {
 
   const confirmArea = () => {
     if (area === "") {
-      alert("Ingrese un área");
+      setSnackbar({
+        visible: true,
+        text: "Ingrese un área",
+        type: "error",
+      });
       return;
     }
 
@@ -89,7 +93,7 @@ const CaptureMenu = () => {
               marginTop: 10,
             }}
           >
-            <Text style={styles.subtitle}>Área: {area}</Text>
+            <Text style={[styles.subtitle, { fontSize: 13, fontWeight: 'normal' }]}>Serie-Área-Digito: {area}</Text>
 
             <TouchableOpacity
               onPress={() => {
@@ -151,6 +155,10 @@ const CaptureMenu = () => {
               flexDirection: "row",
               alignItems: "center",
               gap: 5,
+              marginBottom: 0,
+              height: 40,
+              marginTop: 0,
+              padding: 0,
             }}
           >
             <Text>No Catalogados</Text>
@@ -163,6 +171,23 @@ const CaptureMenu = () => {
                 })
               }
               value={config.catalog_products}
+            />
+
+            <Text>Pesables</Text>
+            <Switch
+              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              onValueChange={() => {
+                setConfig({
+                  ...config,
+                  pesables: !config.pesables,
+                })
+                console.log({
+                  ...config,
+                  pesables: !config.pesables,
+                })
+
+              }}
+              value={config.pesables}
             />
           </View>
 

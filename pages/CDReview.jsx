@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import TopBar from "../components/TopBar";
 import SectionBar from "../components/SectionBar";
 import { KeyboardAvoidingView } from "react-native";
@@ -22,6 +22,7 @@ const CDReview = () => {
   const { area } = useContext(dataContext);
   const { type } = useParams();
   const { setSnackbar } = useContext(dataContext);
+
   const deleteEntryFromInventario = async (db_id) => {
     const db = SQLite.openDatabase("Maestro.db");
     await ExecuteQuery(

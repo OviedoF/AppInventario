@@ -277,6 +277,10 @@ const CD = () => {
               flexDirection: "row",
               alignItems: "center",
               gap: 5,
+              marginBottom: 0,
+              height: 40,
+              marginTop: 0,
+              padding: 0,
             }}
           >
             <Text>No Catalogados</Text>
@@ -289,6 +293,23 @@ const CD = () => {
                 })
               }
               value={config.catalog_products}
+            />
+
+            <Text>Pesables</Text>
+            <Switch
+              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              onValueChange={() => {
+                setConfig({
+                  ...config,
+                  pesables: !config.pesables,
+                })
+                console.log({
+                  ...config,
+                  pesables: !config.pesables,
+                })
+
+              }}
+              value={config.pesables}
             />
           </View>
 

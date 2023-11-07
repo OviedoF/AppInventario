@@ -12,7 +12,7 @@ import { useContext } from "react";
 import { dataContext } from "../context/dataContext";
 
 const Home = () => {
-  const { config, setConfig, user } = useContext(dataContext);
+  const { config, setConfig, user, setSnackbar } = useContext(dataContext);
   const navigate = useNavigate();
   const {
     handleSubmit,
@@ -131,10 +131,17 @@ const Home = () => {
                   <TextInput
                     keyboardType="numeric"
                     onBlur={onBlur}
-                    onChangeText={(value) =>
-                      setConfig({ ...config, largo_prod: value })
-                    }
-                    value={config.largo_prod}
+                    onChangeText={(value) =>{
+                      console.log(isNaN(parseInt(value)))
+                      if (isNaN(parseInt(value))) return setSnackbar({
+                        visible: true,
+                        text: "El largo debe ser un número entero",
+                        type: "error",
+                      })
+                      
+                      return setConfig({ ...config, largo_prod: parseInt(value) })
+                    }}
+                    value={config.largo_prod.toString()}
                     style={{
                       ...styles.input,
                       marginLeft: 10,
@@ -170,10 +177,16 @@ const Home = () => {
                   <TextInput
                     keyboardType="numeric"
                     onBlur={onBlur}
-                    onChangeText={(value) =>
-                      setConfig({ ...config, largo_tag: value })
-                    }
-                    value={config.largo_tag}
+                    onChangeText={(value) =>{
+                      if (isNaN(parseInt(value))) return setSnackbar({
+                        visible: true,
+                        text: "El largo debe ser un número entero",
+                        type: "error",
+                      })
+                      
+                      return setConfig({ ...config, largo_tag: parseInt(value) })
+                    }}
+                    value={config.largo_tag.toString()}
                     style={{
                       ...styles.input,
                       marginLeft: 10,
