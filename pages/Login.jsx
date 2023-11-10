@@ -90,6 +90,7 @@ const Login = () => {
             text: "Sesión iniciada correctamente.",
             type: "success",
           });
+
           navigate(routes.home);
         },
         (error) => {
@@ -114,7 +115,7 @@ const Login = () => {
       [],
       (data) => {
         const config = data.rows._array;
-        console.log(config[4])
+        console.log(config[4]);
 
         setConfig({
           largo_tag: config[0].LARGO_CAMPO,
@@ -124,7 +125,11 @@ const Login = () => {
             : parseInt(config[2].LARGO_CAMPO),
           catalog_products: config[3].LARGO_CAMPO === "N" ? false : true,
           index_capt: 2,
-          pesables: config[5] ? config[5].LARGO_CAMPO === "N" ? false : true : false,
+          pesables: config[5]
+            ? config[5].LARGO_CAMPO === "N"
+              ? false
+              : true
+            : false,
         });
       },
       (error) => {
@@ -162,13 +167,15 @@ const Login = () => {
     }
 
     saveConfig();
-
   };
 
   useEffect(() => {
     const openOrCreateDB = async () => {
       // Pedir permisos de lectura y escritura
-      const db = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}SQLite/Maestro.db`, { size: true });
+      const db = await FileSystem.getInfoAsync(
+        `${FileSystem.documentDirectory}SQLite/Maestro.db`,
+        { size: true }
+      );
 
       if (!db.exists) {
         console.log("No existe la base de datos, se procede a copiarla");
@@ -218,11 +225,14 @@ const Login = () => {
         <TopBar text={"ID:"} />
 
         <View style={styles.container}>
-          <Image style={{
-            ...styles.img,
-            objectFit: "contain",
-            height: 120,
-          }} source={logo} />
+          <Image
+            style={{
+              ...styles.img,
+              objectFit: "contain",
+              height: 120,
+            }}
+            source={logo}
+          />
         </View>
 
         <View style={[styles.container]}>

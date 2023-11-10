@@ -42,7 +42,7 @@ function GTIN8Digit(codigoGTIN8) {
 
   // Calcula el dígito de control
   const sumaTotal = sumaImpares * 3 + sumaPares;
-  const digitoControl = (Math.ceil(sumaTotal / 10) * 10) - sumaTotal;
+  const digitoControl = Math.ceil(sumaTotal / 10) * 10 - sumaTotal;
 
   return digitoControl;
 }
@@ -71,7 +71,7 @@ const ProductEntry = ({ type }) => {
   const [quantity, setQuantity] = useState(1);
   const [lastProduct, setLastProduct] = useState({
     DESCRIPCION: "",
-  })
+  });
   const [dataToShow, setDataToShow] = useState({});
   const [scansData, setScansData] = useState({
     products: "...",
@@ -200,7 +200,10 @@ const ProductEntry = ({ type }) => {
 
   const validatePesable = (code) => {
     const sixDigits = code.substring(0, 6);
-    const lastSixDigits = code.substring(config.largo_prod - 6, config.largo_prod);
+    const lastSixDigits = code.substring(
+      config.largo_prod - 6,
+      config.largo_prod
+    );
 
     const controlDigit = GTIN8Digit(`0${sixDigits}`);
 
@@ -222,7 +225,7 @@ const ProductEntry = ({ type }) => {
     const quantity = GtoKG(lastSixDigits);
 
     console.log("Code to verify", codeToVerify);
-    console.log("Cantidad", quantity)
+    console.log("Cantidad", quantity);
 
     const masterDb = SQLite.openDatabase("Maestro.db");
     const query = `SELECT * FROM MAESTRA  WHERE COD_PROD = '${codeToVerify}'`;
@@ -255,7 +258,10 @@ const ProductEntry = ({ type }) => {
                 onPress: () => refs.product.current.focus(),
                 style: "cancel",
               },
-              { text: "Continuar", onPress: () => addProductToDb(product, quantity) },
+              {
+                text: "Continuar",
+                onPress: () => addProductToDb(product, quantity),
+              },
             ],
             { cancelable: false }
           );
@@ -271,7 +277,10 @@ const ProductEntry = ({ type }) => {
                 onPress: () => refs.product.current.focus(),
                 style: "cancel",
               },
-              { text: "Continuar", onPress: () => addProductToDb(product, quantity) },
+              {
+                text: "Continuar",
+                onPress: () => addProductToDb(product, quantity),
+              },
             ],
             { cancelable: false }
           );
@@ -293,7 +302,7 @@ const ProductEntry = ({ type }) => {
         });
       }
     );
-  }
+  };
 
   const onCodeSubmit = async () => {
     if (!code)
@@ -461,7 +470,24 @@ const ProductEntry = ({ type }) => {
                 marginTop: 10,
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+              >
+                <TouchableOpacity
+                  /* onPress={() => openModal(refs.posicion)} */
+                  style={{
+                    width: "45%",
+                    borderRadius: 5,
+                    padding: 10,
+                    alignItems: "center",
+                    backgroundColor: "red",
+                    textAlign: "center",
+                  }}
+                >
+                  <Text style={[styles.white, { fontWeight: "500" }]}>
+                    CERRAR ÁREA
+                  </Text>
+                </TouchableOpacity>
                 <Text style={{ fontSize: 12 }}>
                   Posición: {cdInfo.posicion}
                 </Text>
@@ -578,15 +604,17 @@ const ProductEntry = ({ type }) => {
               />
             </View>
 
-            {lastProduct.DESCRIPCION && <Text
-              style={{
-                marginTop: 5,
-                marginBottom: 5,
-                textAlign: "center",
-              }}
-            >
-              {lastProduct.DESCRIPCION}
-            </Text>}
+            {lastProduct.DESCRIPCION && (
+              <Text
+                style={{
+                  marginTop: 5,
+                  marginBottom: 5,
+                  textAlign: "center",
+                }}
+              >
+                {lastProduct.DESCRIPCION}
+              </Text>
+            )}
 
             <View
               style={{
@@ -597,149 +625,153 @@ const ProductEntry = ({ type }) => {
                 flexWrap: "wrap",
               }}
             >
-              {!config.pesables && <>
-                {type === "multi" && (
-                  <TouchableOpacity
-                    style={{
-                      ...styles.logBtn,
-                      width: 40,
-                      height: 40,
-                      borderRadius: 5,
-                      alignItems: "center",
-                    }}
-                    onPress={() => {
-                      if (quantity === 1) return;
-                      setQuantity(quantity - 1);
-                    }}
-                  >
-                    <Text
+              {!config.pesables && (
+                <>
+                  {type === "multi" && (
+                    <TouchableOpacity
                       style={{
-                        ...styles.white,
-                        textAlign: "center",
-                        fontWeight: "bold",
+                        ...styles.logBtn,
+                        width: 40,
+                        height: 40,
+                        borderRadius: 5,
+                        alignItems: "center",
+                      }}
+                      onPress={() => {
+                        if (quantity === 1) return;
+                        setQuantity(quantity - 1);
                       }}
                     >
-                      -
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                      <Text
+                        style={{
+                          ...styles.white,
+                          textAlign: "center",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        -
+                      </Text>
+                    </TouchableOpacity>
+                  )}
 
-                {type === "multi" ? (
-                  <TextInput
-                    onChange={(e) => {
-                      setQuantity(parseInt(e.nativeEvent.text));
-                    }}
-                    keyboardType="numeric"
-                    ref={refs.quantity}
-                    style={{
-                      ...styles.input,
-                      fontWeight: "bold",
-                      fontSize: 38,
-                      width: 70,
-                      textAlign: "center",
-                      color: "#000",
-                    }}
-                    onEndEditing={() => setConfirmingClose(true)}
-                  >
-                    {quantity}
-                  </TextInput>
-                ) : (
-                  <>
-                    <Text
+                  {type === "multi" ? (
+                    <TextInput
+                      onChange={(e) => {
+                        setQuantity(parseInt(e.nativeEvent.text));
+                      }}
+                      keyboardType="numeric"
+                      ref={refs.quantity}
                       style={{
+                        ...styles.input,
                         fontWeight: "bold",
                         fontSize: 38,
                         width: 70,
                         textAlign: "center",
                         color: "#000",
                       }}
+                      onEndEditing={() => setConfirmingClose(true)}
                     >
-                      {quantity > 0 && "+"}
                       {quantity}
-                    </Text>
+                    </TextInput>
+                  ) : (
+                    <>
+                      <Text
+                        style={{
+                          fontWeight: "bold",
+                          fontSize: 38,
+                          width: 70,
+                          textAlign: "center",
+                          color: "#000",
+                        }}
+                      >
+                        {quantity > 0 && "+"}
+                        {quantity}
+                      </Text>
 
+                      <TouchableOpacity
+                        onPress={() => {
+                          quantity === 1 ? setQuantity(-1) : setQuantity(1);
+                        }}
+                        style={{
+                          backgroundColor: "transparent",
+                          width: 30,
+                          padding: 5,
+                          margin: 5,
+                        }}
+                      >
+                        <Image
+                          style={{ width: 30, height: 30 }}
+                          source={reverse_icon}
+                        />
+                      </TouchableOpacity>
+                    </>
+                  )}
+
+                  {type === "multi" && (
                     <TouchableOpacity
+                      style={{
+                        ...styles.logBtn,
+                        width: 40,
+                        height: 40,
+                        borderRadius: 5,
+                        alignItems: "center",
+                      }}
                       onPress={() => {
-                        quantity === 1 ? setQuantity(-1) : setQuantity(1);
-                      }}
-                      style={{
-                        backgroundColor: "transparent",
-                        width: 30,
-                        padding: 5,
-                        margin: 5,
+                        setQuantity(quantity + 1);
                       }}
                     >
-                      <Image
-                        style={{ width: 30, height: 30 }}
-                        source={reverse_icon}
-                      />
+                      <Text
+                        style={{
+                          ...styles.white,
+                          textAlign: "center",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        +
+                      </Text>
                     </TouchableOpacity>
-                  </>
-                )}
+                  )}
 
-                {type === "multi" && (
-                  <TouchableOpacity
-                    style={{
-                      ...styles.logBtn,
-                      width: 40,
-                      height: 40,
-                      borderRadius: 5,
-                      alignItems: "center",
-                    }}
-                    onPress={() => {
-                      setQuantity(quantity + 1);
-                    }}
-                  >
-                    <Text
+                  {type === "multi" && (
+                    <TouchableOpacity
                       style={{
-                        ...styles.white,
-                        textAlign: "center",
-                        fontWeight: "bold",
+                        ...styles.logBtn,
+                        width: 70,
+                        borderRadius: 5,
+                        alignItems: "center",
+                      }}
+                      onPress={() => {
+                        setCalculatorModal(true);
                       }}
                     >
-                      +
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                      <Text
+                        style={{
+                          ...styles.white,
+                          textAlign: "center",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        CALC
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
 
-                {type === "multi" && (
-                  <TouchableOpacity
+              {config.pesables && (
+                <>
+                  <Text
                     style={{
-                      ...styles.logBtn,
-                      width: 70,
-                      borderRadius: 5,
-                      alignItems: "center",
-                    }}
-                    onPress={() => {
-                      setCalculatorModal(true);
+                      fontWeight: "bold",
+                      fontSize: 30,
+                      width: 300,
+                      textAlign: "center",
+                      color: "#000",
                     }}
                   >
-                    <Text
-                      style={{
-                        ...styles.white,
-                        textAlign: "center",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      CALC
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </>}
-
-              {config.pesables && <>
-                <Text
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: 30,
-                    width: 300,
-                    textAlign: "center",
-                    color: "#000",
-                  }}
-                >
-                  {lastProduct.quantity || '...'} KG
-                </Text>
-              </>}
+                    {lastProduct.quantity || "..."} KG
+                  </Text>
+                </>
+              )}
             </View>
           </View>
 

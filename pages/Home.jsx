@@ -71,19 +71,7 @@ const Home = () => {
               </Text>
             </View>
           </TouchableOpacity>
-          {/* <Link to={routes.cD} style={styles.primaryBtn}>
-            <View style={{ flexDirection: "row", justifyContent: "center" }}>
-              //? reemplazar home por ruta inventario
-              <Text
-                style={{
-                  ...styles.white,
-                  fontWeight: "bold",
-                }}
-              >
-                CD
-              </Text>
-            </View>
-          </Link> */}
+
           <TouchableOpacity
             onPress={() => {
               navigate(routes.sentWifi);
@@ -102,6 +90,25 @@ const Home = () => {
               </Text>
             </View>
           </TouchableOpacity>
+          {user.admin && (
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={() => {
+                navigate(routes.menuAdmin);
+              }}
+            >
+              <View style={{ flexDirection: "row", justifyContent: "center" }}>
+                <Text
+                  style={{
+                    ...styles.white,
+                    fontWeight: "bold",
+                  }}
+                >
+                  MENU ADMINISTRADOR
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* 
@@ -131,15 +138,19 @@ const Home = () => {
                   <TextInput
                     keyboardType="numeric"
                     onBlur={onBlur}
-                    onChangeText={(value) =>{
-                      console.log(isNaN(parseInt(value)))
-                      if (isNaN(parseInt(value))) return setSnackbar({
-                        visible: true,
-                        text: "El largo debe ser un número entero",
-                        type: "error",
-                      })
-                      
-                      return setConfig({ ...config, largo_prod: parseInt(value) })
+                    onChangeText={(value) => {
+                      console.log(isNaN(parseInt(value)));
+                      if (isNaN(parseInt(value)))
+                        return setSnackbar({
+                          visible: true,
+                          text: "El largo debe ser un número entero",
+                          type: "error",
+                        });
+
+                      return setConfig({
+                        ...config,
+                        largo_prod: parseInt(value),
+                      });
                     }}
                     value={config.largo_prod.toString()}
                     style={{
@@ -177,14 +188,18 @@ const Home = () => {
                   <TextInput
                     keyboardType="numeric"
                     onBlur={onBlur}
-                    onChangeText={(value) =>{
-                      if (isNaN(parseInt(value))) return setSnackbar({
-                        visible: true,
-                        text: "El largo debe ser un número entero",
-                        type: "error",
-                      })
-                      
-                      return setConfig({ ...config, largo_tag: parseInt(value) })
+                    onChangeText={(value) => {
+                      if (isNaN(parseInt(value)))
+                        return setSnackbar({
+                          visible: true,
+                          text: "El largo debe ser un número entero",
+                          type: "error",
+                        });
+
+                      return setConfig({
+                        ...config,
+                        largo_tag: parseInt(value),
+                      });
                     }}
                     value={config.largo_tag.toString()}
                     style={{

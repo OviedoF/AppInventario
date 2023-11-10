@@ -10,5 +10,6 @@ const routes = {
   cdMultipleProductEntry: "/cdMultipleProductEntry",
   cdReview: "/cdReview/:type",
   sentWifi: "/sentWifi",
+  menuAdmin: "/menuAdmin",
 };
 export default routes;
