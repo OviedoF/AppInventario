@@ -395,6 +395,35 @@ const ProductEntry = ({ type }) => {
     );
   };
 
+  const closeArea = async () => {
+    const db = SQLite.openDatabase("Maestro.db");
+    const query = 'UPDATE AREAS SET UEESTADO = "CERRADA" WHERE NUM_AREA = ?';
+
+    ExecuteQuery(
+      db,
+      query,
+      [area],
+      (results) => {
+        console.log("Results", results);
+        setSnackbar({
+          visible: true,
+          text: "Área cerrada correctamente",
+          type: "success",
+        });
+        setArea("");
+        navigate(routes.cD);
+      },
+      (error) => {
+        console.log("Error", error);
+        setSnackbar({
+          visible: true,
+          text: "Error al cerrar área",
+          type: "error",
+        });
+      }
+    );
+  };
+
   useEffect(() => {
     switch (config.index_capt) {
       case 2:
@@ -474,7 +503,7 @@ const ProductEntry = ({ type }) => {
                 style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
               >
                 <TouchableOpacity
-                  /* onPress={() => openModal(refs.posicion)} */
+                  /* onPress={() => closeArea()} */
                   style={{
                     width: "45%",
                     borderRadius: 5,
