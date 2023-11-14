@@ -177,10 +177,11 @@ const CD = () => {
               <TouchableOpacity
                 onPress={() => openModal(refs.posicion)}
                 style={{
-                  backgroundColor: "transparent",
+                  ...styles.logBtn,
                   width: 30,
                   padding: 5,
                   margin: 5,
+                  borderRadius: 5,
                 }}
               >
                 <Image style={{ width: 12, height: 12 }} source={edit_icon} />
@@ -338,6 +339,7 @@ const CD = () => {
                 >
                   <Text style={{ fontSize: 12 }}>Posición</Text>
                   <TextInput
+                    autoFocus
                     style={[styles.input, { width: "60%", height: 30 }]}
                     onChangeText={(text) =>
                       setCdInfo({ ...cdInfo, posicion: text })

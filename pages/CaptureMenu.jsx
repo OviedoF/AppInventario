@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-import { Link, useNavigate } from "react-router-native";
+import { useNavigate } from "react-router-native";
 import React, { useState, useMemo, useEffect, useRef, useContext } from "react";
 import styles from "../styles/styles";
 import SectionBar from "../components/SectionBar";
@@ -17,6 +17,8 @@ import { dataContext } from "../context/dataContext";
 import { ScrollView } from "react-native";
 import { KeyboardAvoidingView } from "react-native";
 import edit_icon from "../assets/edit.png";
+import * as SQLite from "expo-sqlite";
+import ExecuteQuery from "../helpers/ExecuteQuery";
 
 const CaptureMenu = () => {
   const navigate = useNavigate();
@@ -33,17 +35,48 @@ const CaptureMenu = () => {
     if (modal) refs.area.current.focus();
   }, [modal]);
 
-  const confirmArea = () => {
-    if (area === "") {
+  const confirmArea = async () => {
+    try {
+      if (area === "") {
+        setSnackbar({
+          visible: true,
+          text: "Ingrese un área",
+          type: "error",
+        });
+        return;
+      }
+
+      const db = SQLite.openDatabase("Maestro.db")
+
+      ExecuteQuery(db,
+        `SELECT * FROM 'AREAS' WHERE NUM_AREA = "${area}"`,
+        [],
+        (result) => {
+          const areas = result.rows._array;
+
+          if(!areas.length) return setSnackbar({
+            visible: true,
+            text: "Área no encontrada",
+            type: "error",
+          })
+
+          setModal(false);
+        }, (error) => {
+          console.log(error)
+          return setSnackbar({
+            visible: true,
+            text: "Error al ingresar el área",
+            type: "error",
+          })
+        })
+    } catch (error) {
+      console.log(error)
       setSnackbar({
         visible: true,
-        text: "Ingrese un área",
+        text: "Error al ingresar el área",
         type: "error",
       });
-      return;
     }
-
-    setModal(false);
   };
 
   const optionsRadio = useMemo(
@@ -93,7 +126,7 @@ const CaptureMenu = () => {
               marginTop: 10,
             }}
           >
-            <Text style={[styles.subtitle, { fontSize: 13, fontWeight: 'normal' }]}>Serie-Área-Digito: {area}</Text>
+            <Text style={[styles.subtitle, { fontSize: 13, fontWeight: 'normal' }]}>Área: {area}</Text>
 
             <TouchableOpacity
               onPress={() => {
@@ -101,10 +134,10 @@ const CaptureMenu = () => {
               }}
               style={{
                 ...styles.logBtn,
-                backgroundColor: "transparent",
                 width: 30,
                 padding: 5,
                 margin: 5,
+                borderRadius: 5,
               }}
             >
               <Image
@@ -220,6 +253,7 @@ const CaptureMenu = () => {
                 ref={refs.area}
                 placeholder="Área"
                 onSubmitEditing={confirmArea}
+                autoFocus
               />
 
               <View
@@ -242,6 +276,7 @@ const CaptureMenu = () => {
 
                 <TouchableOpacity
                   onPress={() => {
+                    setArea('');
                     navigate(routes.home);
                   }}
                   style={{

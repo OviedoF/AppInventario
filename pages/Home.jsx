@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Text, View, TouchableOpacity, TextInput } from "react-native";
-import { useNavigate, Link } from "react-router-native";
+import { useNavigate } from "react-router-native";
 import { useForm, Controller } from "react-hook-form";
 import routes from "../router/routes";
 import styles from "../styles/styles";
@@ -10,8 +10,11 @@ import { KeyboardAvoidingView } from "react-native";
 import { ScrollView } from "react-native";
 import { useContext } from "react";
 import { dataContext } from "../context/dataContext";
+import * as SQLite from "expo-sqlite";
+import ExecuteQuery from "../helpers/ExecuteQuery";
 
 const Home = () => {
+  const [inventories, setInventories] = useState([])
   const { config, setConfig, user, setSnackbar } = useContext(dataContext);
   const navigate = useNavigate();
   const {
@@ -24,6 +27,33 @@ const Home = () => {
       large_tag: "",
     },
   });
+
+  useEffect(() => {
+    const getInventories = async () => {
+      try {
+        const db = SQLite.openDatabase("Maestro.db")
+
+        ExecuteQuery(db, 'SELECT * FROM INV_ACTIVOS', [], (result) => {
+          const inventories = result.rows._array
+
+          if (!inventories.length) return setSnackbar({
+            visible: true,
+            text: "No hay inventarios activos",
+            type: "error",
+          })
+
+          setInventories(inventories)
+          console.log(inventories)
+        }, (error) => {
+          console.log(error)
+        })
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    getInventories()
+  }, [])
 
   return (
     <KeyboardAvoidingView
@@ -51,39 +81,27 @@ const Home = () => {
           >
             Operador: {user.NOMBRES}
           </Text>
-          <TouchableOpacity
-            style={styles.primaryBtn}
-            onPress={() => {
-              navigate(
-                config.index_capt === 1 ? routes.captureMenu : routes.cD
-              );
-            }}
-          >
-            <View style={{ flexDirection: "row", justifyContent: "center" }}>
-              {/* //? reemplazar home por ruta inventario */}
-              <Text
-                style={{
-                  ...styles.white,
-                  fontWeight: "bold",
-                }}
-              >
-                INVENTARIO
-              </Text>
-            </View>
-          </TouchableOpacity>
-          {/* <Link to={routes.cD} style={styles.primaryBtn}>
-            <View style={{ flexDirection: "row", justifyContent: "center" }}>
-              //? reemplazar home por ruta inventario
-              <Text
-                style={{
-                  ...styles.white,
-                  fontWeight: "bold",
-                }}
-              >
-                CD
-              </Text>
-            </View>
-          </Link> */}
+
+          {inventories.map((inventory, index) => (
+            <TouchableOpacity 
+              key={index}
+              style={styles.primaryBtn}
+              onPress={() => {
+                setConfig({ ...config, inv_activo: inventory.ID_INV })
+                navigate(config.index_capt === 1 ? routes.captureMenu : routes.cD);
+              }}
+            >
+              <View style={{ flexDirection: "row", justifyContent: "center" }}>
+                {/* //? reemplazar home por ruta inventario */}
+                <Text
+                  style={{ ...styles.white, fontWeight: "bold", }}
+                >
+                  {inventory.ID_INV}. {inventory.DESCRIPCION}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+
           <TouchableOpacity
             onPress={() => {
               navigate(routes.sentWifi);
@@ -131,14 +149,14 @@ const Home = () => {
                   <TextInput
                     keyboardType="numeric"
                     onBlur={onBlur}
-                    onChangeText={(value) =>{
+                    onChangeText={(value) => {
                       console.log(isNaN(parseInt(value)))
                       if (isNaN(parseInt(value))) return setSnackbar({
                         visible: true,
                         text: "El largo debe ser un número entero",
                         type: "error",
                       })
-                      
+
                       return setConfig({ ...config, largo_prod: parseInt(value) })
                     }}
                     value={config.largo_prod.toString()}
@@ -177,13 +195,13 @@ const Home = () => {
                   <TextInput
                     keyboardType="numeric"
                     onBlur={onBlur}
-                    onChangeText={(value) =>{
+                    onChangeText={(value) => {
                       if (isNaN(parseInt(value))) return setSnackbar({
                         visible: true,
                         text: "El largo debe ser un número entero",
                         type: "error",
                       })
-                      
+
                       return setConfig({ ...config, largo_tag: parseInt(value) })
                     }}
                     value={config.largo_tag.toString()}

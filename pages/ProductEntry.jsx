@@ -56,7 +56,7 @@ function GtoKG(gramos) {
   // Convierte la cadena de gramos a un número
   const gramosComoNumero = parseFloat(gramos);
 
-  const divisor = gramos.length === 4 ? 1000 : 10000;
+  const divisor = 1000;
 
   // Calcula los kilogramos dividiendo los gramos entre 1000
   const kilogramos = gramosComoNumero / divisor;
@@ -140,7 +140,7 @@ const ProductEntry = ({ type }) => {
 
     ExecuteQuery(
       db,
-      "INSERT INTO INVENTARIO_APP (operator, name, quantity, date, posicion, area, pallet, caja, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO INVENTARIO_APP (operator, name, quantity, date, posicion, area, pallet, caja, type, inventario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         user.NOMBRES,
         product.DESCRIPCION,
@@ -151,6 +151,7 @@ const ProductEntry = ({ type }) => {
         "",
         "",
         "INV",
+        config.inv_activo,
       ],
       (results) => {
         console.log("Results", results);
@@ -175,28 +176,36 @@ const ProductEntry = ({ type }) => {
     );
   };
 
-  const validatePesable = (code) => {
-    const sixDigits = code.substring(0, 6);
-    const lastSixDigits = code.substring(config.largo_prod - 6, config.largo_prod);
+  const validatePesable = (code, codeImplicit) => {
+    const sixDigits = codeImplicit.substring(0, 6);
+    const lastSixDigits = code.substring(config.largo_prod - 6, config.largo_prod - 1);
 
     const controlDigit = GTIN8Digit(`0${sixDigits}`);
 
-    // * Rellenar con 0 a la derecha hasta config.largo_prod - 1
+    // * Rellenar con 0 hasta la longitud original del código
 
     let codeToVerify = sixDigits;
 
-    if (codeToVerify.length < config.largo_prod) {
-      const codeLength = codeToVerify.length;
-      const codeToAdd = config.largo_prod - codeLength;
-      for (let i = 0; i < codeToAdd; i++) {
-        codeToVerify = `${codeToVerify}0`;
-      }
+    const codeLength = codeToVerify.length;
+    const codeToAdd = codeImplicit.length - codeLength;
+    for (let i = 0; i < codeToAdd; i++) {
+      codeToVerify = `${codeToVerify}0`;
     }
 
     // * Reemplazar el último numero por el dígito de control
 
     codeToVerify = codeToVerify.slice(0, -1) + controlDigit;
     const quantity = GtoKG(lastSixDigits);
+
+    // * Si el código no cumple con la configuración, rellenamos el código con 0s a la izquierda
+
+    if (codeToVerify.length < config.largo_prod) {
+      const codeLength = codeToVerify.length;
+      const codeToAdd = config.largo_prod - codeLength;
+      for (let i = 0; i < codeToAdd; i++) {
+        codeToVerify = `0${codeToVerify}`;
+      }
+    }
 
     console.log("Code to verify", codeToVerify);
     console.log("Cantidad", quantity)
@@ -280,6 +289,7 @@ const ProductEntry = ({ type }) => {
         type: "error",
       });
 
+    let codeImplicit = code;
     let codeToSend = code;
     if (codeToSend.length < config.largo_prod) {
       const codeLength = codeToSend.length;
@@ -290,10 +300,83 @@ const ProductEntry = ({ type }) => {
       setCode(codeToSend);
     } // * Si el código no cumple con la configuración, rellenamos el código con 0s a la izquierda
 
-    if (config.pesables) return validatePesable(codeToSend); // * Si el software está para PESABLES, validamos el código
+    if (config.pesables) return validatePesable(codeToSend, codeImplicit); // * Si el software está para PESABLES, validamos el código
+    if (type === 'multi') return refs.quantity.current.focus();
 
     const masterDb = SQLite.openDatabase("Maestro.db");
     const query = `SELECT * FROM MAESTRA  WHERE COD_PROD = '${codeToSend}'`;
+
+    ExecuteQuery(
+      masterDb,
+      query,
+      [],
+      (results) => {
+        if (results.rows._array.length === 0) {
+          setSnackbar({
+            visible: true,
+            text: "No se encontró el producto en la base de datos",
+            type: "error",
+          });
+          refs.code.current.focus();
+          return;
+        }
+
+        const product = results.rows._array[0];
+        setLastProduct(product);
+
+        if (config.catalog_products && product.CATALOGADO == 1) {
+          Alert.alert(
+            "Producto Catalogado",
+            "Este producto está catalogado, ¿Desea continuar?",
+            [
+              {
+                text: "Cancelar",
+                onPress: () => refs.code.current.focus(),
+                style: "cancel",
+              },
+              { text: "Continuar", onPress: () => addProductToDb(product) },
+            ],
+            { cancelable: false }
+          );
+        } // * Si el software está para NO CATALOGADOS, avisamos sobre los que están CATALOGADOS ( CATALOGADO = 1 )
+
+        if (!config.catalog_products && product.CATALOGADO == 0) {
+          Alert.alert(
+            "Producto NO Catalogado",
+            "Este producto NO está catalogado, ¿Desea continuar?",
+            [
+              {
+                text: "Cancelar",
+                onPress: () => refs.code.current.focus(),
+                style: "cancel",
+              },
+              { text: "Continuar", onPress: () => addProductToDb(product) },
+            ],
+            { cancelable: false }
+          );
+        } // * Si el software está para CATALOGADOS, avisamos sobre los que están NO CATALOGADOS ( CATALOGADO = 0 )
+
+        if (
+          (config.catalog_products && product.CATALOGADO == 0) ||
+          (!config.catalog_products && product.CATALOGADO == 1)
+        ) {
+          addProductToDb(product);
+        }
+      },
+      (error) => {
+        console.log("Error", error);
+        setSnackbar({
+          visible: true,
+          text: "Error al buscar el producto en la base de datos",
+          type: "error",
+        });
+      }
+    );
+  };
+
+  const onQuantitySubmit = () => {
+    const masterDb = SQLite.openDatabase("Maestro.db");
+    const query = `SELECT * FROM MAESTRA  WHERE COD_PROD = '${code}'`;
 
     ExecuteQuery(
       masterDb,
@@ -396,17 +479,17 @@ const ProductEntry = ({ type }) => {
               marginTop: 10,
             }}
           >
-            <Text style={[styles.subtitle, { fontSize: 13, fontWeight: 'normal' }]}>Serie-Área-Digito: {area}</Text>
+            <Text style={[styles.subtitle, { fontSize: 13, fontWeight: 'normal' }]}>Área: {area}</Text>
             <TouchableOpacity
               onPress={() => {
                 setModal(true);
               }}
               style={{
                 ...styles.logBtn,
-                backgroundColor: "transparent",
                 width: 30,
                 padding: 5,
                 margin: 5,
+                borderRadius: 5,
               }}
             >
               <Image
@@ -443,7 +526,6 @@ const ProductEntry = ({ type }) => {
               </TouchableOpacity>
 
               <TextInput
-                keyboardType="numeric"
                 style={{
                   ...styles.input,
                   width: "70%",
@@ -453,6 +535,7 @@ const ProductEntry = ({ type }) => {
                 ref={refs.code}
                 placeholder="Código"
                 onSubmitEditing={() => onCodeSubmit()}
+                autoFocus
               />
             </View>
 
@@ -517,7 +600,7 @@ const ProductEntry = ({ type }) => {
                       textAlign: "center",
                       color: "#000",
                     }}
-                    onEndEditing={() => setConfirmingClose(true)}
+                    onEndEditing={() => onQuantitySubmit()}
                   >
                     {quantity}
                   </TextInput>

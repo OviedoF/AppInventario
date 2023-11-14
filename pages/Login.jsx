@@ -48,7 +48,7 @@ const Login = () => {
 
       await ExecuteQuery(
         openDb,
-        `CREATE TABLE IF NOT EXISTS INVENTARIO_APP (id INTEGER PRIMARY KEY AUTOINCREMENT, operator TEXT, name TEXT, quantity INT, date TEXT, posicion TEXT, area TEXT, pallet TEXT, caja TEXT, type TEXT);`,
+        `CREATE TABLE IF NOT EXISTS INVENTARIO_APP (id INTEGER PRIMARY KEY AUTOINCREMENT, operator TEXT, name TEXT, quantity INT, date TEXT, posicion TEXT, area TEXT, pallet TEXT, caja TEXT, type TEXT, inventario TEXT);`,
         [],
         (result) => {
           console.log("Tabla INVENTARIO_APP creada correctamente.");
@@ -67,7 +67,7 @@ const Login = () => {
 
           const user = users.find(
             (user) =>
-              user.NOMBRES.toLowerCase() === data.user.toLowerCase() &&
+              user.COD_USUARIO.toString() === data.user.toString() &&
               user.CLAVE === data.password
           );
 
@@ -123,7 +123,7 @@ const Login = () => {
             ? 3
             : parseInt(config[2].LARGO_CAMPO),
           catalog_products: config[3].LARGO_CAMPO === "N" ? false : true,
-          index_capt: 2,
+          index_capt: 1,
           pesables: config[5] ? config[5].LARGO_CAMPO === "N" ? false : true : false,
         });
       },
