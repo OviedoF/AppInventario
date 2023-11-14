@@ -201,7 +201,10 @@ const ProductEntry = ({ type }) => {
 
   const validatePesable = (code, codeImplicit) => {
     const sixDigits = codeImplicit.substring(0, 6);
-    const lastSixDigits = code.substring(config.largo_prod - 6, config.largo_prod - 1);
+    const lastSixDigits = code.substring(
+      config.largo_prod - 6,
+      config.largo_prod - 1
+    );
 
     const controlDigit = GTIN8Digit(`0${sixDigits}`);
 
@@ -329,7 +332,7 @@ const ProductEntry = ({ type }) => {
     } // * Si el código no cumple con la configuración, rellenamos el código con 0s a la izquierda
 
     if (config.pesables) return validatePesable(codeToSend, codeImplicit); // * Si el software está para PESABLES, validamos el código como pesable
-    if (type === 'multi') return refs.quantity.current.focus();
+    if (type === "multi") return refs.quantity.current.focus();
 
     const masterDb = SQLite.openDatabase("Maestro.db");
     const query = `SELECT * FROM MAESTRA  WHERE COD_PROD = '${codeToSend}'`;
@@ -733,28 +736,13 @@ const ProductEntry = ({ type }) => {
                     </TouchableOpacity>
                   )}
 
-                {type === "multi" ? (
-                  <TextInput
-                    onChange={(e) => {
-                      setQuantity(parseInt(e.nativeEvent.text));
-                    }}
-                    keyboardType="numeric"
-                    ref={refs.quantity}
-                    style={{
-                      ...styles.input,
-                      fontWeight: "bold",
-                      fontSize: 38,
-                      width: 70,
-                      textAlign: "center",
-                      color: "#000",
-                    }}
-                    onEndEditing={() => onQuantitySubmit()}
-                  >
-                    {quantity}
-                  </TextInput>
-                ) : (
-                  <>
+                  {type === "multi" ? (
                     <TextInput
+                      onChange={(e) => {
+                        setQuantity(parseInt(e.nativeEvent.text));
+                      }}
+                      keyboardType="numeric"
+                      ref={refs.quantity}
                       style={{
                         ...styles.input,
                         fontWeight: "bold",
@@ -763,7 +751,7 @@ const ProductEntry = ({ type }) => {
                         textAlign: "center",
                         color: "#000",
                       }}
-                      onEndEditing={() => setConfirmingClose(true)}
+                      onEndEditing={() => onQuantitySubmit()}
                     >
                       {quantity}
                     </TextInput>

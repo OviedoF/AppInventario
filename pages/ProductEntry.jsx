@@ -176,18 +176,12 @@ const ProductEntry = ({ type }) => {
     );
   };
 
-<<<<<<< HEAD
-  const validatePesable = (code, codeImplicit) => {
-    const sixDigits = codeImplicit.substring(0, 6);
-    const lastSixDigits = code.substring(config.largo_prod - 6, config.largo_prod - 1);
-=======
   const validatePesable = (code) => {
     const sixDigits = code.substring(0, 6);
     const lastSixDigits = code.substring(
       config.largo_prod - 6,
       config.largo_prod
     );
->>>>>>> ecdbd41538effa7a942f5185fb9262675acf2149
 
     const controlDigit = GTIN8Digit(`0${sixDigits}`);
 
@@ -316,7 +310,7 @@ const ProductEntry = ({ type }) => {
     } // * Si el código no cumple con la configuración, rellenamos el código con 0s a la izquierda
 
     if (config.pesables) return validatePesable(codeToSend, codeImplicit); // * Si el software está para PESABLES, validamos el código
-    if (type === 'multi') return refs.quantity.current.focus();
+    if (type === "multi") return refs.quantity.current.focus();
 
     const masterDb = SQLite.openDatabase("Maestro.db");
     const query = `SELECT * FROM MAESTRA  WHERE COD_PROD = '${codeToSend}'`;
@@ -389,68 +383,6 @@ const ProductEntry = ({ type }) => {
     );
   };
 
-<<<<<<< HEAD
-  const onQuantitySubmit = () => {
-    const masterDb = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM MAESTRA  WHERE COD_PROD = '${code}'`;
-
-    ExecuteQuery(
-      masterDb,
-      query,
-      [],
-      (results) => {
-        if (results.rows._array.length === 0) {
-          setSnackbar({
-            visible: true,
-            text: "No se encontró el producto en la base de datos",
-            type: "error",
-          });
-          refs.code.current.focus();
-          return;
-        }
-
-        const product = results.rows._array[0];
-        setLastProduct(product);
-
-        if (config.catalog_products && product.CATALOGADO == 1) {
-          Alert.alert(
-            "Producto Catalogado",
-            "Este producto está catalogado, ¿Desea continuar?",
-            [
-              {
-                text: "Cancelar",
-                onPress: () => refs.code.current.focus(),
-                style: "cancel",
-              },
-              { text: "Continuar", onPress: () => addProductToDb(product) },
-            ],
-            { cancelable: false }
-          );
-        } // * Si el software está para NO CATALOGADOS, avisamos sobre los que están CATALOGADOS ( CATALOGADO = 1 )
-
-        if (!config.catalog_products && product.CATALOGADO == 0) {
-          Alert.alert(
-            "Producto NO Catalogado",
-            "Este producto NO está catalogado, ¿Desea continuar?",
-            [
-              {
-                text: "Cancelar",
-                onPress: () => refs.code.current.focus(),
-                style: "cancel",
-              },
-              { text: "Continuar", onPress: () => addProductToDb(product) },
-            ],
-            { cancelable: false }
-          );
-        } // * Si el software está para CATALOGADOS, avisamos sobre los que están NO CATALOGADOS ( CATALOGADO = 0 )
-
-        if (
-          (config.catalog_products && product.CATALOGADO == 0) ||
-          (!config.catalog_products && product.CATALOGADO == 1)
-        ) {
-          addProductToDb(product);
-        }
-=======
   const closeArea = async () => {
     const db = SQLite.openDatabase("Maestro.db");
     const query = 'UPDATE AREAS SET UEESTADO = "CERRADA" WHERE NUM_AREA = ?';
@@ -468,17 +400,12 @@ const ProductEntry = ({ type }) => {
         });
         setArea("");
         navigate(routes.captureMenu);
->>>>>>> ecdbd41538effa7a942f5185fb9262675acf2149
       },
       (error) => {
         console.log("Error", error);
         setSnackbar({
           visible: true,
-<<<<<<< HEAD
-          text: "Error al buscar el producto en la base de datos",
-=======
           text: "Error al cerrar área",
->>>>>>> ecdbd41538effa7a942f5185fb9262675acf2149
           type: "error",
         });
       }
@@ -518,9 +445,6 @@ const ProductEntry = ({ type }) => {
               marginTop: 10,
             }}
           >
-<<<<<<< HEAD
-            <Text style={[styles.subtitle, { fontSize: 13, fontWeight: 'normal' }]}>Área: {area}</Text>
-=======
             <TouchableOpacity
               /* onPress={() => closeArea()} */
               style={{
@@ -541,7 +465,6 @@ const ProductEntry = ({ type }) => {
             >
               Serie-Área-Digito: {area}
             </Text>
->>>>>>> ecdbd41538effa7a942f5185fb9262675acf2149
             <TouchableOpacity
               onPress={() => {
                 setModal(true);
@@ -650,30 +573,6 @@ const ProductEntry = ({ type }) => {
                     </TouchableOpacity>
                   )}
 
-<<<<<<< HEAD
-                {type === "multi" ? (
-                  <TextInput
-                    onChange={(e) => {
-                      setQuantity(parseInt(e.nativeEvent.text));
-                    }}
-                    keyboardType="numeric"
-                    ref={refs.quantity}
-                    style={{
-                      ...styles.input,
-                      fontWeight: "bold",
-                      fontSize: 38,
-                      width: 70,
-                      textAlign: "center",
-                      color: "#000",
-                    }}
-                    onEndEditing={() => onQuantitySubmit()}
-                  >
-                    {quantity}
-                  </TextInput>
-                ) : (
-                  <>
-                    <Text
-=======
                   {type === "multi" ? (
                     <TextInput
                       onChange={(e) => {
@@ -681,7 +580,6 @@ const ProductEntry = ({ type }) => {
                       }}
                       keyboardType="numeric"
                       ref={refs.quantity}
->>>>>>> ecdbd41538effa7a942f5185fb9262675acf2149
                       style={{
                         ...styles.input,
                         fontWeight: "bold",

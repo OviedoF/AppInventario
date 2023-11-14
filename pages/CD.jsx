@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-import { Link, useNavigate } from "react-router-native";
+import { useNavigate } from "react-router-native";
 import React, { useState, useMemo, useEffect, useRef, useContext } from "react";
 import styles from "../styles/styles";
 import SectionBar from "../components/SectionBar";
@@ -341,157 +341,150 @@ const CD = () => {
             containerStyle={{ alignItems: "baseline" }}
           />
         </View>
-
-        {modal && (
-          <View style={styles.modal}>
-            <View style={styles.modalContent}>
-              {dataToShow.posicion && (
-                <View
-                  style={{
-                    width: "100%",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-around",
-                  }}
-                >
-                  <Text style={{ fontSize: 12 }}>Posición</Text>
-                  <TextInput
-                    autoFocus
-                    style={[styles.input, { width: "60%", height: 30 }]}
-                    onChangeText={(text) =>
-                      setCdInfo({ ...cdInfo, posicion: text })
-                    }
-                    value={cdInfo.posicion}
-                    ref={refs.posicion}
-                    placeholder="Posición"
-                    onSubmitEditing={() => passToNextInput("posicion")}
-                  />
-                </View>
-              )}
-
-              {dataToShow.pallet && (
-                <View
-                  style={{
-                    width: "100%",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-around",
-                  }}
-                >
-                  <Text style={{ fontSize: 12 }}>Pallet</Text>
-                  <TextInput
-                    style={[styles.input, { width: "60%", height: 30 }]}
-                    onChangeText={(text) =>
-                      setCdInfo({ ...cdInfo, pallet: text })
-                    }
-                    value={cdInfo.pallet}
-                    placeholder="Pallet"
-                    ref={refs.pallet}
-                    onSubmitEditing={() => passToNextInput("pallet")}
-                  />
-                </View>
-              )}
-
-              {dataToShow.caja && (
-                <View
-                  style={{
-                    width: "100%",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-around",
-                  }}
-                >
-                  <Text style={{ fontSize: 12 }}>Caja</Text>
-                  <TextInput
-                    style={[styles.input, { width: "60%", height: 30 }]}
-                    onChangeText={(text) =>
-                      setCdInfo({ ...cdInfo, caja: text })
-                    }
-                    value={cdInfo.caja}
-                    placeholder="Caja"
-                    ref={refs.caja}
-                    onSubmitEditing={() => passToNextInput("caja")}
-                  />
-                </View>
-              )}
-
-              {dataToShow.area && (
-                <View
-                  style={{
-                    width: "100%",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-around",
-                  }}
-                >
-                  <Text style={{ fontSize: 12 }}>Área</Text>
-                  <TextInput
-                    style={[styles.input, { width: "60%", height: 30 }]}
-                    onChangeText={(text) =>
-                      setCdInfo({ ...cdInfo, area: text })
-                    }
-                    value={cdInfo.area}
-                    placeholder="Área"
-                    ref={refs.area}
-                    onSubmitEditing={() => passToNextInput("area")}
-                  />
-                </View>
-              )}
-
+      </ScrollView>
+      {modal && (
+        <View style={styles.modal}>
+          <View style={styles.modalContent}>
+            {dataToShow.posicion && (
               <View
                 style={{
-                  display: "flex",
+                  width: "100%",
                   flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-around",
                 }}
               >
-                <TouchableOpacity
-                  onPress={() => {
-                    const keys = Object.keys(dataToShow);
-                    let missingData = false;
-
-                    keys.forEach((key) => {
-                      console.log(!cdInfo[key]);
-                      if (!cdInfo[key]) {
-                        setSnackbar({
-                          visible: true,
-                          text: `Ingrese ${key}`,
-                          type: "error",
-                        });
-                        missingData = key;
-                        return;
-                      }
-                    });
-
-                    if (missingData) return refs[missingData].current.focus();
-                    setModal(false);
-                  }}
-                  style={{
-                    ...styles.logBtn,
-                    width: "40%",
-                  }}
-                >
-                  <Text style={[styles.white, styles.textCenter]}>
-                    INGRESAR
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    navigate(routes.home);
-                  }}
-                  style={{
-                    ...styles.logBtn,
-                    width: "40%",
-                    backgroundColor: "#ccc",
-                  }}
-                >
-                  <Text style={[styles.white, styles.textCenter]}>VOLVER</Text>
-                </TouchableOpacity>
+                <Text style={{ fontSize: 12 }}>Posición</Text>
+                <TextInput
+                  autoFocus
+                  style={[styles.input, { width: "60%", height: 30 }]}
+                  onChangeText={(text) =>
+                    setCdInfo({ ...cdInfo, posicion: text })
+                  }
+                  value={cdInfo.posicion}
+                  ref={refs.posicion}
+                  placeholder="Posición"
+                  onSubmitEditing={() => passToNextInput("posicion")}
+                />
               </View>
+            )}
+
+            {dataToShow.pallet && (
+              <View
+                style={{
+                  width: "100%",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-around",
+                }}
+              >
+                <Text style={{ fontSize: 12 }}>Pallet</Text>
+                <TextInput
+                  style={[styles.input, { width: "60%", height: 30 }]}
+                  onChangeText={(text) =>
+                    setCdInfo({ ...cdInfo, pallet: text })
+                  }
+                  value={cdInfo.pallet}
+                  placeholder="Pallet"
+                  ref={refs.pallet}
+                  onSubmitEditing={() => passToNextInput("pallet")}
+                />
+              </View>
+            )}
+
+            {dataToShow.caja && (
+              <View
+                style={{
+                  width: "100%",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-around",
+                }}
+              >
+                <Text style={{ fontSize: 12 }}>Caja</Text>
+                <TextInput
+                  style={[styles.input, { width: "60%", height: 30 }]}
+                  onChangeText={(text) => setCdInfo({ ...cdInfo, caja: text })}
+                  value={cdInfo.caja}
+                  placeholder="Caja"
+                  ref={refs.caja}
+                  onSubmitEditing={() => passToNextInput("caja")}
+                />
+              </View>
+            )}
+
+            {dataToShow.area && (
+              <View
+                style={{
+                  width: "100%",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-around",
+                }}
+              >
+                <Text style={{ fontSize: 12 }}>Área</Text>
+                <TextInput
+                  style={[styles.input, { width: "60%", height: 30 }]}
+                  onChangeText={(text) => setCdInfo({ ...cdInfo, area: text })}
+                  value={cdInfo.area}
+                  placeholder="Área"
+                  ref={refs.area}
+                  onSubmitEditing={() => passToNextInput("area")}
+                />
+              </View>
+            )}
+
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => {
+                  const keys = Object.keys(dataToShow);
+                  let missingData = false;
+
+                  keys.forEach((key) => {
+                    console.log(!cdInfo[key]);
+                    if (!cdInfo[key]) {
+                      setSnackbar({
+                        visible: true,
+                        text: `Ingrese ${key}`,
+                        type: "error",
+                      });
+                      missingData = key;
+                      return;
+                    }
+                  });
+
+                  if (missingData) return refs[missingData].current.focus();
+                  setModal(false);
+                }}
+                style={{
+                  ...styles.logBtn,
+                  width: "40%",
+                }}
+              >
+                <Text style={[styles.white, styles.textCenter]}>INGRESAR</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  navigate(routes.home);
+                }}
+                style={{
+                  ...styles.logBtn,
+                  width: "40%",
+                  backgroundColor: "#ccc",
+                }}
+              >
+                <Text style={[styles.white, styles.textCenter]}>VOLVER</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        )}
-      </ScrollView>
+        </View>
+      )}
       <SupervisorApprobalModal
         setModalVisible={setModalSupervisor}
         modalVisible={modalSupervisor}
