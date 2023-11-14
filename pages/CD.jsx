@@ -17,22 +17,24 @@ import { dataContext } from "../context/dataContext";
 import { ScrollView } from "react-native";
 import { KeyboardAvoidingView } from "react-native";
 import edit_icon from "../assets/edit.png";
+import SupervisorApprobalModal from "../components/SupervisorApprobalModal";
 
 const CD = () => {
   const navigate = useNavigate();
-  const { config, setConfig, cdInfo, setCdInfo, setSnackbar } =
+  const { config, setConfig, cdInfo, setCdInfo, setSnackbar, user } =
     useContext(dataContext);
   const [modal, setModal] = useState(false);
+  const [idDesired, setIdDesired] = useState("");
+  const [authType, setAuthType] = useState("");
+  const [modalSupervisor, setModalSupervisor] = useState(false);
   const [selectedId, setSelectedId] = useState(parseInt(config.buttons_config));
   const [dataToShow, setDataToShow] = useState({});
-
   const refs = {
     posicion: useRef(null),
     pallet: useRef(null),
     caja: useRef(null),
     area: useRef(null),
   };
-
   const openModal = (ref) => {
     setModal(true);
     setTimeout(() => {
@@ -287,12 +289,17 @@ const CD = () => {
             <Text>No Catalogados</Text>
             <Switch
               trackColor={{ false: "#767577", true: "#81b0ff" }}
-              onValueChange={() =>
-                setConfig({
-                  ...config,
-                  catalog_products: !config.catalog_products,
-                })
-              }
+              onValueChange={() => {
+                if (!user.admin) {
+                  setAuthType("pesables");
+                  setModalSupervisor(true);
+                } else {
+                  setConfig({
+                    ...config,
+                    catalog_products: !config.catalog_products,
+                  });
+                }
+              }}
               value={config.catalog_products}
             />
 
@@ -300,15 +307,19 @@ const CD = () => {
             <Switch
               trackColor={{ false: "#767577", true: "#81b0ff" }}
               onValueChange={() => {
-                setConfig({
+                if (!user.admin) {
+                  setAuthType("pesables");
+                  setModalSupervisor(true);
+                } else {
+                  setConfig({
+                    ...config,
+                    pesables: !config.pesables,
+                  });
+                }
+                /* console.log({
                   ...config,
                   pesables: !config.pesables,
-                })
-                console.log({
-                  ...config,
-                  pesables: !config.pesables,
-                })
-
+                }); */
               }}
               value={config.pesables}
             />
@@ -317,8 +328,14 @@ const CD = () => {
           <RadioGroup
             radioButtons={optionsRadio}
             onPress={(value) => {
-              setSelectedId(value);
-              setConfig({ ...config, buttons_config: value });
+              if (!user.admin) {
+                setAuthType("buttons");
+                setIdDesired(value);
+                setModalSupervisor(true);
+              } else {
+                setSelectedId(value);
+                setConfig({ ...config, buttons_config: value });
+              }
             }}
             selectedId={selectedId}
             containerStyle={{ alignItems: "baseline" }}
@@ -475,6 +492,18 @@ const CD = () => {
           </View>
         )}
       </ScrollView>
+      <SupervisorApprobalModal
+        setModalVisible={setModalSupervisor}
+        modalVisible={modalSupervisor}
+        setSnackbar={setSnackbar}
+        user={user}
+        idDesired={idDesired}
+        setSelectedId={setSelectedId}
+        setConfig={setConfig}
+        config={config}
+        authType={authType}
+        setAuthType={setAuthType}
+      />
     </KeyboardAvoidingView>
   );
 };

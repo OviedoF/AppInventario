@@ -9,6 +9,7 @@ import CDReview from "../pages/CDReview";
 import CD from "../pages/CD";
 import SendWIFI from "../pages/SendWIFI";
 import Review from "../pages/Review";
+import AdminMenu from "../pages/AdminMenu";
 
 const AppRouter = () => {
   return (
@@ -17,6 +18,7 @@ const AppRouter = () => {
       <Route exact path={routes.login} element={<Login />} />
       {/* ---------------- USER ---------------- */}
       <Route exact path={routes.home} element={<Home />} />
+      <Route exact path={routes.menuAdmin} element={<AdminMenu />} />
       <Route exact path={routes.captureMenu} element={<CaptureMenu />} />
       <Route exact path={routes.review} element={<Review />} />
       <Route
@@ -31,10 +33,18 @@ const AppRouter = () => {
       />
       <Route exact path={routes.sentWifi} element={<SendWIFI />} />
       {/* ---------------- CD ---------------- */}
-      
+
       <Route exact path={routes.cD} element={<CD />} />
-      <Route exact path={routes.cdSingleProductEntry} element={<CDProductEntry type="single" />} />
-      <Route exact path={routes.cdMultipleProductEntry} element={<CDProductEntry type="multi" />} />
+      <Route
+        exact
+        path={routes.cdSingleProductEntry}
+        element={<CDProductEntry type="single" />}
+      />
+      <Route
+        exact
+        path={routes.cdMultipleProductEntry}
+        element={<CDProductEntry type="multi" />}
+      />
       <Route exact path={routes.cdReview} element={<CDReview />} />
     </Routes>
   );

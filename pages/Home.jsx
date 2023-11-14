@@ -120,6 +120,25 @@ const Home = () => {
               </Text>
             </View>
           </TouchableOpacity>
+          {user.admin && (
+            <TouchableOpacity
+              style={styles.primaryBtn}
+              onPress={() => {
+                navigate(routes.menuAdmin);
+              }}
+            >
+              <View style={{ flexDirection: "row", justifyContent: "center" }}>
+                <Text
+                  style={{
+                    ...styles.white,
+                    fontWeight: "bold",
+                  }}
+                >
+                  MENU ADMINISTRADOR
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* 

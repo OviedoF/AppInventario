@@ -19,13 +19,17 @@ import { KeyboardAvoidingView } from "react-native";
 import edit_icon from "../assets/edit.png";
 import * as SQLite from "expo-sqlite";
 import ExecuteQuery from "../helpers/ExecuteQuery";
+import SupervisorApprobalModal from "../components/SupervisorApprobalModal";
 
 const CaptureMenu = () => {
   const navigate = useNavigate();
-  const { area, setArea, config, setConfig, setSnackbar } = useContext(dataContext);
+  const { area, setArea, config, setConfig, setSnackbar } =
+    useContext(dataContext);
   const [modal, setModal] = useState(false);
   const [selectedId, setSelectedId] = useState(parseInt(config.buttons_config));
-
+  const [idDesired, setIdDesired] = useState("");
+  const [authType, setAuthType] = useState("");
+  const [modalSupervisor, setModalSupervisor] = useState(false);
   const refs = {
     area: useRef(null),
   };
@@ -197,12 +201,17 @@ const CaptureMenu = () => {
             <Text>No Catalogados</Text>
             <Switch
               trackColor={{ false: "#767577", true: "#81b0ff" }}
-              onValueChange={() =>
-                setConfig({
-                  ...config,
-                  catalog_products: !config.catalog_products,
-                })
-              }
+              onValueChange={() => {
+                if (!user.admin) {
+                  setAuthType("pesables");
+                  setModalSupervisor(true);
+                } else {
+                  setConfig({
+                    ...config,
+                    catalog_products: !config.catalog_products,
+                  });
+                }
+              }}
               value={config.catalog_products}
             />
 
@@ -210,15 +219,15 @@ const CaptureMenu = () => {
             <Switch
               trackColor={{ false: "#767577", true: "#81b0ff" }}
               onValueChange={() => {
-                setConfig({
-                  ...config,
-                  pesables: !config.pesables,
-                })
-                console.log({
-                  ...config,
-                  pesables: !config.pesables,
-                })
-
+                if (!user.admin) {
+                  setAuthType("pesables");
+                  setModalSupervisor(true);
+                } else {
+                  setConfig({
+                    ...config,
+                    pesables: !config.pesables,
+                  });
+                }
               }}
               value={config.pesables}
             />
@@ -227,8 +236,14 @@ const CaptureMenu = () => {
           <RadioGroup
             radioButtons={optionsRadio}
             onPress={(value) => {
-              setSelectedId(value);
-              setConfig({ ...config, buttons_config: value });
+              if (!user.admin) {
+                setAuthType("buttons");
+                setIdDesired(value);
+                setModalSupervisor(true);
+              } else {
+                setSelectedId(value);
+                setConfig({ ...config, buttons_config: value });
+              }
             }}
             selectedId={selectedId}
             containerStyle={{ alignItems: "baseline" }}
@@ -292,6 +307,18 @@ const CaptureMenu = () => {
           </View>
         )}
       </ScrollView>
+      <SupervisorApprobalModal
+        setModalVisible={setModalSupervisor}
+        modalVisible={modalSupervisor}
+        setSnackbar={setSnackbar}
+        user={user}
+        idDesired={idDesired}
+        setSelectedId={setSelectedId}
+        setConfig={setConfig}
+        config={config}
+        authType={authType}
+        setAuthType={setAuthType}
+      />
     </KeyboardAvoidingView>
   );
 };
