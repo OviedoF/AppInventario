@@ -5,7 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import TopBar from "../components/TopBar";
 import SectionBar from "../components/SectionBar";
 import routes from "../router/routes";
@@ -13,12 +13,15 @@ import styles from "../styles/styles";
 import * as SQLite from "expo-sqlite";
 import { useNavigate } from "react-router-native";
 import { dataContext } from "../context/dataContext";
+import EditIdModal from "../components/EditIdModal";
 
 const AdminMenu = () => {
   const navigate = useNavigate();
   const { setSnackbar, user } = useContext(dataContext);
+  const [id, setId] = useState("");
+  const [modalId, setModalId] = useState(false);
   const eliminarTablaInventarios = () => {
-    const db = SQLite.openDatabase("NombreDeTuBaseDeDatos.db");
+    const db = SQLite.openDatabase("Maestro.db");
     db.transaction((tx) => {
       tx.executeSql(
         "DROP TABLE IF EXISTS INVENTARIO",
@@ -54,7 +57,7 @@ const AdminMenu = () => {
           <TouchableOpacity
             style={styles.primaryBtn}
             onPress={() => {
-              navigate(routes.menuAdmin);
+              setModalId(true);
             }}
           >
             <View style={{ flexDirection: "row", justifyContent: "center" }}>
@@ -64,7 +67,7 @@ const AdminMenu = () => {
                   fontWeight: "bold",
                 }}
               >
-                MODIFICACIÓN DE PARÁMETROS
+                MODIFICAR ID CAPTURADORA
               </Text>
             </View>
           </TouchableOpacity>
@@ -87,6 +90,12 @@ const AdminMenu = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <EditIdModal
+        id={id}
+        setId={setId}
+        setModalVisible={setModalId}
+        modalVisible={modalId}
+      />
     </KeyboardAvoidingView>
   );
 };
