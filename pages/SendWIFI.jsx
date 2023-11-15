@@ -40,7 +40,7 @@ const SendWIFI = () => {
       style={{ flex: 1 }}
     >
       <ScrollView>
-        <TopBar text={"ID:"} />
+        <TopBar />
 
         <SectionBar section={"Enviar conteo WIFI"} backTo={routes.home} />
 

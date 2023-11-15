@@ -24,7 +24,7 @@ const AdminMenu = () => {
     const db = SQLite.openDatabase("Maestro.db");
     db.transaction((tx) => {
       tx.executeSql(
-        "DROP TABLE IF EXISTS INVENTARIO",
+        "DELETE FROM INVENTARIO",
         [],
         () =>
           setSnackbar({
@@ -36,7 +36,7 @@ const AdminMenu = () => {
           console.log("Error", error);
           setSnackbar({
             visible: true,
-            text: `Error al eliminar la tabla INVENTARIOS: ${error}`,
+            text: `Error al eliminar la tabla INVENTARIO: ${error}`,
             type: "error",
           });
         }
@@ -49,7 +49,7 @@ const AdminMenu = () => {
       style={{ flex: 1 }}
     >
       <ScrollView>
-        <TopBar text={"ID:"} />
+        <TopBar />
 
         <SectionBar section={"Menu Administrador"} backTo={routes.home} />
 

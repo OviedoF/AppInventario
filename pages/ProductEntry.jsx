@@ -422,7 +422,7 @@ const ProductEntry = ({ type }) => {
       style={{ flex: 1 }}
     >
       <ScrollView>
-        <TopBar text={"ID:"} />
+        <TopBar />
         <SectionBar
           section={type === "single" ? "Ingreso 1x1" : "Ingreso por cantidad"}
           backTo={routes.captureMenu}

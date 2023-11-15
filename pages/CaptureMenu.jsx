@@ -115,7 +115,7 @@ const CaptureMenu = () => {
       style={{ flex: 1 }}
     >
       <ScrollView>
-        <TopBar text={"ID:"} />
+        <TopBar />
         <SectionBar section={"Menu Captura"} backTo={routes.home} />
         <View
           style={{

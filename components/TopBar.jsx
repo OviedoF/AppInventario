@@ -5,10 +5,14 @@ import { checkId } from "../helpers/db";
 
 const TopBar = () => {
   const [data, setData] = useState(null);
-  useEffect(() => {
-    const id = checkId();
-    console.log("esto es", id);
+
+  const getId = async () => {
+    let id = await checkId();
+    console.log("este es el id de topbar: ", id);
     setData(id);
+  };
+  useEffect(() => {
+    getId();
   }, []);
   return (
     <View style={styles.topSectionContainer}>

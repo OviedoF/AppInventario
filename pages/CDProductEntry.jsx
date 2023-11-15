@@ -531,7 +531,7 @@ const ProductEntry = ({ type }) => {
       style={{ flex: 1 }}
     >
       <ScrollView>
-        <TopBar text={"ID:"} />
+        <TopBar />
         <SectionBar
           section={
             type === "single" ? "CD - Ingreso 1x1" : "CD - Ingreso por cantidad"
