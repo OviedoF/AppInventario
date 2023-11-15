@@ -75,7 +75,7 @@ const CDReview = () => {
 
   const getCDProducts = async () => {
     const db = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM INVENTARIO_APP WHERE type = "INV"`;
+    const query = `SELECT * FROM INVENTARIO_APP WHERE type = "INV" ORDER BY id DESC`;
     await ExecuteQuery(
       db,
       query,
@@ -156,17 +156,17 @@ const CDReview = () => {
               ]}
             >
               <Text
-                style={{ width: "25%", fontSize: 12, paddingHorizontal: 5 }}
+                style={{ width: "10%", fontSize: 12, paddingHorizontal: 5 }}
               >
                 {item.id}
               </Text>
               <Text
-                style={{ width: "40%", fontSize: 12, paddingHorizontal: 5 }}
+                style={{ width: "45%", fontSize: 12, paddingHorizontal: 5 }}
               >
                 {item.name}
               </Text>
               <Text
-                style={{ width: "10%", fontSize: 12, paddingHorizontal: 5 }}
+                style={{ width: "20%", fontSize: 12, paddingHorizontal: 5 }}
               >
                 {item.quantity < 0 ? item.quantity : `+${item.quantity}`}
               </Text>

@@ -52,12 +52,17 @@ const Calculator = ({
       transparent={true}
       visible={modalCalculatorVisible}
       style={{
-        alignItems: "center",
+        flex: 1,
         justifyContent: "center",
-        display: "flex",
+        alignItems: "center",
       }}
     >
-      <View style={styles.container}>
+      <View style={[styles.container, {
+        width: '100%',
+        marginTop: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+      }]}>
         <View style={styles.closeBtn}>
           <Button
             onPress={() => setModalCalculatorVisible(!modalCalculatorVisible)}

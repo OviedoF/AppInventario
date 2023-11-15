@@ -733,28 +733,13 @@ const ProductEntry = ({ type }) => {
                     </TouchableOpacity>
                   )}
 
-                {type === "multi" ? (
-                  <TextInput
-                    onChange={(e) => {
-                      setQuantity(parseInt(e.nativeEvent.text));
-                    }}
-                    keyboardType="numeric"
-                    ref={refs.quantity}
-                    style={{
-                      ...styles.input,
-                      fontWeight: "bold",
-                      fontSize: 38,
-                      width: 70,
-                      textAlign: "center",
-                      color: "#000",
-                    }}
-                    onEndEditing={() => onQuantitySubmit()}
-                  >
-                    {quantity}
-                  </TextInput>
-                ) : (
-                  <>
+                  {type === "multi" ? (
                     <TextInput
+                      onChange={(e) => {
+                        setQuantity(parseInt(e.nativeEvent.text));
+                      }}
+                      keyboardType="numeric"
+                      ref={refs.quantity}
                       style={{
                         ...styles.input,
                         fontWeight: "bold",
@@ -763,41 +748,55 @@ const ProductEntry = ({ type }) => {
                         textAlign: "center",
                         color: "#000",
                       }}
-                      onEndEditing={() => setConfirmingClose(true)}
+                      onEndEditing={() => onQuantitySubmit()}
                     >
                       {quantity}
                     </TextInput>
                   ) : (
                     <>
-                      <Text
+                      <TextInput
                         style={{
+                          ...styles.input,
                           fontWeight: "bold",
                           fontSize: 38,
                           width: 70,
                           textAlign: "center",
                           color: "#000",
                         }}
+                        onEndEditing={() => setConfirmingClose(true)}
                       >
-                        {quantity > 0 && "+"}
                         {quantity}
-                      </Text>
+                      </TextInput> : <>
+                        <Text
+                          style={{
+                            fontWeight: "bold",
+                            fontSize: 38,
+                            width: 70,
+                            textAlign: "center",
+                            color: "#000",
+                          }}
+                        >
+                          {quantity > 0 && "+"}
+                          {quantity}
+                        </Text>
 
-                      <TouchableOpacity
-                        onPress={() => {
-                          quantity === 1 ? setQuantity(-1) : setQuantity(1);
-                        }}
-                        style={{
-                          backgroundColor: "transparent",
-                          width: 30,
-                          padding: 5,
-                          margin: 5,
-                        }}
-                      >
-                        <Image
-                          style={{ width: 30, height: 30 }}
-                          source={reverse_icon}
-                        />
-                      </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => {
+                            quantity === 1 ? setQuantity(-1) : setQuantity(1);
+                          }}
+                          style={{
+                            backgroundColor: "transparent",
+                            width: 30,
+                            padding: 5,
+                            margin: 5,
+                          }}
+                        >
+                          <Image
+                            style={{ width: 30, height: 30 }}
+                            source={reverse_icon}
+                          />
+                        </TouchableOpacity>
+                      </>
                     </>
                   )}
 
@@ -1092,7 +1091,5 @@ const ProductEntry = ({ type }) => {
     </KeyboardAvoidingView>
   );
 };
-
-const stylesLocal = StyleSheet.create({});
 
 export default ProductEntry;

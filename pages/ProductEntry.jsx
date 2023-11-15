@@ -68,7 +68,10 @@ const ProductEntry = ({ type }) => {
   const { area, setArea, setSnackbar, config, user } = useContext(dataContext);
   const [calculatorModal, setCalculatorModal] = useState(false);
   const [code, setCode] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [DBFindedProduct, setDBFindedProduct] = useState(false)
+  const [quantity, setQuantity] = useState(
+    type === "single" ? 1 : ''
+  );
   const [lastProduct, setLastProduct] = useState({
     DESCRIPCION: "",
   });
@@ -176,18 +179,9 @@ const ProductEntry = ({ type }) => {
     );
   };
 
-<<<<<<< HEAD
   const validatePesable = (code, codeImplicit) => {
     const sixDigits = codeImplicit.substring(0, 6);
     const lastSixDigits = code.substring(config.largo_prod - 6, config.largo_prod - 1);
-=======
-  const validatePesable = (code) => {
-    const sixDigits = code.substring(0, 6);
-    const lastSixDigits = code.substring(
-      config.largo_prod - 6,
-      config.largo_prod
-    );
->>>>>>> ecdbd41538effa7a942f5185fb9262675acf2149
 
     const controlDigit = GTIN8Digit(`0${sixDigits}`);
 
@@ -316,16 +310,16 @@ const ProductEntry = ({ type }) => {
     } // * Si el código no cumple con la configuración, rellenamos el código con 0s a la izquierda
 
     if (config.pesables) return validatePesable(codeToSend, codeImplicit); // * Si el software está para PESABLES, validamos el código
-    if (type === 'multi') return refs.quantity.current.focus();
-
+    console.log("Code to send", codeToSend);
     const masterDb = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM MAESTRA  WHERE COD_PROD = '${codeToSend}'`;
+    const query = `SELECT * FROM MAESTRA WHERE COD_PROD = '${codeToSend}'`;
 
     ExecuteQuery(
       masterDb,
       query,
       [],
       (results) => {
+        console.log("Results", results.rows._array.length);
         if (results.rows._array.length === 0) {
           setSnackbar({
             visible: true,
@@ -335,6 +329,8 @@ const ProductEntry = ({ type }) => {
           refs.code.current.focus();
           return;
         }
+
+        if (type === 'multi') return onQuantitySubmit();
 
         const product = results.rows._array[0];
         setLastProduct(product);
@@ -389,10 +385,29 @@ const ProductEntry = ({ type }) => {
     );
   };
 
-<<<<<<< HEAD
   const onQuantitySubmit = () => {
+    if (!code)
+      return setSnackbar({
+        visible: true,
+        text: "Ingrese un código",
+        type: "error",
+      });
+
+    let codeImplicit = code;
+    let codeToSend = code;
+    if (codeToSend.length < config.largo_prod) {
+      const codeLength = codeToSend.length;
+      const codeToAdd = config.largo_prod - codeLength;
+      for (let i = 0; i < codeToAdd; i++) {
+        codeToSend = `0${codeToSend}`;
+      }
+      setCode(codeToSend);
+    } // * Si el código no cumple con la configuración, rellenamos el código con 0s a la izquierda
+
+    if (config.pesables) return validatePesable(codeToSend, codeImplicit); // * Si el software está para PESABLES, validamos el código
+    console.log("Code to send", codeToSend);
     const masterDb = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM MAESTRA  WHERE COD_PROD = '${code}'`;
+    const query = `SELECT * FROM MAESTRA WHERE COD_PROD = '${codeToSend}'`;
 
     ExecuteQuery(
       masterDb,
@@ -422,7 +437,12 @@ const ProductEntry = ({ type }) => {
                 onPress: () => refs.code.current.focus(),
                 style: "cancel",
               },
-              { text: "Continuar", onPress: () => addProductToDb(product) },
+              {
+                text: "Continuar", onPress: () => {
+                  refs.quantity.current.focus();
+                  setDBFindedProduct(product);
+                }
+              },
             ],
             { cancelable: false }
           );
@@ -438,7 +458,12 @@ const ProductEntry = ({ type }) => {
                 onPress: () => refs.code.current.focus(),
                 style: "cancel",
               },
-              { text: "Continuar", onPress: () => addProductToDb(product) },
+              {
+                text: "Continuar", onPress: () => {
+                  refs.quantity.current.focus();
+                  setDBFindedProduct(product);
+                }
+              },
             ],
             { cancelable: false }
           );
@@ -448,37 +473,15 @@ const ProductEntry = ({ type }) => {
           (config.catalog_products && product.CATALOGADO == 0) ||
           (!config.catalog_products && product.CATALOGADO == 1)
         ) {
-          addProductToDb(product);
+          refs.quantity.current.focus();
+          setDBFindedProduct(product);
         }
-=======
-  const closeArea = async () => {
-    const db = SQLite.openDatabase("Maestro.db");
-    const query = 'UPDATE AREAS SET UEESTADO = "CERRADA" WHERE NUM_AREA = ?';
-
-    ExecuteQuery(
-      db,
-      query,
-      [area],
-      (results) => {
-        console.log("Results", results);
-        setSnackbar({
-          visible: true,
-          text: "Área cerrada correctamente",
-          type: "success",
-        });
-        setArea("");
-        navigate(routes.captureMenu);
->>>>>>> ecdbd41538effa7a942f5185fb9262675acf2149
       },
       (error) => {
         console.log("Error", error);
         setSnackbar({
           visible: true,
-<<<<<<< HEAD
           text: "Error al buscar el producto en la base de datos",
-=======
-          text: "Error al cerrar área",
->>>>>>> ecdbd41538effa7a942f5185fb9262675acf2149
           type: "error",
         });
       }
@@ -518,30 +521,7 @@ const ProductEntry = ({ type }) => {
               marginTop: 10,
             }}
           >
-<<<<<<< HEAD
             <Text style={[styles.subtitle, { fontSize: 13, fontWeight: 'normal' }]}>Área: {area}</Text>
-=======
-            <TouchableOpacity
-              /* onPress={() => closeArea()} */
-              style={{
-                width: "45%",
-                borderRadius: 5,
-                padding: 10,
-                alignItems: "center",
-                backgroundColor: "red",
-                textAlign: "center",
-              }}
-            >
-              <Text style={[styles.white, { fontWeight: "500" }]}>
-                CERRAR ÁREA
-              </Text>
-            </TouchableOpacity>
-            <Text
-              style={[styles.subtitle, { fontSize: 13, fontWeight: "normal" }]}
-            >
-              Serie-Área-Digito: {area}
-            </Text>
->>>>>>> ecdbd41538effa7a942f5185fb9262675acf2149
             <TouchableOpacity
               onPress={() => {
                 setModal(true);
@@ -598,6 +578,7 @@ const ProductEntry = ({ type }) => {
                 placeholder="Código"
                 onSubmitEditing={() => onCodeSubmit()}
                 autoFocus
+                maxLength={parseInt(config.largo_prod)}
               />
             </View>
 
@@ -624,76 +605,40 @@ const ProductEntry = ({ type }) => {
             >
               {!config.pesables && (
                 <>
-                  {type === "multi" && (
-                    <TouchableOpacity
-                      style={{
-                        ...styles.logBtn,
-                        width: 40,
-                        height: 40,
-                        borderRadius: 5,
-                        alignItems: "center",
-                      }}
-                      onPress={() => {
-                        if (quantity === 1) return;
-                        setQuantity(quantity - 1);
-                      }}
-                    >
-                      <Text
-                        style={{
-                          ...styles.white,
-                          textAlign: "center",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        -
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-
-<<<<<<< HEAD
-                {type === "multi" ? (
-                  <TextInput
-                    onChange={(e) => {
-                      setQuantity(parseInt(e.nativeEvent.text));
-                    }}
-                    keyboardType="numeric"
-                    ref={refs.quantity}
-                    style={{
-                      ...styles.input,
-                      fontWeight: "bold",
-                      fontSize: 38,
-                      width: 70,
-                      textAlign: "center",
-                      color: "#000",
-                    }}
-                    onEndEditing={() => onQuantitySubmit()}
-                  >
-                    {quantity}
-                  </TextInput>
-                ) : (
-                  <>
-                    <Text
-=======
                   {type === "multi" ? (
                     <TextInput
                       onChange={(e) => {
-                        setQuantity(parseInt(e.nativeEvent.text));
+                        // Filtrar solo caracteres numéricos, punto decimal y el signo negativo
+                        const filteredText = e.nativeEvent.text.replace(/[^0-9.-]/g, '');
+
+                        // Validar que no se ingresen más de 3 decimales
+                        const decimalCount = filteredText.split('.')[1]?.length || 0;
+                        if (decimalCount > 3) return;
+
+                        if (parseFloat(filteredText) > 1000) return setQuantity('999.999');
+                        if (parseFloat(filteredText) < -1000) return setQuantity('-999.999');
+
+                        // Validar el rango máximo y mínimo
+                        if (filteredText !== '' && (parseFloat(filteredText) > 999999 || parseFloat(filteredText) < -999999)) {
+                          return;
+                        }
+
+                        setQuantity(filteredText);
                       }}
                       keyboardType="numeric"
+                      value={quantity}
                       ref={refs.quantity}
->>>>>>> ecdbd41538effa7a942f5185fb9262675acf2149
                       style={{
                         ...styles.input,
                         fontWeight: "bold",
                         fontSize: 38,
-                        width: 70,
+                        width: 150,
                         textAlign: "center",
                         color: "#000",
                       }}
-                      onEndEditing={() => setConfirmingClose(true)}
-                    >
-                      {quantity}
-                    </TextInput>
+                      onEndEditing={() => addProductToDb(DBFindedProduct, quantity)}
+                    />
+
                   ) : (
                     <>
                       <Text
@@ -726,31 +671,6 @@ const ProductEntry = ({ type }) => {
                         />
                       </TouchableOpacity>
                     </>
-                  )}
-
-                  {type === "multi" && (
-                    <TouchableOpacity
-                      style={{
-                        ...styles.logBtn,
-                        width: 40,
-                        height: 40,
-                        borderRadius: 5,
-                        alignItems: "center",
-                      }}
-                      onPress={() => {
-                        setQuantity(quantity + 1);
-                      }}
-                    >
-                      <Text
-                        style={{
-                          ...styles.white,
-                          textAlign: "center",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        +
-                      </Text>
-                    </TouchableOpacity>
                   )}
 
                   {type === "multi" && (

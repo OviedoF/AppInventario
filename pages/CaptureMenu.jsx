@@ -23,7 +23,7 @@ import SupervisorApprobalModal from "../components/SupervisorApprobalModal";
 
 const CaptureMenu = () => {
   const navigate = useNavigate();
-  const { area, setArea, config, setConfig, setSnackbar } =
+  const { area, setArea, config, setConfig, setSnackbar, user } =
     useContext(dataContext);
   const [modal, setModal] = useState(false);
   const [selectedId, setSelectedId] = useState(parseInt(config.buttons_config));
@@ -269,6 +269,7 @@ const CaptureMenu = () => {
                 placeholder="Área"
                 onSubmitEditing={confirmArea}
                 autoFocus
+                maxLength={parseFloat(config.largo_tag)}
               />
 
               <View
