@@ -201,7 +201,10 @@ const ProductEntry = ({ type }) => {
 
   const validatePesable = (code, codeImplicit) => {
     const sixDigits = codeImplicit.substring(0, 6);
-    const lastSixDigits = code.substring(config.largo_prod - 6, config.largo_prod - 1);
+    const lastSixDigits = code.substring(
+      config.largo_prod - 6,
+      config.largo_prod - 1
+    );
 
     const controlDigit = GTIN8Digit(`0${sixDigits}`);
 
@@ -329,7 +332,7 @@ const ProductEntry = ({ type }) => {
     } // * Si el código no cumple con la configuración, rellenamos el código con 0s a la izquierda
 
     if (config.pesables) return validatePesable(codeToSend, codeImplicit); // * Si el software está para PESABLES, validamos el código como pesable
-    if (type === 'multi') return refs.quantity.current.focus();
+    if (type === "multi") return refs.quantity.current.focus();
 
     const masterDb = SQLite.openDatabase("Maestro.db");
     const query = `SELECT * FROM MAESTRA  WHERE COD_PROD = '${codeToSend}'`;

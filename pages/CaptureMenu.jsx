@@ -50,31 +50,35 @@ const CaptureMenu = () => {
         return;
       }
 
-      const db = SQLite.openDatabase("Maestro.db")
+      const db = SQLite.openDatabase("Maestro.db");
 
-      ExecuteQuery(db,
+      ExecuteQuery(
+        db,
         `SELECT * FROM 'AREAS' WHERE NUM_AREA = "${area}"`,
         [],
         (result) => {
           const areas = result.rows._array;
 
-          if(!areas.length) return setSnackbar({
-            visible: true,
-            text: "Área no encontrada",
-            type: "error",
-          })
+          if (!areas.length)
+            return setSnackbar({
+              visible: true,
+              text: "Área no encontrada",
+              type: "error",
+            });
 
           setModal(false);
-        }, (error) => {
-          console.log(error)
+        },
+        (error) => {
+          console.log(error);
           return setSnackbar({
             visible: true,
             text: "Error al ingresar el área",
             type: "error",
-          })
-        })
+          });
+        }
+      );
     } catch (error) {
-      console.log(error)
+      console.log(error);
       setSnackbar({
         visible: true,
         text: "Error al ingresar el área",
@@ -130,7 +134,11 @@ const CaptureMenu = () => {
               marginTop: 10,
             }}
           >
-            <Text style={[styles.subtitle, { fontSize: 13, fontWeight: 'normal' }]}>Área: {area}</Text>
+            <Text
+              style={[styles.subtitle, { fontSize: 13, fontWeight: "normal" }]}
+            >
+              Área: {area}
+            </Text>
 
             <TouchableOpacity
               onPress={() => {
@@ -249,65 +257,61 @@ const CaptureMenu = () => {
             containerStyle={{ alignItems: "baseline" }}
           />
         </View>
-        {modal && (
-          <View style={styles.modal}>
-            <View style={styles.modalContent}>
-              <Text
+      </ScrollView>
+      {modal && (
+        <View style={styles.modal}>
+          <View style={styles.modalContent}>
+            <Text
+              style={{
+                fontSize: 16,
+              }}
+            >
+              Ingresar Área
+            </Text>
+
+            <TextInput
+              style={styles.input}
+              onChangeText={setArea}
+              value={area}
+              ref={refs.area}
+              placeholder="Área"
+              onSubmitEditing={confirmArea}
+              autoFocus
+            />
+
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+              }}
+            >
+              <TouchableOpacity
+                onPress={confirmArea}
                 style={{
-                  fontSize: 16,
+                  ...styles.logBtn,
+                  width: "40%",
                 }}
               >
-                Ingresar Área
-              </Text>
+                <Text style={[styles.white, styles.textCenter]}>INGRESAR</Text>
+              </TouchableOpacity>
 
-              <TextInput
-                keyboardType="numeric"
-                style={styles.input}
-                onChangeText={setArea}
-                value={area}
-                ref={refs.area}
-                placeholder="Área"
-                onSubmitEditing={confirmArea}
-                autoFocus
-                maxLength={parseFloat(config.largo_tag)}
-              />
-
-              <View
+              <TouchableOpacity
+                onPress={() => {
+                  setArea("");
+                  navigate(routes.home);
+                }}
                 style={{
-                  display: "flex",
-                  flexDirection: "row",
+                  ...styles.logBtn,
+                  width: "40%",
+                  backgroundColor: "#ccc",
                 }}
               >
-                <TouchableOpacity
-                  onPress={confirmArea}
-                  style={{
-                    ...styles.logBtn,
-                    width: "40%",
-                  }}
-                >
-                  <Text style={[styles.white, styles.textCenter]}>
-                    INGRESAR
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    setArea('');
-                    navigate(routes.home);
-                  }}
-                  style={{
-                    ...styles.logBtn,
-                    width: "40%",
-                    backgroundColor: "#ccc",
-                  }}
-                >
-                  <Text style={[styles.white, styles.textCenter]}>VOLVER</Text>
-                </TouchableOpacity>
-              </View>
+                <Text style={[styles.white, styles.textCenter]}>VOLVER</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        )}
-      </ScrollView>
+        </View>
+      )}
       <SupervisorApprobalModal
         setModalVisible={setModalSupervisor}
         modalVisible={modalSupervisor}
