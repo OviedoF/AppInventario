@@ -1,23 +1,15 @@
 import { View, Text } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useContext } from "react";
 import styles from "../styles/styles";
-import { checkId } from "../helpers/db";
+import { dataContext } from "../context/dataContext";
 
 const TopBar = () => {
-  const [data, setData] = useState(null);
+  const {hardwareId} = useContext(dataContext);
 
-  const getId = async () => {
-    let id = await checkId();
-    console.log("este es el id de topbar: ", id);
-    setData(id);
-  };
-  useEffect(() => {
-    getId();
-  }, []);
   return (
     <View style={styles.topSectionContainer}>
       <Text style={[styles.subtitle, styles.white, styles.mxSm, styles.pySm]}>
-        ID OPERADOR: {data && data}
+        ID OPERADOR: {hardwareId || "SIN ID TODAVÍA"}
       </Text>
     </View>
   );

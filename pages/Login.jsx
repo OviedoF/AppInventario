@@ -20,11 +20,13 @@ import * as FileSystem from "expo-file-system";
 import { Platform } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { dataContext } from "../context/dataContext";
+import { Alert } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { cargarInventario } from "../api/db";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, setUser, snackbar, setSnackbar, setConfig } =
+  const { user, setUser, snackbar, setSnackbar, setConfig, hardwareID, setHardwareId } =
     useContext(dataContext);
   const refs = {
     user: useRef(null),
@@ -51,8 +53,9 @@ const Login = () => {
         `CREATE TABLE IF NOT EXISTS INVENTARIO_APP (id INTEGER PRIMARY KEY AUTOINCREMENT, operator TEXT, name TEXT, quantity INT, date TEXT, posicion TEXT, area TEXT, pallet TEXT, caja TEXT, type TEXT, inventario TEXT);`,
         [],
         (result) => {
-          console.log("Tabla INVENTARIO_APP creada correctamente.");
-        },
+          if(result.rowsAffected > 0) {
+            console.log("Tabla INVENTARIO_APP creada correctamente.");
+          }        },
         (error) => {
           console.log(error);
         }
@@ -169,6 +172,79 @@ const Login = () => {
     saveConfig();
   };
 
+  const clearInventario = async () => {
+    const openDb = await SQLite.openDatabase(`Maestro.db`);
+    const query = `DELETE FROM INVENTARIO_APP`;
+
+    await ExecuteQuery(
+      openDb,
+      query,
+      [],
+      (result) => setSnackbar({
+        visible: true,
+        text: "Se vació la base de datos.",
+        type: "success",
+      }),
+      (error) => {
+        console.log(error);
+        setSnackbar({
+          visible: true,
+          text: "No se pudo vaciar la base de datos.",
+          type: "error",
+        });
+      }
+    );
+  };
+
+  const readIfTheDBIsEmtpy = async () => {
+    const openDb = await SQLite.openDatabase(`Maestro.db`);
+    const query = `SELECT * FROM INVENTARIO_APP`;
+
+    await ExecuteQuery(
+      openDb,
+      query,
+      [],
+      (result) => {
+        if (result.rows._array.length === 0) return;
+
+        Alert.alert(
+          "La base de datos tiene información.",
+          "La base de datos seleccionada tiene datos, ¿desea vaciarla?",
+          [
+            {
+              text: "No",
+              onPress: () => setSnackbar({
+                visible: true,
+                text: "Se siguió usando la base de datos actual",
+                type: "success",
+              }),
+              style: "cancel",
+            },
+            {
+              text: "Si",
+              onPress: () => clearInventario(),
+            },
+          ],
+          { cancelable: false }
+        );
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+  };
+
+  const getHardwareID = async () => {
+    try {
+      const value = await AsyncStorage.getItem('hardwareId')
+      if(value !== null) {
+        setHardwareId(value)
+      }
+    } catch(e) {
+      console.log(e);
+    }
+  }
+
   useEffect(() => {
     const openOrCreateDB = async () => {
       // Pedir permisos de lectura y escritura
@@ -210,6 +286,8 @@ const Login = () => {
 
     openOrCreateDB();
     saveConfig();
+    getHardwareID();
+    readIfTheDBIsEmtpy();
   }, []);
 
   useEffect(() => {

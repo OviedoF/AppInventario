@@ -1,10 +1,11 @@
-import React, { useState, createContext } from "react";
+import React, { useState, createContext, useEffect } from "react";
 
 export const dataContext = createContext();
 
 export const DataProvider = ({ children }) => {
   const [area, setArea] = useState(undefined);
   const [user, setUser] = useState(undefined);
+  const [hardwareId, setHardwareId] = useState('')
   const [snackbar, setSnackbar] = useState({
     visible: false,
     text: "",
@@ -20,6 +21,10 @@ export const DataProvider = ({ children }) => {
   })
   const [cdInfo, setCdInfo] = useState({})
 
+  useEffect(() => {
+    console.log('hardware', hardwareId)
+  }, [hardwareId])
+
   return (
     <dataContext.Provider
       value={{
@@ -33,6 +38,8 @@ export const DataProvider = ({ children }) => {
         setConfig,
         cdInfo,
         setCdInfo,
+        hardwareId,
+        setHardwareId,
         /* cartCant,
         addToCart,
         clearCart,

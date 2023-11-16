@@ -137,6 +137,13 @@ const CDReview = () => {
             </Text>
           </TouchableOpacity>
         </View>
+
+        {products && products.length === 0 && (
+          <Text style={{ textAlign: "center" }}>
+            No hay productos en el inventario
+          </Text>
+        )}
+
         {products &&
           products[0] &&
           products.map((item, id) => (

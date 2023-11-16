@@ -20,6 +20,7 @@ import edit_icon from "../assets/edit.png";
 import * as SQLite from "expo-sqlite";
 import ExecuteQuery from "../helpers/ExecuteQuery";
 import SupervisorApprobalModal from "../components/SupervisorApprobalModal";
+import { Alert } from "react-native";
 
 const CaptureMenu = () => {
   const navigate = useNavigate();
@@ -58,13 +59,58 @@ const CaptureMenu = () => {
         [],
         (result) => {
           const areas = result.rows._array;
+          const area = areas[0];
 
-          if (!areas.length)
-            return setSnackbar({
-              visible: true,
-              text: "Área no encontrada",
-              type: "error",
-            });
+          if (!area) return setSnackbar({
+            visible: true,
+            text: "Área no encontrada",
+            type: "error",
+          });
+
+          if (area.ESTADO === "CERRADA") {
+            Alert.alert(
+              "Área cerrada",
+              `El área ${area.NUM_AREA} se encuentra cerrada, ¿desea abrirla y continuar?`,
+              [
+                {
+                  text: "Cancelar",
+                  onPress: () => {
+                    setArea("");
+                    setModal(true);
+                  },
+                },{
+                  text: "Aceptar",
+                  onPress: () => {
+                    const db = SQLite.openDatabase("Maestro.db");
+                    ExecuteQuery(
+                      db,
+                      `UPDATE AREAS SET ESTADO = "INIT" WHERE NUM_AREA = "${area.NUM_AREA}"`,
+                      [],
+                      (result) => {
+                        setSnackbar({
+                          visible: true,
+                          text: "Área abierta correctamente",
+                          type: "success",
+                        });
+                      },
+                      (error) => {
+                        console.log(error);
+                        setSnackbar({
+                          visible: true,
+                          text: "Error al abrir el área",
+                          type: "error",
+                        });
+                      }
+                    );
+                    setModal(false);
+                  },
+                  style: "cancel",
+                }
+              ],
+              { cancelable: false }
+            );
+            return;
+          }
 
           setModal(false);
         },
@@ -86,6 +132,50 @@ const CaptureMenu = () => {
       });
     }
   };
+
+  const confirmCloseArea = async () => {
+    Alert.alert(
+      "Cerrar área",
+      `¿Está seguro que desea cerrar el área ${area}?`,
+      [
+        {
+          text: "Cancelar",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel",
+        },
+        {
+          text: "Cerrar",
+          onPress: async () => {
+            setArea("");
+            const db = SQLite.openDatabase("Maestro.db");
+            ExecuteQuery(
+              db,
+              `UPDATE AREAS SET ESTADO = "CERRADA" WHERE NUM_AREA = "${area}"`,
+              [],
+              (result) => {
+                setSnackbar({
+                  visible: true,
+                  text: "Área cerrada correctamente",
+                  type: "success",
+                });
+              },
+              (error) => {
+                console.log(error);
+                setSnackbar({
+                  visible: true,
+                  text: "Error al cerrar el área",
+                  type: "error",
+                });
+              }
+            );
+
+            return setModal(true);
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  }
 
   const optionsRadio = useMemo(
     () => [
@@ -130,7 +220,7 @@ const CaptureMenu = () => {
               alignItems: "center",
               flexWrap: "wrap",
               justifyContent: "center",
-              width: "80%",
+              width: "90%",
               marginTop: 10,
             }}
           >
@@ -146,19 +236,31 @@ const CaptureMenu = () => {
               }}
               style={{
                 ...styles.logBtn,
-                width: 30,
+                width: 60,
                 padding: 5,
                 margin: 5,
                 borderRadius: 5,
               }}
             >
-              <Image
-                style={{
-                  width: 15,
-                  height: 15,
-                }}
-                source={edit_icon}
-              />
+              <Text style={{
+                color: "#fff",
+              }}>EDITAR </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => confirmCloseArea()}
+              style={{
+                ...styles.logBtn,
+                width: 70,
+                padding: 5,
+                margin: 5,
+                borderRadius: 5,
+                backgroundColor: "#dc3545",
+              }}
+            >
+              <Text style={{
+                color: "#fff",
+              }}>CERRAR</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -258,6 +360,7 @@ const CaptureMenu = () => {
           />
         </View>
       </ScrollView>
+
       {modal && (
         <View style={styles.modal}>
           <View style={styles.modalContent}>
@@ -286,7 +389,7 @@ const CaptureMenu = () => {
               }}
             >
               <TouchableOpacity
-                onPress={confirmArea}
+                onPress={() => confirmArea()}
                 style={{
                   ...styles.logBtn,
                   width: "40%",
@@ -312,6 +415,7 @@ const CaptureMenu = () => {
           </View>
         </View>
       )}
+
       <SupervisorApprobalModal
         setModalVisible={setModalSupervisor}
         modalVisible={modalSupervisor}

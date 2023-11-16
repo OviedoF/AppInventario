@@ -9,10 +9,10 @@ import {
   TextInput,
 } from "react-native";
 import styles from "../styles/styles";
-import { createOrUpdateId } from "../helpers/db";
 
-const EditIdModal = ({ id, setId, setModalVisible, modalVisible }) => {
+const EditIdModal = ({ id, setId, setModalVisible, modalVisible, onConfirm }) => {
   const inputEdit = useRef(null);
+
   return (
     <>
       <View style={stylesModal.centeredView}>
@@ -40,26 +40,29 @@ const EditIdModal = ({ id, setId, setModalVisible, modalVisible }) => {
               >
                 Ingrese ID de capturador
               </Text>
+
               <TextInput
                 onChangeText={(value) => setId(value)}
                 value={id.toString()}
-                style={styles.input}
+                style={[styles.input, { width: '100%' }]}
                 showSoftInputOnFocus={false}
                 ref={inputEdit}
                 autoFocus
                 onSubmitEditing={() => {
-                  setModalVisible(!modalVisible);
+                  onConfirm()
                 }}
               />
-              <View style={{ flexDirection: "row" }}>
+
+              <View style={{ flexDirection: "row", width: '50%' }}>
                 <TouchableOpacity
                   style={styles.logBtn}
                   onPress={() => {
-                    createOrUpdateId(id);
-                    setModalVisible(!modalVisible);
+                    onConfirm()
                   }}
                 >
-                  <Text style={stylesModal.textStyle}>EDITAR</Text>
+                  <Text style={[stylesModal.textStyle, {
+                    width: '100%',
+                  }]}>ACEPTAR</Text>
                 </TouchableOpacity>
               </View>
             </View>

@@ -14,12 +14,14 @@ import * as SQLite from "expo-sqlite";
 import { useNavigate } from "react-router-native";
 import { dataContext } from "../context/dataContext";
 import EditIdModal from "../components/EditIdModal";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AdminMenu = () => {
   const navigate = useNavigate();
-  const { setSnackbar, user } = useContext(dataContext);
+  const { setSnackbar, user, setHardwareId } = useContext(dataContext);
   const [id, setId] = useState("");
   const [modalId, setModalId] = useState(false);
+
   const eliminarTablaInventarios = () => {
     const db = SQLite.openDatabase("Maestro.db");
     db.transaction((tx) => {
@@ -43,6 +45,27 @@ const AdminMenu = () => {
       );
     });
   };
+
+  const changeHardwareID = async () => {
+    try {
+      await AsyncStorage.setItem("hardwareId", id);
+      setHardwareId(id);
+      setSnackbar({
+        visible: true,
+        text: "ID cambiado con éxito",
+        type: "success",
+      });
+      return setModalId(false);
+    } catch (e) {
+      setSnackbar({
+        visible: true,
+        text: `Error al cambiar el ID: ${e}`,
+        type: "error",
+      });
+      return setModalId(false);
+    }
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -56,9 +79,7 @@ const AdminMenu = () => {
         <View style={styles.container}>
           <TouchableOpacity
             style={styles.primaryBtn}
-            onPress={() => {
-              setModalId(true);
-            }}
+            onPress={() => setModalId(true)}
           >
             <View style={{ flexDirection: "row", justifyContent: "center" }}>
               <Text
@@ -71,6 +92,7 @@ const AdminMenu = () => {
               </Text>
             </View>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.primaryBtn}
             onPress={() => {
@@ -90,11 +112,13 @@ const AdminMenu = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
       <EditIdModal
         id={id}
         setId={setId}
         setModalVisible={setModalId}
         modalVisible={modalId}
+        onConfirm={changeHardwareID}
       />
     </KeyboardAvoidingView>
   );
