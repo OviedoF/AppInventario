@@ -115,7 +115,7 @@ const Login = () => {
       [],
       (data) => {
         const config = data.rows._array;
-        console.log(config[4]);
+        /* console.log(config[4]); */
 
         setConfig({
           largo_tag: config[0].LARGO_CAMPO,
@@ -125,7 +125,11 @@ const Login = () => {
             : parseInt(config[2].LARGO_CAMPO),
           catalog_products: config[3].LARGO_CAMPO === "N" ? false : true,
           index_capt: 1,
-          pesables: config[5] ? config[5].LARGO_CAMPO === "N" ? false : true : false,
+          pesables: config[5]
+            ? config[5].LARGO_CAMPO === "N"
+              ? false
+              : true
+            : false,
         });
       },
       (error) => {
@@ -218,7 +222,7 @@ const Login = () => {
       style={{ flex: 1 }}
     >
       <ScrollView>
-        <TopBar text={"ID:"} />
+        <TopBar />
 
         <View style={styles.container}>
           <Image

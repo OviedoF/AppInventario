@@ -13,7 +13,6 @@ import { createOrUpdateId } from "../helpers/db";
 
 const EditIdModal = ({ id, setId, setModalVisible, modalVisible }) => {
   const inputEdit = useRef(null);
-
   return (
     <>
       <View style={stylesModal.centeredView}>

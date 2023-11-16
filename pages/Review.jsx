@@ -99,7 +99,7 @@ const CDReview = () => {
   return (
     <KeyboardAvoidingView>
       <ScrollView>
-        <TopBar text={"ID:"} />
+        <TopBar />
         <SectionBar
           section={`Revisión`}
           backTo={
