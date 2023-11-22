@@ -15,6 +15,7 @@ import styles from "../styles/styles";
 import SectionBar from "../components/SectionBar";
 import SelectDropdown from "react-native-select-dropdown";
 import TopBar from "../components/TopBar";
+import { sendAreas } from "../helpers/db";
 
 const SendWIFI = () => {
   const [errorModal, setErrorModal] = useState(false);
@@ -102,6 +103,7 @@ const SendWIFI = () => {
 
             <TouchableOpacity
               style={[styles.primaryBtn, { marginTop: 10, width: "100vw" }]}
+              onPress={() => sendAreas()}
             >
               <Text
                 style={[

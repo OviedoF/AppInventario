@@ -92,7 +92,79 @@ const createOrUpdateId = async (largoCampo) => {
   await createOrUpdate();
 };
 
-export { createOrUpdateId, checkId };
+const sendAreas = async () => {
+  const db = SQLite.openDatabase("Maestro.db");
+
+  const getClosedAreas = async () => {
+    try {
+      return new Promise((resolve, reject) => {
+        ExecuteQuery(
+          db,
+          "SELECT * FROM AREAS WHERE ESTADO = ?",
+          ["CERRADO"],
+          ({ rows }) => {
+            const areasCerradas = rows._array;
+            resolve(areasCerradas);
+          },
+          (error) => {
+            console.log("Error al obtener áreas cerradas:", error);
+            reject(error);
+          }
+        );
+      });
+    } catch (error) {
+      console.error("Error al ejecutar obtenerAreasCerradas:", error);
+      return null;
+    }
+  };
+  //? LISTADO DE ÁREAS CERRADAS
+  const closedAreas = await getClosedAreas();
+
+  //? OBTENER LECTURAS POR CADA ÁREA
+
+  const getProductsForEachArea = async () => {
+    try {
+      const resultados = await Promise.all(
+        closedAreas.map(async (area) => {
+          const areaNumero = area.NUM_AREA;
+
+          return new Promise((resolve, reject) => {
+            ExecuteQuery(
+              db,
+              "SELECT * FROM INVENTARIO WHERE area = ?",
+              [areaNumero],
+              ({ rows }) => {
+                const elementosInventario = rows._array;
+                resolve({ areaNumero, elementosInventario });
+              },
+              (error) => {
+                console.log(
+                  `Error al obtener elementos de inventario para el área ${areaNumero}:`,
+                  error
+                );
+                reject(error);
+              }
+            );
+          });
+        })
+      );
+
+      return resultados;
+    } catch (error) {
+      console.error(
+        "Error al obtener elementos de inventario por área:",
+        error
+      );
+      return null;
+    }
+  };
+  const resultadosPorArea = await getProductsForEachArea(closedAreas);
+  console.log("Resultados por área:", resultadosPorArea);
+
+  //? ENVIAR DATOS
+};
+
+export { createOrUpdateId, checkId, sendAreas };
 
 /* FORMATO 
 {
