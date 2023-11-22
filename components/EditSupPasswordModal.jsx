@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import styles from "../styles/styles";
 
-const EditIdModal = ({ id, setId, setModalVisible, modalVisible, onConfirm }) => {
+const EditSupPasswordModal = ({ supervisorPassword, setSupervisorPassword, setModalVisible, modalVisible, onConfirm }) => {
   const inputEdit = useRef(null);
 
   return (
@@ -37,12 +37,12 @@ const EditIdModal = ({ id, setId, setModalVisible, modalVisible, onConfirm }) =>
                   { fontWeight: "bold", fontSize: 16 },
                 ]}
               >
-                Ingrese ID de capturador
+                Ingrese clave de supervisor
               </Text>
 
               <TextInput
-                onChangeText={(value) => setId(value)}
-                value={id.toString()}
+                onChangeText={(value) => setSupervisorPassword(value)}
+                value={supervisorPassword}
                 style={[styles.input, { width: '100%' }]}
                 showSoftInputOnFocus={false}
                 ref={inputEdit}
@@ -71,7 +71,7 @@ const EditIdModal = ({ id, setId, setModalVisible, modalVisible, onConfirm }) =>
     </>
   );
 };
-export default EditIdModal;
+export default EditSupPasswordModal;
 
 const stylesModal = StyleSheet.create({
   centeredView: {

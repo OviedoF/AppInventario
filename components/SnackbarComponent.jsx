@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useContext } from "react";
+import React, {  useContext } from "react";
 import { dataContext } from "../context/dataContext";
 import { Snackbar } from "react-native-paper";
 
@@ -15,6 +15,7 @@ export default SnackbarComponent = () => {
           type: "success",
         })
       }
+      
       duration={3000}
       style={{
         backgroundColor: snackbar.type === "success" ? "#4caf50" : "#f44336",

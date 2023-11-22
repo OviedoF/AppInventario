@@ -5,6 +5,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { DataProvider } from "./context/dataContext";
 import SnackbarComponent from "./components/SnackbarComponent";
 import { Dimensions, View } from "react-native";
+import DangerModal from "./components/DangerModal";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
             <StatusBar />
             <AppRouter />
             <SnackbarComponent />
+            <DangerModal />
           </View>
         </SafeAreaProvider>
       </NativeRouter>

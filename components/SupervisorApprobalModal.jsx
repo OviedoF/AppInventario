@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import styles from "../styles/styles";
 import { TextInput } from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import env from "../env";
 
 const SupervisorApprobalModal = ({
   setModalVisible,
@@ -24,21 +26,26 @@ const SupervisorApprobalModal = ({
 }) => {
   const [code, setCode] = useState("");
   const input = useRef(null);
+
   const checkSupervisorCode = async () => {
+    const adminPassword = await AsyncStorage.getItem(env.asyncStorage.adminPassword);
+    console.log(env.asyncStorage.adminPassword, adminPassword);
+
     if (!user || !user.CLAVE) {
-      setModalVisible(false);
+      setCode("");
       setSnackbar({
         visible: true,
         text: `Error al obtener clave de supervisor`,
         type: "error",
       });
     }
-    if (code === user.CLAVE) {
-      setModalVisible(false);
+
+    if (code === adminPassword) {
       if (authType === "buttons") {
         setSelectedId(idDesired);
         setConfig({ ...config, buttons_config: idDesired });
       }
+      
       if (authType === "pesables") {
         setConfig({
           ...config,
@@ -57,7 +64,10 @@ const SupervisorApprobalModal = ({
         type: "success",
       });
       setAuthType("");
+      setCode("");
+      setModalVisible(false);
     } else {
+      setCode("");
       setModalVisible(false);
       setSnackbar({
         visible: true,
@@ -74,7 +84,6 @@ const SupervisorApprobalModal = ({
           transparent={true}
           visible={modalVisible}
           onRequestClose={() => {
-            Alert.alert("Modal has been closed.");
             setModalVisible(!modalVisible);
           }}
         >
@@ -100,18 +109,8 @@ const SupervisorApprobalModal = ({
                 showSoftInputOnFocus={false}
                 ref={input}
                 autoFocus
-                onSubmitEditing={() => {
-                  setModalVisible(!modalVisible);
-                }}
+                onSubmitEditing={() => checkSupervisorCode()}
               />
-              <View style={{ flexDirection: "row" }}>
-                <TouchableOpacity
-                  style={[styles.logBtn]}
-                  onPress={() => checkSupervisorCode()}
-                >
-                  <Text style={stylesModal.textStyle}>Confirmar</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </View>
         </Modal>

@@ -12,10 +12,12 @@ import { useContext } from "react";
 import { dataContext } from "../context/dataContext";
 import * as SQLite from "expo-sqlite";
 import ExecuteQuery from "../helpers/ExecuteQuery";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import env from "../env";
 
 const Home = () => {
   const [inventories, setInventories] = useState([]);
-  const { config, setConfig, user, setSnackbar } = useContext(dataContext);
+  const { config, setConfig, user, setSnackbar, inventario, setInventario } = useContext(dataContext);
   const navigate = useNavigate();
   const {
     handleSubmit,
@@ -27,6 +29,7 @@ const Home = () => {
       large_tag: "",
     },
   });
+  console.log(inventories);
 
   useEffect(() => {
     const getInventories = async () => {
@@ -60,6 +63,14 @@ const Home = () => {
     };
 
     getInventories();
+
+    if(!user.admin) {
+      if(!inventario) return navigate(routes.login)
+      setConfig({ ...config, inv_activo: inventory.ID_INV });
+      navigate(
+        config.index_capt === 1 ? routes.captureMenu : routes.cD
+      );
+    }
   }, []);
 
   return (
@@ -93,8 +104,10 @@ const Home = () => {
             <TouchableOpacity
               key={index}
               style={styles.primaryBtn}
-              onPress={() => {
+              onPress={async () => {
                 setConfig({ ...config, inv_activo: inventory.ID_INV });
+                setInventario(`${inventory.ID_INV}. ${inventory.DESCRIPCION}`);
+                await AsyncStorage.setItem(env.asyncStorage.invSelected, `${inventory.ID_INV}. ${inventory.DESCRIPCION}`);
                 navigate(
                   config.index_capt === 1 ? routes.captureMenu : routes.cD
                 );

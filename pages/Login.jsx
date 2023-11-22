@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
-import { useNavigate } from "react-router-native";
+import { useLocation, useNavigate } from "react-router-native";
 import logo from "../assets/logo.png"; //! agregar logo.png a la carpeta assets
 import routes from "../router/routes";
 import styles from "../styles/styles";
@@ -20,18 +20,21 @@ import * as FileSystem from "expo-file-system";
 import { Platform } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { dataContext } from "../context/dataContext";
-import { Alert } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import dataApp from "../app.json";
+import env from "../env";
+import { BackHandler } from "react-native";
 // import { cargarInventario } from "../api/db";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, setUser, snackbar, setSnackbar, setConfig, hardwareID, setHardwareId } =
+  const { setUser, setSnackbar, setConfig, setHardwareId, setInventario, config, setDangerModal } =
     useContext(dataContext);
   const refs = {
     user: useRef(null),
     password: useRef(null),
   };
+  console.log(dataApp.expo.version)
 
   const {
     handleSubmit,
@@ -53,9 +56,10 @@ const Login = () => {
         `CREATE TABLE IF NOT EXISTS INVENTARIO_APP (id INTEGER PRIMARY KEY AUTOINCREMENT, operator TEXT, name TEXT, quantity INT, date TEXT, posicion TEXT, area TEXT, pallet TEXT, caja TEXT, type TEXT, inventario TEXT);`,
         [],
         (result) => {
-          if(result.rowsAffected > 0) {
+          if (result.rowsAffected > 0) {
             console.log("Tabla INVENTARIO_APP creada correctamente.");
-          }        },
+          }
+        },
         (error) => {
           console.log(error);
         }
@@ -83,10 +87,18 @@ const Login = () => {
             return;
           }
 
-          setUser({
+          const userProx = {
             ...user,
             admin: user._id === 1 || user._id === 2 ? true : false,
+          };
+
+          if (!userProx.admin) return setSnackbar({
+            visible: true,
+            text: "El administrador no ha configurado el inventario para este usuario.",
+            type: "error",
           });
+
+          setUser(userProx);
 
           setSnackbar({
             visible: true,
@@ -94,6 +106,10 @@ const Login = () => {
             type: "success",
           });
 
+          BackHandler.addEventListener("hardwareBackPress", () => {
+            navigate(-1);
+            return true;
+          } ); // * Agregar evento para el botón de atrás
           navigate(routes.home);
         },
         (error) => {
@@ -172,30 +188,6 @@ const Login = () => {
     saveConfig();
   };
 
-  const clearInventario = async () => {
-    const openDb = await SQLite.openDatabase(`Maestro.db`);
-    const query = `DELETE FROM INVENTARIO_APP`;
-
-    await ExecuteQuery(
-      openDb,
-      query,
-      [],
-      (result) => setSnackbar({
-        visible: true,
-        text: "Se vació la base de datos.",
-        type: "success",
-      }),
-      (error) => {
-        console.log(error);
-        setSnackbar({
-          visible: true,
-          text: "No se pudo vaciar la base de datos.",
-          type: "error",
-        });
-      }
-    );
-  };
-
   const readIfTheDBIsEmtpy = async () => {
     const openDb = await SQLite.openDatabase(`Maestro.db`);
     const query = `SELECT * FROM INVENTARIO_APP`;
@@ -207,26 +199,17 @@ const Login = () => {
       (result) => {
         if (result.rows._array.length === 0) return;
 
-        Alert.alert(
-          "La base de datos tiene información.",
-          "La base de datos seleccionada tiene datos, ¿desea vaciarla?",
-          [
+        setDangerModal({
+          visible: true,
+          title: "¡Atención!",
+          text: "La base de datos tiene información.",
+          buttons: [
             {
-              text: "No",
-              onPress: () => setSnackbar({
-                visible: true,
-                text: "Se siguió usando la base de datos actual",
-                type: "success",
-              }),
-              style: "cancel",
-            },
-            {
-              text: "Si",
-              onPress: () => clearInventario(),
+              text: "Entendido",
+              onPress: () => console.log("Cancel Pressed"),
             },
           ],
-          { cancelable: false }
-        );
+        });
       },
       (error) => {
         console.log(error);
@@ -237,13 +220,32 @@ const Login = () => {
   const getHardwareID = async () => {
     try {
       const value = await AsyncStorage.getItem('hardwareId')
-      if(value !== null) {
+      if (value !== null) {
         setHardwareId(value)
       }
-    } catch(e) {
+      const adminPassword = await AsyncStorage.getItem(env.asyncStorage.adminPassword)
+      if (!adminPassword) {
+        console.log("No existe la contraseña de administrador, se procede a crearla");
+        await AsyncStorage.setItem(env.asyncStorage.adminPassword, '1234')
+      }
+    } catch (e) {
       console.log(e);
     }
   }
+
+  const getInvSelected = async () => {
+    try {
+      const value = await AsyncStorage.getItem(env.asyncStorage.invSelected)
+      if (value !== null) {
+        setInventario(value)
+      }
+      console.log(value.split('.')[0])
+      setConfig({ ...config, inv_activo: value.split('.')[0] });
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
 
   useEffect(() => {
     const openOrCreateDB = async () => {
@@ -287,7 +289,11 @@ const Login = () => {
     openOrCreateDB();
     saveConfig();
     getHardwareID();
+    getInvSelected();
     readIfTheDBIsEmtpy();
+
+    //Eliminar todos los addEventListener de BackHandler
+    BackHandler.removeEventListener("hardwareBackPress", () => { });
   }, []);
 
   useEffect(() => {
@@ -374,6 +380,10 @@ const Login = () => {
         >
           <Text style={[styles.textCenter]}>ABRIR NUEVA BASE DE DATOS</Text>
         </TouchableOpacity>
+
+        <Text style={[styles.textCenter, { marginTop: 5 }]}>
+          Versión: {dataApp.expo.version}
+        </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );

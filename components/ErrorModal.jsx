@@ -17,7 +17,6 @@ const ErrorModal = ({ message, setModalFailVisible, modalFailVisible }) => {
           transparent={true}
           visible={modalFailVisible}
           onRequestClose={() => {
-            Alert.alert("Modal has been closed.");
             setModalFailVisible(!modalFailVisible);
           }}
         >
@@ -25,9 +24,19 @@ const ErrorModal = ({ message, setModalFailVisible, modalFailVisible }) => {
             style={[
               stylesModal.centeredView,
               { backgroundColor: "rgba(0, 0, 0, 0.5)" },
+              width = "100%",
             ]}
           >
             <View style={stylesModal.modalView}>
+            <Text
+                style={[
+                  stylesModal.modalText,
+                  { fontWeight: "bold", fontSize: 25 },
+                ]}
+              >
+                ¡ERROR!
+              </Text>
+
               <Text
                 style={[
                   stylesModal.modalText,
@@ -61,9 +70,9 @@ const stylesModal = StyleSheet.create({
   },
   modalView: {
     margin: 20,
-    backgroundColor: "white",
+    backgroundColor: "#f44336",
     borderRadius: 20,
-    padding: 35,
+    padding: 25,
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
@@ -73,11 +82,12 @@ const stylesModal = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+    width: "90%",
   },
   button: {
     borderRadius: 10,
-    width: 96,
-    height: 48,
+    width: '100%',
+    height: 35,
     borderColor: "blue",
     justifyContent: "center",
     color: "white",
@@ -87,11 +97,12 @@ const stylesModal = StyleSheet.create({
     backgroundColor: "#F194FF",
   },
   textStyle: {
-    color: "#f5f5f5",
+    color: "#fefefe",
     textAlign: "center",
   },
   modalText: {
     marginBottom: 15,
     textAlign: "center",
+    color: "#fefefe",
   },
 });

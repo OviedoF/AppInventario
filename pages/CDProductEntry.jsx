@@ -63,7 +63,7 @@ function GtoKG(gramos) {
 }
 
 const ProductEntry = ({ type }) => {
-  const { cdInfo, setCdInfo, config, setSnackbar, user } =
+  const { cdInfo, setCdInfo, config, setSnackbar, user, setDangerModal } =
     useContext(dataContext);
   const [modal, setModal] = useState(false);
   const [calculatorModal, setCalculatorModal] = useState(false);
@@ -257,10 +257,11 @@ const ProductEntry = ({ type }) => {
         setLastProduct({ ...product, quantity });
 
         if (config.catalog_products && product.CATALOGADO == 1) {
-          Alert.alert(
-            "Producto Catalogado",
-            "Este producto está catalogado, ¿Desea continuar?",
-            [
+          setDangerModal({
+            visible: true,
+            title: "Producto Catalogado",
+            text: "Este producto está catalogado, ¿Desea continuar?",
+            buttons: [
               {
                 text: "Cancelar",
                 onPress: () => refs.product.current.focus(),
@@ -271,15 +272,15 @@ const ProductEntry = ({ type }) => {
                 onPress: () => addProductToDb(product, quantity),
               },
             ],
-            { cancelable: false }
-          );
+          });
         } // * Si el software está para NO CATALOGADOS, avisamos sobre los que están CATALOGADOS ( CATALOGADO = 1 )
 
         if (!config.catalog_products && product.CATALOGADO == 0) {
-          Alert.alert(
-            "Producto NO Catalogado",
-            "Este producto NO está catalogado, ¿Desea continuar?",
-            [
+          setDangerModal({
+            visible: true,
+            title: "Producto NO Catalogado",
+            text: "Este producto NO está catalogado, ¿Desea continuar?",
+            buttons: [
               {
                 text: "Cancelar",
                 onPress: () => refs.product.current.focus(),
@@ -290,8 +291,7 @@ const ProductEntry = ({ type }) => {
                 onPress: () => addProductToDb(product, quantity),
               },
             ],
-            { cancelable: false }
-          );
+          });
         } // * Si el software está para CATALOGADOS, avisamos sobre los que están NO CATALOGADOS ( CATALOGADO = 0 )
 
         if (
@@ -356,35 +356,41 @@ const ProductEntry = ({ type }) => {
         setLastProduct(product);
 
         if (config.catalog_products && product.CATALOGADO == 1) {
-          Alert.alert(
-            "Producto Catalogado",
-            "Este producto está catalogado, ¿Desea continuar?",
-            [
+          setDangerModal({
+            visible: true,
+            title: "Producto Catalogado",
+            text: "Este producto está catalogado, ¿Desea continuar?",
+            buttons: [
               {
                 text: "Cancelar",
                 onPress: () => refs.product.current.focus(),
                 style: "cancel",
               },
-              { text: "Continuar", onPress: () => addProductToDb(product) },
+              {
+                text: "Continuar",
+                onPress: () => addProductToDb(product),
+              },
             ],
-            { cancelable: false }
-          );
+          });
         } // * Si el software está para NO CATALOGADOS, avisamos sobre los que están CATALOGADOS ( CATALOGADO = 1 )
 
         if (!config.catalog_products && product.CATALOGADO == 0) {
-          Alert.alert(
-            "Producto NO Catalogado",
-            "Este producto NO está catalogado, ¿Desea continuar?",
-            [
+          setDangerModal({
+            visible: true,
+            title: "Producto NO Catalogado",
+            text: "Este producto NO está catalogado, ¿Desea continuar?",
+            buttons: [
               {
                 text: "Cancelar",
                 onPress: () => refs.product.current.focus(),
                 style: "cancel",
               },
-              { text: "Continuar", onPress: () => addProductToDb(product) },
+              {
+                text: "Continuar",
+                onPress: () => addProductToDb(product),
+              },
             ],
-            { cancelable: false }
-          );
+          });
         } // * Si el software está para CATALOGADOS, avisamos sobre los que están NO CATALOGADOS ( CATALOGADO = 0 )
 
         if (
@@ -428,35 +434,41 @@ const ProductEntry = ({ type }) => {
         setLastProduct(product);
 
         if (config.catalog_products && product.CATALOGADO == 1) {
-          Alert.alert(
-            "Producto Catalogado",
-            "Este producto está catalogado, ¿Desea continuar?",
-            [
+          setDangerModal({
+            visible: true,
+            title: "Producto Catalogado",
+            text: "Este producto está catalogado, ¿Desea continuar?",
+            buttons: [
               {
                 text: "Cancelar",
                 onPress: () => refs.product.current.focus(),
                 style: "cancel",
               },
-              { text: "Continuar", onPress: () => addProductToDb(product) },
+              {
+                text: "Continuar",
+                onPress: () => addProductToDb(product),
+              },
             ],
-            { cancelable: false }
-          );
+          });
         } // * Si el software está para NO CATALOGADOS, avisamos sobre los que están CATALOGADOS ( CATALOGADO = 1 )
 
         if (!config.catalog_products && product.CATALOGADO == 0) {
-          Alert.alert(
-            "Producto NO Catalogado",
-            "Este producto NO está catalogado, ¿Desea continuar?",
-            [
+          setDangerModal({
+            visible: true,
+            title: "Producto NO Catalogado",
+            text: "Este producto NO está catalogado, ¿Desea continuar?",
+            buttons: [
               {
                 text: "Cancelar",
                 onPress: () => refs.product.current.focus(),
                 style: "cancel",
               },
-              { text: "Continuar", onPress: () => addProductToDb(product) },
+              {
+                text: "Continuar",
+                onPress: () => addProductToDb(product),
+              },
             ],
-            { cancelable: false }
-          );
+          });
         } // * Si el software está para CATALOGADOS, avisamos sobre los que están NO CATALOGADOS ( CATALOGADO = 0 )
 
         if (

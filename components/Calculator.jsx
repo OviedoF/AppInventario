@@ -33,7 +33,8 @@ const Calculator = ({
     try {
       const result = eval(displayText);
       setDisplayText(result.toString());
-      setQuantity(parseFloat(result.toString()));
+      setQuantity(result.toString());
+      setModalCalculatorVisible(!modalCalculatorVisible);
     } catch (error) {
       setDisplayText("Error");
     }

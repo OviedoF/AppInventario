@@ -22,6 +22,7 @@ import { Alert } from "react-native";
 import * as SQLite from "expo-sqlite";
 import ExecuteQuery from "../helpers/ExecuteQuery";
 import reverse_icon from "../assets/reverse.png";
+import ErrorModal from "../components/ErrorModal";
 
 function GTIN8Digit(codigoGTIN8) {
   if (codigoGTIN8.length !== 7) {
@@ -65,7 +66,7 @@ function GtoKG(gramos) {
 }
 
 const ProductEntry = ({ type }) => {
-  const { area, setArea, setSnackbar, config, user } = useContext(dataContext);
+  const { area, setArea, setSnackbar, config, user, setDangerModal } = useContext(dataContext);
   const [calculatorModal, setCalculatorModal] = useState(false);
   const [code, setCode] = useState("");
   const [DBFindedProduct, setDBFindedProduct] = useState(false)
@@ -75,6 +76,7 @@ const ProductEntry = ({ type }) => {
   const [lastProduct, setLastProduct] = useState({
     DESCRIPCION: "",
   });
+  const [productNoFinded, setProductNoFinded] = useState(false)
   const [confirmingClose, setConfirmingClose] = useState(false);
   const [modal, setModal] = useState(false);
   const [scansData, setScansData] = useState({
@@ -101,6 +103,65 @@ const ProductEntry = ({ type }) => {
 
     setModal(false);
   };
+
+  const confirmCloseArea = async () => {
+    setDangerModal({
+      visible: true,
+      title: "Cerrar área",
+      text: "¿Está seguro que desea cerrar el área?",
+      buttons: [
+        {
+          text: "Cancelar",
+          onPress: () => {
+            setDangerModal({
+              visible: false,
+              title: "",
+              text: "",
+              buttons: [],
+            });
+          },
+          style: "cancel",
+        },
+        {
+          text: "Cerrar",
+          onPress: async () => {
+            setDangerModal({
+              visible: false,
+              title: "",
+              text: "",
+              buttons: [],
+            });
+            setArea("");
+            const db = SQLite.openDatabase("Maestro.db");
+            ExecuteQuery(
+              db,
+              `UPDATE AREAS SET ESTADO = "CERRADA" WHERE NUM_AREA = "${area}"`,
+              [],
+              (result) => {
+                setSnackbar({
+                  visible: true,
+                  text: "Área cerrada correctamente",
+                  type: "success",
+                });
+              },
+              (error) => {
+                console.log(error);
+                setSnackbar({
+                  visible: true,
+                  text: "Error al cerrar el área",
+                  type: "error",
+                });
+              }
+            );
+
+            setArea("");
+            navigate(routes.captureMenu);
+            return;
+          },
+        },
+      ],
+    });
+  }
 
   const getScansData = async () => {
     const db = SQLite.openDatabase("Maestro.db");
@@ -165,6 +226,8 @@ const ProductEntry = ({ type }) => {
           type: "success",
         });
         setCode("");
+        if (type === 'multi') setQuantity('');
+        if (type === 'single') setQuantity(1);
         refs.code.current.clear();
         refs.code.current.focus();
       },
@@ -222,10 +285,9 @@ const ProductEntry = ({ type }) => {
       [],
       (results) => {
         if (results.rows._array.length === 0) {
-          setSnackbar({
-            visible: true,
-            text: "No se encontró el producto en la base de datos",
-            type: "error",
+          setProductNoFinded(true);
+          setLastProduct({
+            DESCRIPCION: "",
           });
           refs.code.current.focus();
           return;
@@ -235,41 +297,61 @@ const ProductEntry = ({ type }) => {
         setLastProduct({ ...product, quantity });
 
         if (config.catalog_products && product.CATALOGADO == 1) {
-          Alert.alert(
-            "Producto Catalogado",
-            "Este producto está catalogado, ¿Desea continuar?",
-            [
+          setDangerModal({
+            visible: true,
+            title: "Producto Catalogado",
+            text: "Este producto es catalogado. Si quiere añadirlo desactive la opción de no catalogados.",
+            buttons: [
               {
-                text: "Cancelar",
-                onPress: () => refs.code.current.focus(),
+                text: "Entendido",
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+                  refs.code.current.focus();
+                },
                 style: "cancel",
-              },
-              {
-                text: "Continuar",
-                onPress: () => addProductToDb(product, quantity),
-              },
+              }
             ],
-            { cancelable: false }
-          );
+          });
         } // * Si el software está para NO CATALOGADOS, avisamos sobre los que están CATALOGADOS ( CATALOGADO = 1 )
 
         if (!config.catalog_products && product.CATALOGADO == 0) {
-          Alert.alert(
-            "Producto NO Catalogado",
-            "Este producto NO está catalogado, ¿Desea continuar?",
-            [
+          setDangerModal({
+            visible: true,
+            title: "Producto NO Catalogado",
+            text: "Este producto NO está catalogado, ¿Desea continuar?",
+            buttons: [
               {
                 text: "Cancelar",
-                onPress: () => refs.code.current.focus(),
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+                  refs.code.current.focus();
+                },
                 style: "cancel",
               },
               {
                 text: "Continuar",
-                onPress: () => addProductToDb(product, quantity),
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+                  addProductToDb(product, quantity);
+                },
               },
             ],
-            { cancelable: false }
-          );
+          });
         } // * Si el software está para CATALOGADOS, avisamos sobre los que están NO CATALOGADOS ( CATALOGADO = 0 )
 
         if (
@@ -297,6 +379,7 @@ const ProductEntry = ({ type }) => {
         text: "Ingrese un código",
         type: "error",
       });
+    setProductNoFinded(false);
 
     let codeImplicit = code;
     let codeToSend = code;
@@ -321,11 +404,10 @@ const ProductEntry = ({ type }) => {
       (results) => {
         console.log("Results", results.rows._array.length);
         if (results.rows._array.length === 0) {
-          setSnackbar({
-            visible: true,
-            text: "No se encontró el producto en la base de datos",
-            type: "error",
+          setLastProduct({
+            DESCRIPCION: "",
           });
+          setProductNoFinded(true);
           refs.code.current.focus();
           return;
         }
@@ -336,35 +418,61 @@ const ProductEntry = ({ type }) => {
         setLastProduct(product);
 
         if (config.catalog_products && product.CATALOGADO == 1) {
-          Alert.alert(
-            "Producto Catalogado",
-            "Este producto está catalogado, ¿Desea continuar?",
-            [
+          setDangerModal({
+            visible: true,
+            title: "Producto Catalogado",
+            text: "Este producto es catalogado. Si quiere añadirlo desactive la opción de no catalogados.",
+            buttons: [
               {
-                text: "Cancelar",
-                onPress: () => refs.code.current.focus(),
+                text: "Entendido",
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+                  refs.code.current.focus();
+                },
                 style: "cancel",
-              },
-              { text: "Continuar", onPress: () => addProductToDb(product) },
+              }
             ],
-            { cancelable: false }
-          );
+          });
         } // * Si el software está para NO CATALOGADOS, avisamos sobre los que están CATALOGADOS ( CATALOGADO = 1 )
 
         if (!config.catalog_products && product.CATALOGADO == 0) {
-          Alert.alert(
-            "Producto NO Catalogado",
-            "Este producto NO está catalogado, ¿Desea continuar?",
-            [
+          setDangerModal({
+            visible: true,
+            title: "Producto NO Catalogado",
+            text: "Este producto NO está catalogado, ¿Desea continuar?",
+            buttons: [
               {
                 text: "Cancelar",
-                onPress: () => refs.code.current.focus(),
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+                  refs.code.current.focus();
+                },
                 style: "cancel",
               },
-              { text: "Continuar", onPress: () => addProductToDb(product) },
+              {
+                text: "Continuar",
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+                  addProductToDb(product);
+                },
+              },
             ],
-            { cancelable: false }
-          );
+          });
         } // * Si el software está para CATALOGADOS, avisamos sobre los que están NO CATALOGADOS ( CATALOGADO = 0 )
 
         if (
@@ -393,6 +501,8 @@ const ProductEntry = ({ type }) => {
         type: "error",
       });
 
+    setProductNoFinded(false);
+
     let codeImplicit = code;
     let codeToSend = code;
     if (codeToSend.length < config.largo_prod) {
@@ -415,11 +525,10 @@ const ProductEntry = ({ type }) => {
       [],
       (results) => {
         if (results.rows._array.length === 0) {
-          setSnackbar({
-            visible: true,
-            text: "No se encontró el producto en la base de datos",
-            type: "error",
+          setLastProduct({
+            DESCRIPCION: "",
           });
+          setProductNoFinded(true);
           refs.code.current.focus();
           return;
         }
@@ -428,45 +537,62 @@ const ProductEntry = ({ type }) => {
         setLastProduct(product);
 
         if (config.catalog_products && product.CATALOGADO == 1) {
-          Alert.alert(
-            "Producto Catalogado",
-            "Este producto está catalogado, ¿Desea continuar?",
-            [
+          setDangerModal({
+            visible: true,
+            title: "Producto Catalogado",
+            text: "Este producto es catalogado. Si quiere añadirlo desactive la opción de no catalogados.",
+            buttons: [
               {
-                text: "Cancelar",
-                onPress: () => refs.code.current.focus(),
+                text: "Entendido",
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+                  refs.code.current.focus();
+                },
                 style: "cancel",
-              },
-              {
-                text: "Continuar", onPress: () => {
-                  refs.quantity.current.focus();
-                  setDBFindedProduct(product);
-                }
-              },
+              }
             ],
-            { cancelable: false }
-          );
+          });
         } // * Si el software está para NO CATALOGADOS, avisamos sobre los que están CATALOGADOS ( CATALOGADO = 1 )
 
         if (!config.catalog_products && product.CATALOGADO == 0) {
-          Alert.alert(
-            "Producto NO Catalogado",
-            "Este producto NO está catalogado, ¿Desea continuar?",
-            [
+          setDangerModal({
+            visible: true,
+            title: "Producto NO Catalogado",
+            text: "Este producto NO está catalogado, ¿Desea continuar?",
+            buttons: [
               {
                 text: "Cancelar",
-                onPress: () => refs.code.current.focus(),
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+                  refs.code.current.focus();
+                },
                 style: "cancel",
               },
               {
-                text: "Continuar", onPress: () => {
-                  refs.quantity.current.focus();
+                text: "Continuar",
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
                   setDBFindedProduct(product);
-                }
+                  refs.quantity.current.focus();
+                },
               },
             ],
-            { cancelable: false }
-          );
+          });
         } // * Si el software está para CATALOGADOS, avisamos sobre los que están NO CATALOGADOS ( CATALOGADO = 0 )
 
         if (
@@ -497,10 +623,10 @@ const ProductEntry = ({ type }) => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
-      <ScrollView>
+      <ScrollView keyboardShouldPersistTaps='handled'>
         <TopBar />
         <SectionBar
-          section={type === "single" ? "Ingreso 1x1" : "Ingreso por cantidad"}
+          section={type === "single" ? `Ingreso 1x1 - Área: ${area.slice(0, area.length - 1)}-${area.slice(-1)}` : `Ingreso por cantidad - Área: ${area.slice(0, area.length - 1)}-${area.slice(-1)}`}
           backTo={routes.captureMenu}
         />
 
@@ -514,33 +640,48 @@ const ProductEntry = ({ type }) => {
             style={{
               display: "flex",
               flexDirection: "row",
-              alignItems: "center",
+              alignItems: "flex-start",
               flexWrap: "wrap",
-              justifyContent: "center",
-              width: "80%",
-              marginTop: 10,
+              justifyContent: "flex-end",
+              width: "100%",
             }}
           >
-            <Text style={[styles.subtitle, { fontSize: 13, fontWeight: 'normal' }]}>Área: {area}</Text>
             <TouchableOpacity
               onPress={() => {
-                setModal(true);
+                setArea("");
+                return navigate(routes.captureMenu);
               }}
               style={{
                 ...styles.logBtn,
-                width: 30,
+                width: 80,
                 padding: 5,
                 margin: 5,
                 borderRadius: 5,
               }}
             >
-              <Image
-                style={{
-                  width: 15,
-                  height: 15,
-                }}
-                source={edit_icon}
-              />
+              <Text style={{
+                color: "#fff",
+                textAlign: "center",
+                fontSize: 8
+              }}>NUEVA ÁREA</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => confirmCloseArea()}
+              style={{
+                ...styles.logBtn,
+                width: 80,
+                padding: 5,
+                margin: 5,
+                borderRadius: 5,
+                backgroundColor: "#dc3545",
+              }}
+            >
+              <Text style={{
+                color: "#fff",
+                textAlign: "center",
+                fontSize: 8
+              }}>CERRAR ÁREA</Text>
             </TouchableOpacity>
           </View>
 
@@ -550,9 +691,11 @@ const ProductEntry = ({ type }) => {
                 style={{
                   ...styles.logBtn,
                   width: 40,
-                  height: 40,
+                  height: 25,
                   borderRadius: 5,
                   alignItems: "center",
+                  padding: 0,
+                  justifyContent: "center",
                 }}
                 onPress={() => setCode("")}
               >
@@ -561,6 +704,7 @@ const ProductEntry = ({ type }) => {
                     ...styles.white,
                     textAlign: "center",
                     fontWeight: "bold",
+                    fontSize: 10,
                   }}
                 >
                   B
@@ -571,6 +715,8 @@ const ProductEntry = ({ type }) => {
                 style={{
                   ...styles.input,
                   width: "70%",
+                  height: 25,
+                  borderBottomColor: "transparent",
                 }}
                 onChangeText={setCode}
                 value={code}
@@ -581,6 +727,10 @@ const ProductEntry = ({ type }) => {
                 maxLength={parseInt(config.largo_prod)}
               />
             </View>
+
+            {productNoFinded && (
+              <ErrorModal message={'No se encontró el producto en la base de datos'} modalFailVisible setModalFailVisible={setProductNoFinded} />
+            )}
 
             {lastProduct.DESCRIPCION && (
               <Text
@@ -615,8 +765,47 @@ const ProductEntry = ({ type }) => {
                         const decimalCount = filteredText.split('.')[1]?.length || 0;
                         if (decimalCount > 3) return;
 
-                        if (parseFloat(filteredText) > 1000) return setQuantity('999.999');
-                        if (parseFloat(filteredText) < -1000) return setQuantity('-999.999');
+                        if (parseFloat(filteredText) > 1000) return setDangerModal({
+                          visible: true,
+                          title: "Error",
+                          text: "El valor máximo es 999.999",
+                          buttons: [
+                            {
+                              text: "Entendido",
+                              onPress: () => {
+                                setDangerModal({
+                                  visible: false,
+                                  title: "",
+                                  text: "",
+                                  buttons: [],
+                                });
+                                refs.quantity.current.focus();
+                              },
+                              style: "cancel",
+                            }
+                          ],
+                        })
+
+                        if (parseFloat(filteredText) < -1000) return setDangerModal({
+                          visible: true,
+                          title: "Error",
+                          text: "El valor mínimo es -999.999",
+                          buttons: [
+                            {
+                              text: "Entendido",
+                              onPress: () => {
+                                setDangerModal({
+                                  visible: false,
+                                  title: "",
+                                  text: "",
+                                  buttons: [],
+                                });
+                                refs.quantity.current.focus();
+                              },
+                              style: "cancel",
+                            }
+                          ],
+                        });
 
                         // Validar el rango máximo y mínimo
                         if (filteredText !== '' && (parseFloat(filteredText) > 999999 || parseFloat(filteredText) < -999999)) {
@@ -704,7 +893,7 @@ const ProductEntry = ({ type }) => {
                   <Text
                     style={{
                       fontWeight: "bold",
-                      fontSize: 30,
+                      fontSize: 25,
                       width: 300,
                       textAlign: "center",
                       color: "#000",
@@ -729,7 +918,7 @@ const ProductEntry = ({ type }) => {
             <TouchableOpacity
               style={{
                 ...styles.logBtn,
-                width: "30%",
+                width: "45%",
                 borderRadius: 5,
               }}
               onPress={() =>
@@ -752,27 +941,7 @@ const ProductEntry = ({ type }) => {
             <TouchableOpacity
               style={{
                 ...styles.logBtn,
-                width: "30%",
-                borderRadius: 5,
-                alignItems: "center",
-              }}
-              onPress={() => onCodeSubmit()}
-            >
-              <Text
-                style={{
-                  ...styles.white,
-                  textAlign: "center",
-                  fontWeight: "bold",
-                }}
-              >
-                GRABAR
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={{
-                ...styles.logBtn,
-                width: "30%",
+                width: "45%",
                 borderRadius: 5,
                 alignItems: "center",
               }}

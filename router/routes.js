@@ -5,6 +5,7 @@ const routes = {
   singleProductEntry: "/singleProductEntry",
   multipleProductEntry: "/multipleProductEntry",
   review: "/review/:type",
+  view: "/view/:area",
   cD: "/CD",
   cdSingleProductEntry: "/cdSingleProductEntry",
   cdMultipleProductEntry: "/cdMultipleProductEntry",

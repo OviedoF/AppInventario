@@ -10,6 +10,7 @@ import CD from "../pages/CD";
 import SendWIFI from "../pages/SendWIFI";
 import Review from "../pages/Review";
 import AdminMenu from "../pages/AdminMenu";
+import AreaView from "../pages/AreaView";
 
 const AppRouter = () => {
   return (
@@ -21,6 +22,7 @@ const AppRouter = () => {
       <Route exact path={routes.menuAdmin} element={<AdminMenu />} />
       <Route exact path={routes.captureMenu} element={<CaptureMenu />} />
       <Route exact path={routes.review} element={<Review />} />
+      <Route exact path={routes.view} element={<AreaView />} />
       <Route
         exact
         path={routes.singleProductEntry}

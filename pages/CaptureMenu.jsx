@@ -24,7 +24,7 @@ import { Alert } from "react-native";
 
 const CaptureMenu = () => {
   const navigate = useNavigate();
-  const { area, setArea, config, setConfig, setSnackbar, user } =
+  const { area, setArea, config, setConfig, setSnackbar, user, setDangerModal } =
     useContext(dataContext);
   const [modal, setModal] = useState(false);
   const [selectedId, setSelectedId] = useState(parseInt(config.buttons_config));
@@ -40,6 +40,18 @@ const CaptureMenu = () => {
     if (modal) refs.area.current.focus();
   }, [modal]);
 
+  function calcularDigitoVerificador(rut) {
+    let multiplicador = 0;
+    let suma = 1;
+
+    for (; rut; rut = Math.floor(rut / 10)) {
+      const digito = rut % 10;
+      suma = (suma + digito * (9 - multiplicador++ % 6)) % 11;
+    }
+
+    return suma ? suma - 1 : 'k';
+  }
+
   const confirmArea = async () => {
     try {
       if (area === "") {
@@ -51,11 +63,39 @@ const CaptureMenu = () => {
         return;
       }
 
+      // * Agarramos la serie, el número de área y el dígito verificador
+      const aux = area;
+      const serie = aux.slice(0, 3);
+      let numArea = aux.slice(3, aux.length - 1);
+      console.log(numArea);
+      const digitVerif = aux.slice(aux.length - 1, aux.length);
+
+      // * Si el largo del número de área es menor al largo del tag, le agregamos ceros a la izquierda
+
+      while (numArea.length < config.largo_tag) numArea = "0" + numArea;
+
+      // * Si el largo del número de área es mayor al largo del tag, le quitamos los números de la izquierda hasta que el largo sea igual al largo del tag
+      while (numArea.length > config.largo_tag) numArea = numArea.slice(1);
+
+      // * Calculamos el dígito verificador del número de área y lo comparamos con el dígito verificador ingresado
+      const digitVerifArea = calcularDigitoVerificador(parseInt(numArea));
+      console.log(serie, numArea, digitVerif, digitVerifArea);
+
+      if (digitVerifArea.toString() !== digitVerif.toString()) {
+        setArea("");
+        return setSnackbar({
+          visible: true,
+          text: "Dígito verificador incorrecto",
+          type: "error",
+        });
+      }
+
+      // * Hacer la consulta a la base de datos para ver si el área existe
       const db = SQLite.openDatabase("Maestro.db");
 
       ExecuteQuery(
         db,
-        `SELECT * FROM 'AREAS' WHERE NUM_AREA = "${area}"`,
+        `SELECT * FROM 'AREAS' WHERE NUM_AREA = "${numArea + digitVerifArea}"`,
         [],
         (result) => {
           const areas = result.rows._array;
@@ -67,21 +107,45 @@ const CaptureMenu = () => {
             type: "error",
           });
 
+          setArea(area.NUM_AREA);
+          console.log(area.ESTADO);
+
           if (area.ESTADO === "CERRADA") {
-            Alert.alert(
-              "Área cerrada",
-              `El área ${area.NUM_AREA} se encuentra cerrada, ¿desea abrirla y continuar?`,
-              [
+            setDangerModal({
+              visible: true,
+              title: "Área cerrada",
+              text: `El área ${area.NUM_AREA} se encuentra cerrada, ¿qué desea hacer?`,
+              buttons: [
                 {
-                  text: "Cancelar",
+                  text: "Ver",
+                  onPress: () => navigate(`/view/${area.NUM_AREA}`),
+                  style: "cancel",
+                }, {
+                  text: "Modificar",
                   onPress: () => {
-                    setArea("");
-                    setModal(true);
-                  },
-                },{
-                  text: "Aceptar",
-                  onPress: () => {
+                    console.log('Modificar');
                     const db = SQLite.openDatabase("Maestro.db");
+
+                    // * CAMBIAMOS EL UEESTADO DEL ÁREA A M Y SUMAMOS 1 AL ESTADOTAG
+
+                    ExecuteQuery(
+                      db,
+                      `UPDATE AREAS SET UESTADO = "M", ESTADOTAG = ESTADOTAG + 1 WHERE NUM_AREA = "${area.NUM_AREA}"`,
+                      [],
+                      (result) => {
+                        console.log('SE CAMBIÓ EL UESTADO DEL ÁREA A M Y SE SUMÓ 1 AL ESTADOTAG');
+                      },
+                      (error) => {
+                        console.log(error);
+                        setSnackbar({
+                          visible: true,
+                          text: "Error al modificar el área",
+                          type: "error",
+                        });
+                      }
+                    );
+
+                    // * CAMBIAR EL ESTADO DEL ÁREA A INIT
                     ExecuteQuery(
                       db,
                       `UPDATE AREAS SET ESTADO = "INIT" WHERE NUM_AREA = "${area.NUM_AREA}"`,
@@ -104,11 +168,198 @@ const CaptureMenu = () => {
                     );
                     setModal(false);
                   },
-                  style: "cancel",
+                }, {
+                  text: 'Retomar',
+                  onPress: () => {
+                    console.log('Retomar');
+                    const db = SQLite.openDatabase("Maestro.db");
+                    // * Limpiamos el área
+                    ExecuteQuery(
+                      db,
+                      `DELETE FROM INVENTARIO_APP WHERE area = "${area.NUM_AREA}"`,
+                      [],
+                      (result) => {
+                        console.log('Área limpiada correctamente');
+                      },
+                      (error) => {
+                        console.log(error);
+                        setSnackbar({
+                          visible: true,
+                          text: "Error al limpiar el área",
+                          type: "error",
+                        });
+                      }
+                    );
+
+                    // * Cambiar el UESTADO del área a R y sumar 1 al ESTADOTAG
+                    ExecuteQuery(
+                      db,
+                      `UPDATE AREAS SET UESTADO = "R", ESTADOTAG = ESTADOTAG + 1 WHERE NUM_AREA = "${area.NUM_AREA}"`,
+                      [],
+                      (result) => {
+                        console.log('SE CAMBIÓ EL UESTADO DEL ÁREA A R Y SE SUMÓ 1 AL ESTADOTAG');
+                      },
+                      (error) => {
+                        console.log(error);
+                        setSnackbar({
+                          visible: true,
+                          text: "Error al retomar el área",
+                          type: "error",
+                        });
+                      }
+                    );
+
+                    // * Cambiamos el estado del área a INIT
+                    ExecuteQuery(
+                      db,
+                      `UPDATE AREAS SET ESTADO = "INIT" WHERE NUM_AREA = "${area.NUM_AREA}"`,
+                      [],
+                      (result) => {
+                        setSnackbar({
+                          visible: true,
+                          text: "Área retomada correctamente!",
+                          type: "success",
+                        });
+                      },
+                      (error) => {
+                        console.log(error);
+                        setSnackbar({
+                          visible: true,
+                          text: "Error al abrir el área",
+                          type: "error",
+                        });
+                      }
+                    );
+
+                    setModal(false);
+                  }
                 }
-              ],
-              { cancelable: false }
-            );
+              ]
+            });
+            //   "Área cerrada",
+            //   `El área ${area.NUM_AREA} se encuentra cerrada, ¿qué desea hacer?`,
+            //   [
+            //     {
+            //       text: "Ver",
+            //       onPress: () => navigate(`/view/${area.NUM_AREA}`),
+            //       style: "cancel",
+            //     }, {
+            //       text: "Modificar",
+            //       onPress: () => {
+            //         console.log('Modificar');
+            //         const db = SQLite.openDatabase("Maestro.db");
+
+            //         // * CAMBIAMOS EL UEESTADO DEL ÁREA A M Y SUMAMOS 1 AL ESTADOTAG
+
+            //         ExecuteQuery(
+            //           db,
+            //           `UPDATE AREAS SET UESTADO = "M", ESTADOTAG = ESTADOTAG + 1 WHERE NUM_AREA = "${area.NUM_AREA}"`,
+            //           [],
+            //           (result) => {
+            //             console.log('SE CAMBIÓ EL UESTADO DEL ÁREA A M Y SE SUMÓ 1 AL ESTADOTAG');
+            //           },
+            //           (error) => {
+            //             console.log(error);
+            //             setSnackbar({
+            //               visible: true,
+            //               text: "Error al modificar el área",
+            //               type: "error",
+            //             });
+            //           }
+            //         );
+
+            //         // * CAMBIAR EL ESTADO DEL ÁREA A INIT
+            //         ExecuteQuery(
+            //           db,
+            //           `UPDATE AREAS SET ESTADO = "INIT" WHERE NUM_AREA = "${area.NUM_AREA}"`,
+            //           [],
+            //           (result) => {
+            //             setSnackbar({
+            //               visible: true,
+            //               text: "Área abierta correctamente",
+            //               type: "success",
+            //             });
+            //           },
+            //           (error) => {
+            //             console.log(error);
+            //             setSnackbar({
+            //               visible: true,
+            //               text: "Error al abrir el área",
+            //               type: "error",
+            //             });
+            //           }
+            //         );
+            //         setModal(false);
+            //       },
+            //     }, {
+            //       text: 'Retomar',
+            //       onPress: () => {
+            //         console.log('Retomar');
+            //         const db = SQLite.openDatabase("Maestro.db");
+            //         // * Limpiamos el área
+            //         ExecuteQuery(
+            //           db,
+            //           `DELETE FROM INVENTARIO_APP WHERE area = "${area.NUM_AREA}"`,
+            //           [],
+            //           (result) => {
+            //             console.log('Área limpiada correctamente');
+            //           },
+            //           (error) => {
+            //             console.log(error);
+            //             setSnackbar({
+            //               visible: true,
+            //               text: "Error al limpiar el área",
+            //               type: "error",
+            //             });
+            //           }
+            //         );
+
+            //         // * Cambiar el UESTADO del área a R y sumar 1 al ESTADOTAG
+            //         ExecuteQuery(
+            //           db,
+            //           `UPDATE AREAS SET UESTADO = "R", ESTADOTAG = ESTADOTAG + 1 WHERE NUM_AREA = "${area.NUM_AREA}"`,
+            //           [],
+            //           (result) => {
+            //             console.log('SE CAMBIÓ EL UESTADO DEL ÁREA A R Y SE SUMÓ 1 AL ESTADOTAG');
+            //           },
+            //           (error) => {
+            //             console.log(error);
+            //             setSnackbar({
+            //               visible: true,
+            //               text: "Error al retomar el área",
+            //               type: "error",
+            //             });
+            //           }
+            //         );
+
+            //         // * Cambiamos el estado del área a INIT
+            //         ExecuteQuery(
+            //           db,
+            //           `UPDATE AREAS SET ESTADO = "INIT" WHERE NUM_AREA = "${area.NUM_AREA}"`,
+            //           [],
+            //           (result) => {
+            //             setSnackbar({
+            //               visible: true,
+            //               text: "Área retomada correctamente!",
+            //               type: "success",
+            //             });
+            //           },
+            //           (error) => {
+            //             console.log(error);
+            //             setSnackbar({
+            //               visible: true,
+            //               text: "Error al abrir el área",
+            //               type: "error",
+            //             });
+            //           }
+            //         );
+
+            //         setModal(false);
+            //       }
+            //     }
+            //   ],
+            //   { cancelable: false }
+            // );
             return;
           }
 
@@ -134,10 +385,11 @@ const CaptureMenu = () => {
   };
 
   const confirmCloseArea = async () => {
-    Alert.alert(
-      "Cerrar área",
-      `¿Está seguro que desea cerrar el área ${area}?`,
-      [
+    setDangerModal({
+      visible: true,
+      title: "Cerrar área",
+      text: `¿Está seguro que desea cerrar el área ${area}?`,
+      buttons: [
         {
           text: "Cancelar",
           onPress: () => console.log("Cancel Pressed"),
@@ -172,9 +424,8 @@ const CaptureMenu = () => {
             return setModal(true);
           },
         },
-      ],
-      { cancelable: false }
-    );
+      ]
+    });
   }
 
   const optionsRadio = useMemo(
@@ -227,11 +478,12 @@ const CaptureMenu = () => {
             <Text
               style={[styles.subtitle, { fontSize: 13, fontWeight: "normal" }]}
             >
-              Área: {area}
+              Área: {area.slice(0, area.length - 1)}-{area.slice(-1)}
             </Text>
 
             <TouchableOpacity
               onPress={() => {
+                setArea("");
                 setModal(true);
               }}
               style={{
@@ -244,7 +496,7 @@ const CaptureMenu = () => {
             >
               <Text style={{
                 color: "#fff",
-              }}>EDITAR </Text>
+              }}>NUEVA </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -313,7 +565,7 @@ const CaptureMenu = () => {
               trackColor={{ false: "#767577", true: "#81b0ff" }}
               onValueChange={() => {
                 if (!user.admin) {
-                  setAuthType("pesables");
+                  setAuthType("catalog_products");
                   setModalSupervisor(true);
                 } else {
                   setConfig({
@@ -389,16 +641,6 @@ const CaptureMenu = () => {
               }}
             >
               <TouchableOpacity
-                onPress={() => confirmArea()}
-                style={{
-                  ...styles.logBtn,
-                  width: "40%",
-                }}
-              >
-                <Text style={[styles.white, styles.textCenter]}>INGRESAR</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
                 onPress={() => {
                   setArea("");
                   navigate(routes.home);
@@ -427,6 +669,8 @@ const CaptureMenu = () => {
         config={config}
         authType={authType}
         setAuthType={setAuthType}
+        key={authType}
+        newValue={idDesired}
       />
     </KeyboardAvoidingView>
   );

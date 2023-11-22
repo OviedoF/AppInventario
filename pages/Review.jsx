@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, Alert } from "react-native";
 import React, { useContext, useState, useEffect, useRef } from "react";
 import TopBar from "../components/TopBar";
 import SectionBar from "../components/SectionBar";
@@ -14,14 +14,14 @@ import ExecuteQuery from "../helpers/ExecuteQuery";
 import EditEntryModal from "../components/EditEntryModal";
 
 const CDReview = () => {
-  const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState(null);
   const [modalEdit, setEditModal] = useState(false);
   const [quantity, setQuantity] = useState("");
   const [products, setProducts] = useState(null);
   const { area } = useContext(dataContext);
   const { type } = useParams();
-  const { setSnackbar } = useContext(dataContext);
+  const { setSnackbar, setArea, setDangerModal } = useContext(dataContext);
+  const navigate = useNavigate();
 
   const deleteEntryFromInventario = async (db_id) => {
     const db = SQLite.openDatabase("Maestro.db");
@@ -73,6 +73,60 @@ const CDReview = () => {
     );
   };
 
+  const clearActualArea = async () => {
+    try {
+      setDangerModal({
+        visible: true,
+        title: "Limpiar área actual",
+        text: `¿Estás seguro de que deseas limpiar el área ${area}?`,
+        buttons: [
+          {
+            text: "Cancelar",
+            onPress: () => console.log("Cancel Pressed"),
+            style: "cancel",
+          },
+          {
+            text: "Aceptar",
+            onPress: async () => {
+              const db = SQLite.openDatabase("Maestro.db");
+              await ExecuteQuery(
+                db,
+                "DELETE FROM INVENTARIO_APP WHERE area = ?",
+                [area],
+                (results) => {
+                  setSnackbar({
+                    visible: true,
+                    text: "Área actual limpiada correctamente",
+                    type: "success",
+                  });
+                  getCDProducts();
+                },
+                (error) => {
+                  console.log("Error", error);
+                  setSnackbar({
+                    visible: true,
+                    text: "Error al limpiar área actual",
+                    type: "error",
+                  });
+                }
+              );
+
+              setArea("");
+              navigate(routes.captureMenu);
+            },
+          },
+        ],
+      });
+    } catch (error) {
+      console.log(error)
+      return setSnackbar({
+        visible: true,
+        text: "Error al limpiar área actual",
+        type: "error",
+      });
+    }
+  }
+
   const getCDProducts = async () => {
     const db = SQLite.openDatabase("Maestro.db");
     const query = `SELECT * FROM INVENTARIO_APP WHERE type = "INV" ORDER BY id DESC`;
@@ -117,23 +171,34 @@ const CDReview = () => {
           }}
         >
           <TouchableOpacity
-            style={[styles.primaryBtn, { width: "30%" }]}
+            style={[styles.primaryBtn, { width: "30%", justifyContent: 'center' }]}
             onPress={() => {
               setEditModal(true);
             }}
           >
-            <Text style={[styles.white, { textAlign: "center" }]}>
+            <Text style={[styles.white, { textAlign: "center", alignItems: 'center' }]}>
               Modificar
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.primaryBtn, { width: "30%" }]}
+            style={[styles.primaryBtn, { width: "30%", justifyContent: 'center' }]}
             onPress={() => {
               deleteEntryFromInventario(selectedId);
             }}
           >
-            <Text style={[styles.white, { textAlign: "center" }]}>
+            <Text style={[styles.white, { textAlign: "center", alignItems: 'center' }]}>
               Eliminar
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.primaryBtn, { width: "30%", justifyContent: 'center' }]}
+            onPress={() => {
+              clearActualArea();
+            }}
+          >
+            <Text style={[styles.white, { textAlign: "center", alignItems: 'center' }]}>
+              Limpiar área actual
             </Text>
           </TouchableOpacity>
         </View>
