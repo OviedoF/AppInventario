@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   TouchableOpacity,
+  TextInput,
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import TopBar from "../components/TopBar";
@@ -17,14 +18,15 @@ import EditIdModal from "../components/EditIdModal";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import EditSupPasswordModal from "../components/EditSupPasswordModal";
 import env from "../env";
+import PickInventoryModal from "../components/PickInventarioModal";
 
 const AdminMenu = () => {
-  const navigate = useNavigate();
-  const { setSnackbar, user, setHardwareId } = useContext(dataContext);
+  const { setSnackbar, user, setHardwareId, config, setConfig } = useContext(dataContext);
   const [id, setId] = useState("");
   const [modalId, setModalId] = useState(false);
   const [changePasswordModal, setChangePasswordModal] = useState(false)
   const [supervisorPassword, setSupervisorPassword] = useState("")
+  const [changeInventory, setChangeInventory] = useState(false)
 
   const eliminarTablaInventarios = () => {
     const db = SQLite.openDatabase("Maestro.db");
@@ -106,7 +108,7 @@ const AdminMenu = () => {
       <ScrollView>
         <TopBar />
 
-        <SectionBar section={"Menu Administrador"} backTo={routes.home} />
+        <SectionBar section={"Menu Administrador"} backTo={routes.login} />
 
         <View style={styles.container}>
           <TouchableOpacity
@@ -158,8 +160,114 @@ const AdminMenu = () => {
               </Text>
             </View>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.primaryBtn}
+            onPress={() => setChangeInventory(true)}
+          >
+            <View style={{ flexDirection: "row", justifyContent: "center" }}>
+              <Text
+                style={{
+                  ...styles.white,
+                  fontWeight: "bold",
+                }}
+              >
+                MODIFICAR INVENTARIO
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+
+          <View
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                width: "40%",
+              }}
+            >
+              <Text>Largo Prod</Text>
+
+              <TextInput
+                keyboardType="numeric"
+                onChangeText={(value) => {
+                  console.log(isNaN(parseInt(value)));
+                  if (isNaN(parseInt(value)))
+                    return setSnackbar({
+                      visible: true,
+                      text: "El largo debe ser un número entero",
+                      type: "error",
+                    });
+
+                  return setConfig({
+                    ...config,
+                    largo_prod: parseInt(value),
+                  });
+                }}
+                value={config.largo_prod.toString()}
+                style={{
+                  ...styles.input,
+                  marginLeft: 10,
+                }}
+                placeholder="Largo Prod"
+              />
+            </View>
+          </View>
+
+          <View
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                width: "40%",
+              }}
+            >
+              <Text>Largo Tag</Text>
+
+
+              <TextInput
+                keyboardType="numeric"
+                onChangeText={(value) => {
+                  if (isNaN(parseInt(value)))
+                    return setSnackbar({
+                      visible: true,
+                      text: "El largo debe ser un número entero",
+                      type: "error",
+                    });
+
+                  return setConfig({
+                    ...config,
+                    largo_tag: parseInt(value),
+                  });
+                }}
+                value={config.largo_tag.toString()}
+                style={{
+                  ...styles.input,
+                  marginLeft: 10,
+                }}
+                placeholder="Largo Tag"
+              />
+            </View>
+          </View>
         </View>
       </ScrollView>
+
+      <PickInventoryModal
+        setModalVisible={setChangeInventory}
+        modalVisible={changeInventory}
+      />
 
       <EditIdModal
         id={id}

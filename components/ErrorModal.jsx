@@ -23,8 +23,9 @@ const ErrorModal = ({ message, setModalFailVisible, modalFailVisible }) => {
           <View
             style={[
               stylesModal.centeredView,
-              { backgroundColor: "rgba(0, 0, 0, 0.5)" },
-              width = "100%",
+              { 
+                backgroundColor: "rgba(0, 0, 0, 0.5)"
+              },
             ]}
           >
             <View style={stylesModal.modalView}>
@@ -74,6 +75,7 @@ const stylesModal = StyleSheet.create({
     borderRadius: 20,
     padding: 25,
     alignItems: "center",
+    justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -82,7 +84,8 @@ const stylesModal = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    width: "90%",
+    width: "95%",
+    height: "95%",
   },
   button: {
     borderRadius: 10,

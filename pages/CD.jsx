@@ -92,7 +92,7 @@ const CD = () => {
           text: "Error al obtener la configuración, el índice de captura no es válido",
           type: "error",
         });
-        navigate(routes.home);
+        navigate(routes.login);
         break;
     }
   }, [config]);
@@ -154,7 +154,7 @@ const CD = () => {
     >
       <ScrollView>
         <TopBar />
-        <SectionBar section={"Menu Captura CD"} backTo={routes.home} />
+        <SectionBar section={"Menu Captura CD"} backTo={routes.login} />
 
         <View
           style={{
@@ -471,7 +471,7 @@ const CD = () => {
 
               <TouchableOpacity
                 onPress={() => {
-                  navigate(routes.home);
+                  navigate(routes.login);
                 }}
                 style={{
                   ...styles.logBtn,

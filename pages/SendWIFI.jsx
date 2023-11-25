@@ -42,7 +42,7 @@ const SendWIFI = () => {
       <ScrollView>
         <TopBar />
 
-        <SectionBar section={"Enviar conteo WIFI"} backTo={routes.home} />
+        <SectionBar section={"Enviar conteo WIFI"} backTo={routes.login} />
 
         <View style={styles.container}>
           <View style={[styles.flex_row]}>

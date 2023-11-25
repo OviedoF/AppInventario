@@ -528,7 +528,7 @@ const ProductEntry = ({ type }) => {
           text: "Error al obtener la configuración, el índice de captura no es válido",
           type: "error",
         });
-        navigate(routes.home);
+        navigate(routes.login);
         break;
     }
   }, [config]);

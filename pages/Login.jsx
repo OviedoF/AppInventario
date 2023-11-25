@@ -28,7 +28,7 @@ import { BackHandler } from "react-native";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { setUser, setSnackbar, setConfig, setHardwareId, setInventario, config, setDangerModal } =
+  const { setUser, setSnackbar, setConfig, setHardwareId, setInventario, config, setDangerModal, inventario } =
     useContext(dataContext);
   const refs = {
     user: useRef(null),
@@ -92,7 +92,7 @@ const Login = () => {
             admin: user._id === 1 || user._id === 2 ? true : false,
           };
 
-          if (!userProx.admin) return setSnackbar({
+          if (!userProx.admin && !inventario) return setSnackbar({
             visible: true,
             text: "El administrador no ha configurado el inventario para este usuario.",
             type: "error",
@@ -110,7 +110,7 @@ const Login = () => {
             navigate(-1);
             return true;
           } ); // * Agregar evento para el botón de atrás
-          navigate(routes.home);
+          navigate(userProx.admin ? routes.menuAdmin : routes.captureMenu);
         },
         (error) => {
           console.log(error);

@@ -112,7 +112,11 @@ const CDReview = () => {
               );
 
               setArea("");
-              navigate(routes.captureMenu);
+              navigate(
+                type === "single"
+                  ? routes.singleProductEntry
+                  : routes.multipleProductEntry
+              );
             },
           },
         ],

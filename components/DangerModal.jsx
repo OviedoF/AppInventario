@@ -90,6 +90,7 @@ const stylesModal = StyleSheet.create({
         borderRadius: 20,
         padding: 25,
         alignItems: "center",
+        justifyContent: "center",
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -99,6 +100,7 @@ const stylesModal = StyleSheet.create({
         shadowRadius: 4,
         elevation: 5,
         width: "95%",
+        height: "95%",
     },
     button: {
         borderRadius: 10,

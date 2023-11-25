@@ -60,6 +60,7 @@ const CaptureMenu = () => {
           text: "Ingrese un área",
           type: "error",
         });
+        refs.area.current.focus();
         return;
       }
 
@@ -81,15 +82,6 @@ const CaptureMenu = () => {
       const digitVerifArea = calcularDigitoVerificador(parseInt(numArea));
       console.log(serie, numArea, digitVerif, digitVerifArea);
 
-      if (digitVerifArea.toString() !== digitVerif.toString()) {
-        setArea("");
-        return setSnackbar({
-          visible: true,
-          text: "Dígito verificador incorrecto",
-          type: "error",
-        });
-      }
-
       // * Hacer la consulta a la base de datos para ver si el área existe
       const db = SQLite.openDatabase("Maestro.db");
 
@@ -101,11 +93,23 @@ const CaptureMenu = () => {
           const areas = result.rows._array;
           const area = areas[0];
 
-          if (!area) return setSnackbar({
-            visible: true,
-            text: "Área no encontrada",
-            type: "error",
-          });
+          if (!area) {
+            refs.area.current.focus();
+            return setSnackbar({
+              visible: true,
+              text: "Área no encontrada",
+              type: "error",
+            });
+          }
+
+          if (digitVerifArea.toString() !== digitVerif.toString()) {
+            refs.area.current.focus();
+            return setSnackbar({
+              visible: true,
+              text: "Dígito verificador incorrecto",
+              type: "error",
+            });
+          }
 
           setArea(area.NUM_AREA);
           console.log(area.ESTADO);
@@ -457,7 +461,7 @@ const CaptureMenu = () => {
     >
       <ScrollView>
         <TopBar />
-        <SectionBar section={"Menu Captura"} backTo={routes.home} />
+        <SectionBar section={"Menu Captura"} backTo={routes.login} />
         <View
           style={{
             ...styles.container,
@@ -519,7 +523,10 @@ const CaptureMenu = () => {
         <View style={styles.container}>
           {selectedId === 1 || selectedId === 3 ? (
             <TouchableOpacity
-              style={styles.primaryBtn}
+              style={[styles.primaryBtn, {
+                width: '90%',
+                borderRadius: 10
+              }]}
               onPress={() => navigate(routes.singleProductEntry)}
             >
               <View style={{ flexDirection: "row", justifyContent: "center" }}>
@@ -530,7 +537,10 @@ const CaptureMenu = () => {
 
           {selectedId === 2 || selectedId === 3 ? (
             <TouchableOpacity
-              style={styles.primaryBtn}
+              style={[styles.primaryBtn, {
+                width: '90%',
+                borderRadius: 10
+              }]}
               onPress={() => navigate(routes.multipleProductEntry)}
             >
               <View style={{ flexDirection: "row", justifyContent: "center" }}>
@@ -540,7 +550,10 @@ const CaptureMenu = () => {
           ) : null}
 
           <TouchableOpacity
-            style={styles.primaryBtn}
+            style={[styles.primaryBtn, {
+              width: '90%',
+              borderRadius: 10
+            }]}
             onPress={() => navigate(routes.sentWifi)}
           >
             <View style={{ flexDirection: "row", justifyContent: "center" }}>
@@ -632,6 +645,7 @@ const CaptureMenu = () => {
               placeholder="Área"
               onSubmitEditing={confirmArea}
               autoFocus
+              maxLength={parseInt(config.largo_tag) + 4}
             />
 
             <View
@@ -643,7 +657,7 @@ const CaptureMenu = () => {
               <TouchableOpacity
                 onPress={() => {
                   setArea("");
-                  navigate(routes.home);
+                  navigate(routes.login);
                 }}
                 style={{
                   ...styles.logBtn,

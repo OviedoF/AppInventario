@@ -82,6 +82,7 @@ const ProductEntry = ({ type }) => {
   const [scansData, setScansData] = useState({
     products: "...",
     scans: "...",
+    totalOfArea: "...",
   });
 
   const navigate = useNavigate();
@@ -180,9 +181,12 @@ const ProductEntry = ({ type }) => {
           if (!productsDb.includes(product.name)) productsDb.push(product.name);
         });
 
+        const productsWithSameArea = results.rows._array.filter((product) => product.area === area);
+        
         setScansData({
           products: productsDb.length.toFixed(1),
           scans: results.rows._array.length.toFixed(1),
+          totalOfArea: productsWithSameArea.length.toFixed(1),
         });
       },
       (error) => {
@@ -501,6 +505,12 @@ const ProductEntry = ({ type }) => {
         type: "error",
       });
 
+    if(!quantity) return setSnackbar({
+      visible: true,
+      text: "Ingrese una cantidad",
+      type: "error",
+    });
+
     setProductNoFinded(false);
 
     let codeImplicit = code;
@@ -653,7 +663,10 @@ const ProductEntry = ({ type }) => {
               }}
               style={{
                 ...styles.logBtn,
-                width: 80,
+                width: 120,
+                height: 30,
+                alignItems: 'center',
+                justifyContent: 'center',
                 padding: 5,
                 margin: 5,
                 borderRadius: 5,
@@ -662,7 +675,7 @@ const ProductEntry = ({ type }) => {
               <Text style={{
                 color: "#fff",
                 textAlign: "center",
-                fontSize: 8
+                fontSize: 12
               }}>NUEVA ÁREA</Text>
             </TouchableOpacity>
 
@@ -670,7 +683,10 @@ const ProductEntry = ({ type }) => {
               onPress={() => confirmCloseArea()}
               style={{
                 ...styles.logBtn,
-                width: 80,
+                width: 120,
+                height: 30,
+                alignItems: 'center',
+                justifyContent: 'center',
                 padding: 5,
                 margin: 5,
                 borderRadius: 5,
@@ -680,7 +696,7 @@ const ProductEntry = ({ type }) => {
               <Text style={{
                 color: "#fff",
                 textAlign: "center",
-                fontSize: 8
+                fontSize: 12
               }}>CERRAR ÁREA</Text>
             </TouchableOpacity>
           </View>
@@ -691,7 +707,7 @@ const ProductEntry = ({ type }) => {
                 style={{
                   ...styles.logBtn,
                   width: 40,
-                  height: 25,
+                  height: 35,
                   borderRadius: 5,
                   alignItems: "center",
                   padding: 0,
@@ -704,7 +720,7 @@ const ProductEntry = ({ type }) => {
                     ...styles.white,
                     textAlign: "center",
                     fontWeight: "bold",
-                    fontSize: 10,
+                    fontSize: 15,
                   }}
                 >
                   B
@@ -715,8 +731,9 @@ const ProductEntry = ({ type }) => {
                 style={{
                   ...styles.input,
                   width: "70%",
-                  height: 25,
+                  height: 30,
                   borderBottomColor: "transparent",
+                  fontSize: 20,
                 }}
                 onChangeText={setCode}
                 value={code}
@@ -918,7 +935,9 @@ const ProductEntry = ({ type }) => {
             <TouchableOpacity
               style={{
                 ...styles.logBtn,
-                width: "45%",
+                width: "49%",
+                height: 45,
+                justifyContent: 'center',
                 borderRadius: 5,
               }}
               onPress={() =>
@@ -941,7 +960,9 @@ const ProductEntry = ({ type }) => {
             <TouchableOpacity
               style={{
                 ...styles.logBtn,
-                width: "45%",
+                width: "49%",
+                height: 45,
+                justifyContent: 'center',
                 borderRadius: 5,
                 alignItems: "center",
               }}
@@ -965,6 +986,9 @@ const ProductEntry = ({ type }) => {
             </Text>
             <Text style={{ fontSize: 16, marginTop: 5 }}>
               Cantidad de Scan Realizados: {scansData.scans}
+            </Text>
+            <Text style={{ fontSize: 16, marginTop: 5 }}>
+              Total de productos: {scansData.totalOfArea}
             </Text>
           </View>
         </View>

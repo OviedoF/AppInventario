@@ -31,7 +31,8 @@ const Calculator = ({
 
   const calculateResult = () => {
     try {
-      const result = eval(displayText);
+      // Reemplaza las comas por puntos para evaluar correctamente los decimales
+      const result = eval(displayText.replace(/,/g, '.'));
       setDisplayText(result.toString());
       setQuantity(result.toString());
       setModalCalculatorVisible(!modalCalculatorVisible);
@@ -44,7 +45,8 @@ const Calculator = ({
     ["7", "8", "9", "/"],
     ["4", "5", "6", "*"],
     ["1", "2", "3", "-"],
-    ["C", "0", "=", "+"],
+    ["C", "0", ".", "+"], // Agrega el botón de punto para decimales
+    ["="],
   ];
 
   return (
