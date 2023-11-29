@@ -133,7 +133,7 @@ const CDReview = () => {
 
   const getCDProducts = async () => {
     const db = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM INVENTARIO_APP WHERE type = "INV" ORDER BY id DESC`;
+    const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" ORDER BY id DESC`;
     await ExecuteQuery(
       db,
       query,

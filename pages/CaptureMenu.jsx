@@ -24,7 +24,7 @@ import { Alert } from "react-native";
 
 const CaptureMenu = () => {
   const navigate = useNavigate();
-  const { area, setArea, config, setConfig, setSnackbar, user, setDangerModal } =
+  const { area, setArea, config, setConfig, setSnackbar, user, setDangerModal, setSerie } =
     useContext(dataContext);
   const [modal, setModal] = useState(false);
   const [selectedId, setSelectedId] = useState(parseInt(config.buttons_config));
@@ -34,6 +34,7 @@ const CaptureMenu = () => {
   const refs = {
     area: useRef(null),
   };
+  console.log(config);
 
   useEffect(() => {
     if (!area) setModal(true);
@@ -111,6 +112,7 @@ const CaptureMenu = () => {
             });
           }
 
+          setSerie(serie);
           setArea(area.NUM_AREA);
           console.log(area.ESTADO);
 
@@ -605,6 +607,7 @@ const CaptureMenu = () => {
                 }
               }}
               value={config.pesables}
+              
             />
           </View>
 
@@ -654,6 +657,20 @@ const CaptureMenu = () => {
                 flexDirection: "row",
               }}
             >
+
+              <TouchableOpacity
+                onPress={() => {
+                  navigate(routes.sentWifi)
+                }}
+                style={{
+                  ...styles.logBtn,
+                  width: "40%",
+                  backgroundColor: "#2E97A7",
+                }}
+              >
+                <Text style={[styles.white, styles.textCenter]}>ENVIO WIFI</Text>
+              </TouchableOpacity>
+
               <TouchableOpacity
                 onPress={() => {
                   setArea("");
@@ -662,7 +679,7 @@ const CaptureMenu = () => {
                 style={{
                   ...styles.logBtn,
                   width: "40%",
-                  backgroundColor: "#ccc",
+                  backgroundColor: "#dc3545",
                 }}
               >
                 <Text style={[styles.white, styles.textCenter]}>VOLVER</Text>

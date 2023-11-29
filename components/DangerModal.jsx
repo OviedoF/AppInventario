@@ -12,8 +12,8 @@ import { dataContext } from "../context/dataContext";
 const DangerModal = () => {
     const { dangerModal, setDangerModal } = useContext(dataContext);
 
-    if(
-        dangerModal.visible && dangerModal.buttons.length > 0  
+    if (
+        dangerModal.visible && dangerModal.buttons.length > 0
     ) return (
         <>
             <View style={stylesModal.centeredView}>
@@ -29,11 +29,17 @@ const DangerModal = () => {
                             width = "100%",
                         ]}
                     >
-                        <View style={stylesModal.modalView}>
+                        <View style={[stylesModal.modalView, {
+                            backgroundColor: dangerModal.bg || "#ffc107",
+
+                        }]}>
                             <Text
                                 style={[
                                     stylesModal.modalText,
-                                    { fontWeight: "bold", fontSize: 25 },
+                                    {
+                                        fontWeight: "bold", fontSize: 25,
+                                        color: dangerModal.color || "#fefefe"
+                                    },
                                 ]}
                             >
                                 {dangerModal.title ? dangerModal.title : "¡PELIGRO!"}
@@ -42,7 +48,10 @@ const DangerModal = () => {
                             <Text
                                 style={[
                                     stylesModal.modalText,
-                                    { fontWeight: "bold", fontSize: 16 },
+                                    {
+                                        fontWeight: "bold", fontSize: 16,
+                                        color: dangerModal.color || "#fefefe"
+                                    },
                                 ]}
                             >
                                 {dangerModal.text ? dangerModal.text : ""}

@@ -6,9 +6,11 @@ export const dataContext = createContext();
 
 export const DataProvider = ({ children }) => {
   const [area, setArea] = useState('');
+  const [serie, setSerie] = useState('')
   const [user, setUser] = useState(undefined);
   const [inventario, setInventario] = useState('')
   const [hardwareId, setHardwareId] = useState('')
+  const [codCapturador, setCodCapturador] = useState('')
   const [snackbar, setSnackbar] = useState({
     visible: false,
     text: "",
@@ -49,6 +51,10 @@ export const DataProvider = ({ children }) => {
         setInventario,
         dangerModal,
         setDangerModal,
+        serie,
+        setSerie,
+        codCapturador,
+        setCodCapturador,
         /* cartCant,
         addToCart,
         clearCart,

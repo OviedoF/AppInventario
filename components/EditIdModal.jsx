@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import styles from "../styles/styles";
 
-const EditIdModal = ({ id, setId, setModalVisible, modalVisible, onConfirm }) => {
+const EditIdModal = ({ id, setId, setModalVisible, modalVisible, onConfirm, codCapturador, setCodCapturador }) => {
   const inputEdit = useRef(null);
 
   return (
@@ -41,8 +41,27 @@ const EditIdModal = ({ id, setId, setModalVisible, modalVisible, onConfirm }) =>
               </Text>
 
               <TextInput
-                onChangeText={(value) => setId(value)}
+                onChangeText={(value) => setId(value.toString())}
                 value={id.toString()}
+                style={[styles.input, { width: '100%' }]}
+                showSoftInputOnFocus={false}
+                onSubmitEditing={() => {
+                  onConfirm()
+                }}
+              />
+
+              <Text
+                style={[
+                  stylesModal.modalText,
+                  { fontWeight: "bold", fontSize: 16 },
+                ]}
+              >
+                Ingrese código de capturador
+              </Text>
+
+              <TextInput
+                onChangeText={(value) => setCodCapturador(value.toString())}
+                value={codCapturador.toString()}
                 style={[styles.input, { width: '100%' }]}
                 showSoftInputOnFocus={false}
                 ref={inputEdit}

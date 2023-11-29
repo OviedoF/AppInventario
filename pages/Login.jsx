@@ -28,7 +28,7 @@ import { BackHandler } from "react-native";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { setUser, setSnackbar, setConfig, setHardwareId, setInventario, config, setDangerModal, inventario } =
+  const { setUser, setSnackbar, setConfig, setHardwareId, setInventario, config, setDangerModal, inventario, codCapturador, setCodCapturador } =
     useContext(dataContext);
   const refs = {
     user: useRef(null),
@@ -53,7 +53,7 @@ const Login = () => {
 
       await ExecuteQuery(
         openDb,
-        `CREATE TABLE IF NOT EXISTS INVENTARIO_APP (id INTEGER PRIMARY KEY AUTOINCREMENT, operator TEXT, name TEXT, quantity INT, date TEXT, posicion TEXT, area TEXT, pallet TEXT, caja TEXT, type TEXT, inventario TEXT);`,
+        `CREATE TABLE IF NOT EXISTS INVENTARIO_APP (id INTEGER PRIMARY KEY AUTOINCREMENT, operator TEXT, name TEXT, quantity INT, date TEXT, posicion TEXT, area TEXT, pallet TEXT, caja TEXT, type TEXT, inventario TEXT, serie TEXT, existe TEXT, EstadoTag TEXT, CorrelativoApertura TEXT, invtype TEXT);`,
         [],
         (result) => {
           if (result.rowsAffected > 0) {
@@ -223,6 +223,11 @@ const Login = () => {
       if (value !== null) {
         setHardwareId(value)
       }
+      const codCapturador = await AsyncStorage.getItem('codCapturador')
+      if (codCapturador !== null) {
+        setCodCapturador(codCapturador)
+      }
+      
       const adminPassword = await AsyncStorage.getItem(env.asyncStorage.adminPassword)
       if (!adminPassword) {
         console.log("No existe la contraseña de administrador, se procede a crearla");
@@ -383,6 +388,10 @@ const Login = () => {
 
         <Text style={[styles.textCenter, { marginTop: 5 }]}>
           Versión: {dataApp.expo.version}
+        </Text>
+
+        <Text style={[styles.textCenter, { marginTop: 5 }]}>
+          Cod Capturador: {codCapturador}
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>

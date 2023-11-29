@@ -16,13 +16,10 @@ import ConfirmCloseAreaModal from "../components/ConfirmCloseAreaModal";
 import Calculator from "../components/Calculator";
 import TopBar from "../components/TopBar";
 import { dataContext } from "../context/dataContext";
-import { Link, useNavigate } from "react-router-native";
-import edit_icon from "../assets/edit.png";
-import { Alert } from "react-native";
+import { useNavigate } from "react-router-native";
 import * as SQLite from "expo-sqlite";
 import ExecuteQuery from "../helpers/ExecuteQuery";
 import reverse_icon from "../assets/reverse.png";
-import ErrorModal from "../components/ErrorModal";
 
 function GTIN8Digit(codigoGTIN8) {
   if (codigoGTIN8.length !== 7) {
@@ -66,17 +63,19 @@ function GtoKG(gramos) {
 }
 
 const ProductEntry = ({ type }) => {
-  const { area, setArea, setSnackbar, config, user, setDangerModal } = useContext(dataContext);
+  const { area, setArea, setSnackbar, config, user, setDangerModal, serie } = useContext(dataContext);
+  const [areaData, setAreaData] = useState({
+    UESTADO: '',
+    ESTADOTAG: ''
+  })
   const [calculatorModal, setCalculatorModal] = useState(false);
   const [code, setCode] = useState("");
-  const [DBFindedProduct, setDBFindedProduct] = useState(false)
   const [quantity, setQuantity] = useState(
     type === "single" ? 1 : ''
   );
   const [lastProduct, setLastProduct] = useState({
     DESCRIPCION: "",
   });
-  const [productNoFinded, setProductNoFinded] = useState(false)
   const [confirmingClose, setConfirmingClose] = useState(false);
   const [modal, setModal] = useState(false);
   const [scansData, setScansData] = useState({
@@ -203,23 +202,44 @@ const ProductEntry = ({ type }) => {
 
   const addProductToDb = async (product, qty = quantity) => {
     const db = SQLite.openDatabase("Maestro.db");
-    const date =
-      new Date().toLocaleDateString() + ": " + new Date().toLocaleTimeString();
+    const date = new Date().toISOString();
+
+    console.log(      [
+      user.COD_USUARIO,
+      product.COD_PROD,
+      qty,
+      date,
+      "",
+      area,
+      "",
+      "",
+      product.type,
+      config.inv_activo,
+      serie,
+      product.exists ? product.exists : 'S',
+      areaData.UESTADO == 'INI' ? '0' : areaData.UESTADO,
+      areaData.ESTADOTAG
+    ]);
 
     ExecuteQuery(
       db,
-      "INSERT INTO INVENTARIO_APP (operator, name, quantity, date, posicion, area, pallet, caja, type, inventario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO INVENTARIO_APP (operator, name, quantity, date, posicion, area, pallet, caja, type, inventario, serie, existe, EstadoTag, CorrelativoApertura, invtype) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
-        user.NOMBRES,
-        product.DESCRIPCION,
+        user.COD_USUARIO,
+        product.COD_PROD,
         qty,
         date,
         "",
         area,
         "",
         "",
-        "INV",
+        product.type,
         config.inv_activo,
+        serie,
+        product.exists ? product.exists : 'S',
+        areaData.UESTADO == 'INI' ? '0' : areaData.UESTADO,
+        areaData.ESTADOTAG,
+        'INV'
       ],
       (results) => {
         console.log("Results", results);
@@ -289,12 +309,52 @@ const ProductEntry = ({ type }) => {
       [],
       (results) => {
         if (results.rows._array.length === 0) {
-          setProductNoFinded(true);
-          setLastProduct({
-            DESCRIPCION: "",
-          });
-          refs.code.current.focus();
-          return;
+          if (results.rows._array.length === 0) {
+            return setDangerModal({
+              visible: true,
+              title: "Producto NO Encontrado",
+              bg: "#dc3545",
+              color: "#fff",
+              text: "¿Desea agregarlo igualmente?",
+              buttons: [
+                {
+                  text: "Sí, agregar",
+                  onPress: () => {
+                    setDangerModal({
+                      visible: false,
+                      title: "",
+                      text: "",
+                      buttons: [],
+                    });
+  
+                    addProductToDb({
+                      COD_PROD: codeToVerify,
+                      exists: 'N',
+                      type: "P"
+                    }, quantity);
+                    return;
+                  },
+                },
+                {
+                  text: "NO, NO AGREGAR",
+                  onPress: () => {
+                    setDangerModal({
+                      visible: false,
+                      title: "",
+                      text: "",
+                      buttons: [],
+                    });
+                    refs.code.current.focus();
+                    setLastProduct({
+                      DESCRIPCION: "",
+                    });
+                    return;
+                  },
+                  style: "cancel",
+                },
+              ],
+            });
+          } // * Si el producto no se encuentra en la base de datos, preguntamos si se quiere agregar igualmente
         }
 
         const product = results.rows._array[0];
@@ -351,7 +411,10 @@ const ProductEntry = ({ type }) => {
                     text: "",
                     buttons: [],
                   });
-                  addProductToDb(product, quantity);
+                  addProductToDb({
+                    ...product,
+                    type: "P"
+                  }, quantity);
                 },
               },
             ],
@@ -362,7 +425,10 @@ const ProductEntry = ({ type }) => {
           (config.catalog_products && product.CATALOGADO == 0) ||
           (!config.catalog_products && product.CATALOGADO == 1)
         ) {
-          addProductToDb(product, quantity);
+          addProductToDb({
+            ...product,
+            type: "P"
+          }, quantity);
         }
       },
       (error) => {
@@ -376,14 +442,13 @@ const ProductEntry = ({ type }) => {
     );
   };
 
-  const onCodeSubmit = async () => {
+  const onCodeSubmit = async (sendedBy) => {
     if (!code)
       return setSnackbar({
         visible: true,
         text: "Ingrese un código",
         type: "error",
       });
-    setProductNoFinded(false);
 
     let codeImplicit = code;
     let codeToSend = code;
@@ -408,143 +473,60 @@ const ProductEntry = ({ type }) => {
       (results) => {
         console.log("Results", results.rows._array.length);
         if (results.rows._array.length === 0) {
-          setLastProduct({
-            DESCRIPCION: "",
-          });
-          setProductNoFinded(true);
-          refs.code.current.focus();
-          return;
-        }
+          return setDangerModal({
+            visible: true,
+            title: `Producto ${codeToSend} NO Encontrado`,
+            bg: "#dc3545",
+            color: "#fff",
+            text: "¿Desea agregarlo igualmente?",
+            buttons: [
+              {
+                text: "Sí, agregar",
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
 
-        if (type === 'multi') return onQuantitySubmit();
+                  if (type === 'multi' && sendedBy !== 'qtyInput') return refs.quantity.current.focus();
+
+                  addProductToDb({
+                    COD_PROD: codeToSend,
+                    exists: 'N',
+                    type: type === 'single' ? "A" : "S"
+                  });
+                  return;
+                },
+              },
+              {
+                text: "NO, NO AGREGAR",
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+                  refs.code.current.focus();
+                  setLastProduct({
+                    DESCRIPCION: "",
+                  });
+                  return;
+                },
+                style: "cancel",
+              },
+            ],
+          });
+        } // * Si el producto no se encuentra en la base de datos, preguntamos si se quiere agregar igualmente
+
+        if (type === 'multi' && sendedBy !== 'qtyInput') return refs.quantity.current.focus();
 
         const product = results.rows._array[0];
-        setLastProduct(product);
-
-        if (config.catalog_products && product.CATALOGADO == 1) {
-          setDangerModal({
-            visible: true,
-            title: "Producto Catalogado",
-            text: "Este producto es catalogado. Si quiere añadirlo desactive la opción de no catalogados.",
-            buttons: [
-              {
-                text: "Entendido",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  refs.code.current.focus();
-                },
-                style: "cancel",
-              }
-            ],
-          });
-        } // * Si el software está para NO CATALOGADOS, avisamos sobre los que están CATALOGADOS ( CATALOGADO = 1 )
-
-        if (!config.catalog_products && product.CATALOGADO == 0) {
-          setDangerModal({
-            visible: true,
-            title: "Producto NO Catalogado",
-            text: "Este producto NO está catalogado, ¿Desea continuar?",
-            buttons: [
-              {
-                text: "Cancelar",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  refs.code.current.focus();
-                },
-                style: "cancel",
-              },
-              {
-                text: "Continuar",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  addProductToDb(product);
-                },
-              },
-            ],
-          });
-        } // * Si el software está para CATALOGADOS, avisamos sobre los que están NO CATALOGADOS ( CATALOGADO = 0 )
-
-        if (
-          (config.catalog_products && product.CATALOGADO == 0) ||
-          (!config.catalog_products && product.CATALOGADO == 1)
-        ) {
-          addProductToDb(product);
-        }
-      },
-      (error) => {
-        console.log("Error", error);
-        setSnackbar({
-          visible: true,
-          text: "Error al buscar el producto en la base de datos",
-          type: "error",
+        setLastProduct({
+          DESCRIPCION: product.DESCRIPCION,
         });
-      }
-    );
-  };
-
-  const onQuantitySubmit = () => {
-    if (!code)
-      return setSnackbar({
-        visible: true,
-        text: "Ingrese un código",
-        type: "error",
-      });
-
-    if(!quantity) return setSnackbar({
-      visible: true,
-      text: "Ingrese una cantidad",
-      type: "error",
-    });
-
-    setProductNoFinded(false);
-
-    let codeImplicit = code;
-    let codeToSend = code;
-    if (codeToSend.length < config.largo_prod) {
-      const codeLength = codeToSend.length;
-      const codeToAdd = config.largo_prod - codeLength;
-      for (let i = 0; i < codeToAdd; i++) {
-        codeToSend = `0${codeToSend}`;
-      }
-      setCode(codeToSend);
-    } // * Si el código no cumple con la configuración, rellenamos el código con 0s a la izquierda
-
-    if (config.pesables) return validatePesable(codeToSend, codeImplicit); // * Si el software está para PESABLES, validamos el código
-    console.log("Code to send", codeToSend);
-    const masterDb = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM MAESTRA WHERE COD_PROD = '${codeToSend}'`;
-
-    ExecuteQuery(
-      masterDb,
-      query,
-      [],
-      (results) => {
-        if (results.rows._array.length === 0) {
-          setLastProduct({
-            DESCRIPCION: "",
-          });
-          setProductNoFinded(true);
-          refs.code.current.focus();
-          return;
-        }
-
-        const product = results.rows._array[0];
-        setLastProduct(product);
 
         if (config.catalog_products && product.CATALOGADO == 1) {
           setDangerModal({
@@ -597,8 +579,10 @@ const ProductEntry = ({ type }) => {
                     text: "",
                     buttons: [],
                   });
-                  setDBFindedProduct(product);
-                  refs.quantity.current.focus();
+                  addProductToDb({
+                    ...product,
+                    type: type === 'single' ? "A" : "S"
+                  });
                 },
               },
             ],
@@ -609,8 +593,10 @@ const ProductEntry = ({ type }) => {
           (config.catalog_products && product.CATALOGADO == 0) ||
           (!config.catalog_products && product.CATALOGADO == 1)
         ) {
-          refs.quantity.current.focus();
-          setDBFindedProduct(product);
+          addProductToDb({
+            ...product,
+            type: type === 'single' ? "A" : "S"
+          });
         }
       },
       (error) => {
@@ -626,6 +612,26 @@ const ProductEntry = ({ type }) => {
 
   useEffect(() => {
     getScansData();
+
+    const db = SQLite.openDatabase("Maestro.db");
+    ExecuteQuery(
+      db,
+      "SELECT * FROM AREAS WHERE NUM_AREA = ?",
+      [area],
+      (res) => {
+        if(!res.rows._array[0]) return setSnackbar({
+          visible: true,
+          text: "El área no existe",
+          type: "error",
+        });
+
+        console.log(res.rows._array[0])
+        setAreaData(res.rows._array[0]);
+      },
+      (err) => {
+        console.log(err)
+      }        
+    )
   }, []);
 
   return (
@@ -745,10 +751,6 @@ const ProductEntry = ({ type }) => {
               />
             </View>
 
-            {productNoFinded && (
-              <ErrorModal message={'No se encontró el producto en la base de datos'} modalFailVisible setModalFailVisible={setProductNoFinded} />
-            )}
-
             {lastProduct.DESCRIPCION && (
               <Text
                 style={{
@@ -842,7 +844,7 @@ const ProductEntry = ({ type }) => {
                         textAlign: "center",
                         color: "#000",
                       }}
-                      onEndEditing={() => addProductToDb(DBFindedProduct, quantity)}
+                      onEndEditing={() => onCodeSubmit('qtyInput')}
                     />
 
                   ) : (

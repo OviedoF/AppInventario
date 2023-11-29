@@ -21,8 +21,8 @@ import env from "../env";
 import PickInventoryModal from "../components/PickInventarioModal";
 
 const AdminMenu = () => {
-  const { setSnackbar, user, setHardwareId, config, setConfig } = useContext(dataContext);
-  const [id, setId] = useState("");
+  const { setSnackbar, user, setHardwareId, config, setConfig, hardwareId, codCapturador, setCodCapturador} = useContext(dataContext);
+  const [id, setId] = useState(hardwareId);
   const [modalId, setModalId] = useState(false);
   const [changePasswordModal, setChangePasswordModal] = useState(false)
   const [supervisorPassword, setSupervisorPassword] = useState("")
@@ -56,6 +56,7 @@ const AdminMenu = () => {
     try {
       await AsyncStorage.setItem("hardwareId", id);
       setHardwareId(id);
+      await AsyncStorage.setItem("codCapturador", codCapturador);
       setSnackbar({
         visible: true,
         text: "ID cambiado con éxito",
@@ -272,6 +273,8 @@ const AdminMenu = () => {
       <EditIdModal
         id={id}
         setId={setId}
+        codCapturador={codCapturador}
+        setCodCapturador={setCodCapturador}
         setModalVisible={setModalId}
         modalVisible={modalId}
         onConfirm={changeHardwareID}
