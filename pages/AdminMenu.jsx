@@ -19,14 +19,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import EditSupPasswordModal from "../components/EditSupPasswordModal";
 import env from "../env";
 import PickInventoryModal from "../components/PickInventarioModal";
+import * as SecureStore from 'expo-secure-store';
 
 const AdminMenu = () => {
   const { setSnackbar, user, setHardwareId, config, setConfig, hardwareId, codCapturador, setCodCapturador} = useContext(dataContext);
   const [id, setId] = useState(hardwareId);
   const [modalId, setModalId] = useState(false);
+  const [ip, setIp] = useState('')
   const [changePasswordModal, setChangePasswordModal] = useState(false)
   const [supervisorPassword, setSupervisorPassword] = useState("")
   const [changeInventory, setChangeInventory] = useState(false)
+
+  useEffect(() => {
+    async function getIp() {
+      const ip = await AsyncStorage.getItem("IP");
+      setIp(ip)
+    }
+     
+    getIp()
+  }, [])
 
   const eliminarTablaInventarios = () => {
     const db = SQLite.openDatabase("Maestro.db");
@@ -54,9 +65,10 @@ const AdminMenu = () => {
 
   const changeHardwareID = async () => {
     try {
-      await AsyncStorage.setItem("hardwareId", id);
+      await SecureStore.setItemAsync("hardwareId", id);
       setHardwareId(id);
-      await AsyncStorage.setItem("codCapturador", codCapturador);
+      await SecureStore.setItemAsync("codCapturador", codCapturador);
+      await AsyncStorage.setItem("IP", ip);
       setSnackbar({
         visible: true,
         text: "ID cambiado con éxito",
@@ -173,7 +185,7 @@ const AdminMenu = () => {
                   fontWeight: "bold",
                 }}
               >
-                MODIFICAR INVENTARIO
+                SELECCIONAR INVENTARIO
               </Text>
             </View>
           </TouchableOpacity>
@@ -278,6 +290,8 @@ const AdminMenu = () => {
         setModalVisible={setModalId}
         modalVisible={modalId}
         onConfirm={changeHardwareID}
+        ip={ip}
+        setIp={setIp}
       />
 
       <EditSupPasswordModal

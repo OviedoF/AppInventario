@@ -11,6 +11,7 @@ export const DataProvider = ({ children }) => {
   const [inventario, setInventario] = useState('')
   const [hardwareId, setHardwareId] = useState('')
   const [codCapturador, setCodCapturador] = useState('')
+  const [loading, setLoading] = useState(false)
   const [snackbar, setSnackbar] = useState({
     visible: false,
     text: "",
@@ -31,6 +32,11 @@ export const DataProvider = ({ children }) => {
     buttons: [],
   })
   const [cdInfo, setCdInfo] = useState({})
+
+  useEffect(() => {
+    console.log('dataContext')
+    console.log(config)
+  }, [config])
 
   return (
     <dataContext.Provider
@@ -55,6 +61,8 @@ export const DataProvider = ({ children }) => {
         setSerie,
         codCapturador,
         setCodCapturador,
+        loading,
+        setLoading,
         /* cartCant,
         addToCart,
         clearCart,

@@ -20,6 +20,8 @@ import { useNavigate } from "react-router-native";
 import * as SQLite from "expo-sqlite";
 import ExecuteQuery from "../helpers/ExecuteQuery";
 import reverse_icon from "../assets/reverse.png";
+import * as FileSystem from 'expo-file-system';
+import { Alert } from "react-native";
 
 function GTIN8Digit(codigoGTIN8) {
   if (codigoGTIN8.length !== 7) {
@@ -75,6 +77,7 @@ const ProductEntry = ({ type }) => {
   );
   const [lastProduct, setLastProduct] = useState({
     DESCRIPCION: "",
+    TYPE: "",
   });
   const [confirmingClose, setConfirmingClose] = useState(false);
   const [modal, setModal] = useState(false);
@@ -102,6 +105,34 @@ const ProductEntry = ({ type }) => {
     }
 
     setModal(false);
+  };
+
+  const createDataFile = async () => {
+    try {
+      const content = 'Contenido del archivo .txt';
+
+      // * Obtener el directorio de documentos
+      const dir = FileSystem.documentDirectory;
+
+      // * Construir la ruta completa al archivo en el directorio "downloads"
+      const filePath = `${dir}downloads/myFile.txt`;
+
+      // * Escribir el contenido en el archivo
+      await FileSystem.writeAsStringAsync(filePath, content);
+
+      Alert.alert(
+        'Archivo creado',
+        `El archivo se creó correctamente en ${filePath}`,
+        [
+          {
+            text: 'Ok',
+            style: 'cancel'
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error al crear o guardar el archivo:', error);
+    }
   };
 
   const confirmCloseArea = async () => {
@@ -133,6 +164,7 @@ const ProductEntry = ({ type }) => {
             });
             setArea("");
             const db = SQLite.openDatabase("Maestro.db");
+
             ExecuteQuery(
               db,
               `UPDATE AREAS SET ESTADO = "CERRADA" WHERE NUM_AREA = "${area}"`,
@@ -153,6 +185,8 @@ const ProductEntry = ({ type }) => {
                 });
               }
             );
+
+            createDataFile();
 
             setArea("");
             navigate(routes.captureMenu);
@@ -181,7 +215,7 @@ const ProductEntry = ({ type }) => {
         });
 
         const productsWithSameArea = results.rows._array.filter((product) => product.area === area);
-        
+
         setScansData({
           products: productsDb.length.toFixed(1),
           scans: results.rows._array.length.toFixed(1),
@@ -200,11 +234,11 @@ const ProductEntry = ({ type }) => {
     );
   };
 
-  const addProductToDb = async (product, qty = quantity) => {
+  const addProductToDb = async (product, qty = quantity, additionType) => {
     const db = SQLite.openDatabase("Maestro.db");
     const date = new Date().toISOString();
 
-    console.log(      [
+    console.log([
       user.COD_USUARIO,
       product.COD_PROD,
       qty,
@@ -242,7 +276,6 @@ const ProductEntry = ({ type }) => {
         'INV'
       ],
       (results) => {
-        console.log("Results", results);
         getScansData();
         setSnackbar({
           visible: true,
@@ -250,6 +283,7 @@ const ProductEntry = ({ type }) => {
           type: "success",
         });
         setCode("");
+        setLastProduct({ ...product, quantity, type: additionType });
         if (type === 'multi') setQuantity('');
         if (type === 'single') setQuantity(1);
         refs.code.current.clear();
@@ -308,57 +342,58 @@ const ProductEntry = ({ type }) => {
       query,
       [],
       (results) => {
-        if (results.rows._array.length === 0) {
-          if (results.rows._array.length === 0) {
-            return setDangerModal({
-              visible: true,
-              title: "Producto NO Encontrado",
-              bg: "#dc3545",
-              color: "#fff",
-              text: "¿Desea agregarlo igualmente?",
-              buttons: [
-                {
-                  text: "Sí, agregar",
-                  onPress: () => {
-                    setDangerModal({
-                      visible: false,
-                      title: "",
-                      text: "",
-                      buttons: [],
-                    });
-  
-                    addProductToDb({
-                      COD_PROD: codeToVerify,
-                      exists: 'N',
-                      type: "P"
-                    }, quantity);
-                    return;
-                  },
-                },
-                {
-                  text: "NO, NO AGREGAR",
-                  onPress: () => {
-                    setDangerModal({
-                      visible: false,
-                      title: "",
-                      text: "",
-                      buttons: [],
-                    });
-                    refs.code.current.focus();
-                    setLastProduct({
-                      DESCRIPCION: "",
-                    });
-                    return;
-                  },
-                  style: "cancel",
-                },
-              ],
-            });
-          } // * Si el producto no se encuentra en la base de datos, preguntamos si se quiere agregar igualmente
-        }
 
         const product = results.rows._array[0];
-        setLastProduct({ ...product, quantity });
+
+        if (results.rows._array.length === 0) {
+          return setDangerModal({
+            visible: true,
+            title: "Producto NO Encontrado",
+            bg: "#dc3545",
+            color: "#fff",
+            text: "¿Desea agregarlo igualmente?",
+            buttons: [
+              {
+                text: "Sí, agregar",
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+
+                  addProductToDb({
+                    COD_PROD: codeToVerify,
+                    exists: 'N',
+                    type: "S",
+                    DESCRIPCION: `PESABLE ${codeToVerify} x ${quantity}kg`,
+                  }, quantity, "PESABLE");
+
+                  return;
+                },
+              },
+              {
+                text: "NO, NO AGREGAR",
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+                  refs.code.current.focus();
+                  setLastProduct({
+                    ...lastProduct,
+                    DESCRIPCION: "",
+                  });
+                  return;
+                },
+                style: "cancel",
+              },
+            ],
+          });
+        } // * Si el producto no se encuentra en la base de datos, preguntamos si se quiere agregar igualmente
 
         if (config.catalog_products && product.CATALOGADO == 1) {
           setDangerModal({
@@ -413,8 +448,9 @@ const ProductEntry = ({ type }) => {
                   });
                   addProductToDb({
                     ...product,
-                    type: "P"
-                  }, quantity);
+                    DESCRIPCION: `${product.DESCRIPCION} x ${quantity}kg`,
+                    type: "S"
+                  }, quantity, "PESABLE");
                 },
               },
             ],
@@ -427,8 +463,9 @@ const ProductEntry = ({ type }) => {
         ) {
           addProductToDb({
             ...product,
-            type: "P"
-          }, quantity);
+            DESCRIPCION: `${product.DESCRIPCION} x ${quantity}kg`,
+            type: "S"
+          }, quantity, "PESABLE");
         }
       },
       (error) => {
@@ -461,8 +498,34 @@ const ProductEntry = ({ type }) => {
       setCode(codeToSend);
     } // * Si el código no cumple con la configuración, rellenamos el código con 0s a la izquierda
 
-    if (config.pesables) return validatePesable(codeToSend, codeImplicit); // * Si el software está para PESABLES, validamos el código
-    console.log("Code to send", codeToSend);
+    // * ¿El código empieza con 25?
+
+    const firstTwoDigits = codeImplicit.substring(0, 2);
+
+    if (config.pesables && firstTwoDigits.toString() == "25") return validatePesable(codeToSend, codeImplicit); // * Si el software está para PESABLES, validamos el código
+
+    if(!config.pesables && firstTwoDigits.toString() == "25") return setDangerModal({
+      visible: true,
+      title: "Producto PESABLE",
+      text: "Este producto es pesable. Si quiere añadirlo active la opción de pesables.",
+      buttons: [
+        {
+          text: "Entendido",
+          onPress: () => {
+            setDangerModal({
+              visible: false,
+              title: "",
+              text: "",
+              buttons: [],
+            });
+            refs.code.current.focus();
+            refs.code.current.clear();
+          },
+          style: "cancel",
+        }
+      ],
+    });
+
     const masterDb = SQLite.openDatabase("Maestro.db");
     const query = `SELECT * FROM MAESTRA WHERE COD_PROD = '${codeToSend}'`;
 
@@ -471,6 +534,8 @@ const ProductEntry = ({ type }) => {
       query,
       [],
       (results) => {
+        const product = results.rows._array[0];
+
         console.log("Results", results.rows._array.length);
         if (results.rows._array.length === 0) {
           return setDangerModal({
@@ -495,8 +560,9 @@ const ProductEntry = ({ type }) => {
                   addProductToDb({
                     COD_PROD: codeToSend,
                     exists: 'N',
-                    type: type === 'single' ? "A" : "S"
-                  });
+                    type: type === 'single' ? "A" : "S",
+                    DESCRIPCION: codeToSend,
+                  }, quantity, "1X1");
                   return;
                 },
               },
@@ -522,11 +588,6 @@ const ProductEntry = ({ type }) => {
         } // * Si el producto no se encuentra en la base de datos, preguntamos si se quiere agregar igualmente
 
         if (type === 'multi' && sendedBy !== 'qtyInput') return refs.quantity.current.focus();
-
-        const product = results.rows._array[0];
-        setLastProduct({
-          DESCRIPCION: product.DESCRIPCION,
-        });
 
         if (config.catalog_products && product.CATALOGADO == 1) {
           setDangerModal({
@@ -582,7 +643,7 @@ const ProductEntry = ({ type }) => {
                   addProductToDb({
                     ...product,
                     type: type === 'single' ? "A" : "S"
-                  });
+                  }, quantity, "1X1");
                 },
               },
             ],
@@ -596,7 +657,7 @@ const ProductEntry = ({ type }) => {
           addProductToDb({
             ...product,
             type: type === 'single' ? "A" : "S"
-          });
+          }, quantity, "1X1");
         }
       },
       (error) => {
@@ -619,7 +680,7 @@ const ProductEntry = ({ type }) => {
       "SELECT * FROM AREAS WHERE NUM_AREA = ?",
       [area],
       (res) => {
-        if(!res.rows._array[0]) return setSnackbar({
+        if (!res.rows._array[0]) return setSnackbar({
           visible: true,
           text: "El área no existe",
           type: "error",
@@ -630,9 +691,13 @@ const ProductEntry = ({ type }) => {
       },
       (err) => {
         console.log(err)
-      }        
+      }
     )
   }, []);
+
+  useEffect(() => {
+    console.log("Last Product", lastProduct);
+  }, [lastProduct]);
 
   return (
     <KeyboardAvoidingView
@@ -772,156 +837,140 @@ const ProductEntry = ({ type }) => {
                 flexWrap: "wrap",
               }}
             >
-              {!config.pesables && (
-                <>
-                  {type === "multi" ? (
-                    <TextInput
-                      onChange={(e) => {
-                        // Filtrar solo caracteres numéricos, punto decimal y el signo negativo
-                        const filteredText = e.nativeEvent.text.replace(/[^0-9.-]/g, '');
 
-                        // Validar que no se ingresen más de 3 decimales
-                        const decimalCount = filteredText.split('.')[1]?.length || 0;
-                        if (decimalCount > 3) return;
+              <>
+                {type === "multi" ? (
+                  <TextInput
+                    onChange={(e) => {
+                      // Filtrar solo caracteres numéricos, punto decimal y el signo negativo
+                      const filteredText = e.nativeEvent.text.replace(/[^0-9.-]/g, '');
 
-                        if (parseFloat(filteredText) > 1000) return setDangerModal({
-                          visible: true,
-                          title: "Error",
-                          text: "El valor máximo es 999.999",
-                          buttons: [
-                            {
-                              text: "Entendido",
-                              onPress: () => {
-                                setDangerModal({
-                                  visible: false,
-                                  title: "",
-                                  text: "",
-                                  buttons: [],
-                                });
-                                refs.quantity.current.focus();
-                              },
-                              style: "cancel",
-                            }
-                          ],
-                        })
+                      // Validar que no se ingresen más de 3 decimales
+                      const decimalCount = filteredText.split('.')[1]?.length || 0;
+                      if (decimalCount > 3) return;
 
-                        if (parseFloat(filteredText) < -1000) return setDangerModal({
-                          visible: true,
-                          title: "Error",
-                          text: "El valor mínimo es -999.999",
-                          buttons: [
-                            {
-                              text: "Entendido",
-                              onPress: () => {
-                                setDangerModal({
-                                  visible: false,
-                                  title: "",
-                                  text: "",
-                                  buttons: [],
-                                });
-                                refs.quantity.current.focus();
-                              },
-                              style: "cancel",
-                            }
-                          ],
-                        });
+                      if (parseFloat(filteredText) > 1000) return setDangerModal({
+                        visible: true,
+                        title: "Error",
+                        text: "El valor máximo es 999.999",
+                        buttons: [
+                          {
+                            text: "Entendido",
+                            onPress: () => {
+                              setDangerModal({
+                                visible: false,
+                                title: "",
+                                text: "",
+                                buttons: [],
+                              });
+                              refs.quantity.current.focus();
+                            },
+                            style: "cancel",
+                          }
+                        ],
+                      })
 
-                        // Validar el rango máximo y mínimo
-                        if (filteredText !== '' && (parseFloat(filteredText) > 999999 || parseFloat(filteredText) < -999999)) {
-                          return;
-                        }
+                      if (parseFloat(filteredText) < -1000) return setDangerModal({
+                        visible: true,
+                        title: "Error",
+                        text: "El valor mínimo es -999.999",
+                        buttons: [
+                          {
+                            text: "Entendido",
+                            onPress: () => {
+                              setDangerModal({
+                                visible: false,
+                                title: "",
+                                text: "",
+                                buttons: [],
+                              });
+                              refs.quantity.current.focus();
+                            },
+                            style: "cancel",
+                          }
+                        ],
+                      });
 
-                        setQuantity(filteredText);
-                      }}
-                      keyboardType="numeric"
-                      value={quantity}
-                      ref={refs.quantity}
-                      style={{
-                        ...styles.input,
-                        fontWeight: "bold",
-                        fontSize: 38,
-                        width: 150,
-                        textAlign: "center",
-                        color: "#000",
-                      }}
-                      onEndEditing={() => onCodeSubmit('qtyInput')}
-                    />
+                      // Validar el rango máximo y mínimo
+                      if (filteredText !== '' && (parseFloat(filteredText) > 999999 || parseFloat(filteredText) < -999999)) {
+                        return;
+                      }
 
-                  ) : (
-                    <>
-                      <Text
-                        style={{
-                          fontWeight: "bold",
-                          fontSize: 38,
-                          width: 70,
-                          textAlign: "center",
-                          color: "#000",
-                        }}
-                      >
-                        {quantity > 0 && "+"}
-                        {quantity}
-                      </Text>
-
-                      <TouchableOpacity
-                        onPress={() => {
-                          quantity === 1 ? setQuantity(-1) : setQuantity(1);
-                        }}
-                        style={{
-                          backgroundColor: "transparent",
-                          width: 30,
-                          padding: 5,
-                          margin: 5,
-                        }}
-                      >
-                        <Image
-                          style={{ width: 30, height: 30 }}
-                          source={reverse_icon}
-                        />
-                      </TouchableOpacity>
-                    </>
-                  )}
-
-                  {type === "multi" && (
-                    <TouchableOpacity
-                      style={{
-                        ...styles.logBtn,
-                        width: 70,
-                        borderRadius: 5,
-                        alignItems: "center",
-                      }}
-                      onPress={() => {
-                        setCalculatorModal(true);
-                      }}
-                    >
-                      <Text
-                        style={{
-                          ...styles.white,
-                          textAlign: "center",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        CALC
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </>
-              )}
-
-              {config.pesables && (
-                <>
-                  <Text
+                      setQuantity(filteredText);
+                    }}
+                    keyboardType="numeric"
+                    value={quantity}
+                    ref={refs.quantity}
                     style={{
+                      ...styles.input,
                       fontWeight: "bold",
-                      fontSize: 25,
-                      width: 300,
+                      fontSize: 38,
+                      width: 150,
                       textAlign: "center",
                       color: "#000",
                     }}
+                    onEndEditing={() => onCodeSubmit('qtyInput')}
+                  />
+
+                ) : (
+                  <>
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: 38,
+                        width: 70,
+                        textAlign: "center",
+                        color: "#000",
+                      }}
+                    >
+                      {quantity > 0 && "+"}
+                      {quantity}
+                    </Text>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        quantity === 1 ? setQuantity(-1) : setQuantity(1);
+                      }}
+                      style={{
+                        backgroundColor: "transparent",
+                        width: 30,
+                        padding: 5,
+                        margin: 5,
+                      }}
+                    >
+                      <Image
+                        style={{ width: 30, height: 30 }}
+                        source={reverse_icon}
+                      />
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                {type === "multi" && (
+                  <TouchableOpacity
+                    style={{
+                      ...styles.logBtn,
+                      width: 70,
+                      borderRadius: 5,
+                      alignItems: "center",
+                    }}
+                    onPress={() => {
+                      setCalculatorModal(true);
+                    }}
                   >
-                    {lastProduct.quantity || "..."} KG
-                  </Text>
-                </>
-              )}
+                    <Text
+                      style={{
+                        ...styles.white,
+                        textAlign: "center",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      CALC
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </>
+
             </View>
           </View>
 

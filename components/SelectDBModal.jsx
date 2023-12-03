@@ -1,0 +1,268 @@
+import axios from "axios";
+import React, { useContext, useEffect, useState } from "react";
+import {
+    Modal,
+    Text,
+    View,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+} from "react-native";
+import CustomPicker from "./CustomPicker";
+import { dataContext } from "../context/dataContext";
+import * as FileSystem from "expo-file-system";
+import ReplaceWithLoading from "./ReplaceWithLoading";
+
+const SelectDBModal = ({ onEnd }) => {
+    const { setSnackbar, setLoading } = useContext(dataContext)
+    const [invSeleccionado, setInvSeleccionado] = useState(0)
+    const [inventariosDisponibles, setInventariosDisponibles] = useState([]);
+    const [ip, setIp] = useState("");
+    const [error, setError] = useState(false)
+
+    const getInventarios = async () => {
+        try {
+            setLoading(true)
+            const response = await axios.get(
+                `http://${ip}/isam/api/inventarios_disponibles.php`
+            );
+
+            if (response.data.status !== 'ok') {
+                setError('No se pudo obtener los inventarios')
+                return;
+            }
+
+            setError(false)
+            setLoading(false)
+            return setInventariosDisponibles(response.data.result);
+        } catch (error) {
+            setError('No se pudo obtener los inventarios')
+            setLoading(false)
+            setSnackbar({
+                visible: true,
+                text: "No se pudo conectar con el servidor",
+                type: "error",
+            });
+        }
+    };
+
+    const getDB = async () => {
+        try {
+            setLoading(true)
+            await fetch(`http://${ip}/isam/api/descargar_maestroInv.php`, {
+                headers: {
+                    "id": invSeleccionado,
+                },
+            })
+                .then((response) => response.blob())
+                .then((blob) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64data = reader.result.split(",")[1]; // Obtener la parte de datos de la cadena Data URL
+                        FileSystem.writeAsStringAsync(
+                            `${FileSystem.documentDirectory}SQLite/Maestro.db`,
+                            base64data,
+                            {
+                                encoding: FileSystem.EncodingType.Base64,
+                            }
+                        )
+                            .then(() => {
+                                setSnackbar({
+                                    visible: true,
+                                    text: "Base de datos descargada",
+                                    type: "success",
+                                });
+                                setLoading(false)
+                                onEnd()
+                            })
+                            .catch((error) => {
+                                console.log(error);
+                                setLoading(false)
+                                setError('No se pudo descargar la base de datos')
+                                setSnackbar({
+                                    visible: true,
+                                    text: "No se pudo descargar la base de datos",
+                                    type: "error",
+                                });
+                            });
+                    };
+                    reader.readAsDataURL(blob);
+                })
+                .catch((error) => {
+                    console.log(error);
+                    setLoading(false)
+                    setError('No se pudo descargar la base de datos')
+                    setSnackbar({
+                        visible: true,
+                        text: "No se pudo descargar la base de datos",
+                        type: "error",
+                    });
+                });
+        } catch (error) {
+            console.log(error);
+            setLoading(false)
+            setError('La bdd del inventario no existe')
+            setSnackbar({
+                visible: true,
+                text: "No se pudo conectar con el servidor",
+                type: "error",
+            });
+        }
+    };
+
+    return (
+        <View style={stylesModal.centeredView}>
+            <Modal
+                animationType="fade"
+                transparent={true}
+            >
+                <View
+                    style={[
+                        stylesModal.centeredView,
+                        { backgroundColor: "rgba(0, 0, 0, 0.5)", width: "100%", height: "100%" }, ,
+                    ]}
+                >
+                    <ReplaceWithLoading>
+                        <View style={[
+                            stylesModal.modalView,
+                            { backgroundColor: "#fefefe" }
+                        ]}>
+                            <TouchableOpacity
+                                style={{ position: "absolute", top: 10, right: 10 }}
+                                onPress={() => onEnd()}
+                            >
+                                <Text style={{ fontSize: 20, fontWeight: "bold" }}>X</Text>
+                            </TouchableOpacity>
+
+                            <Text
+                                style={[
+                                    stylesModal.modalText,
+                                    {
+                                        fontWeight: "bold", fontSize: 25,
+                                        color: "#191919"
+                                    },
+                                ]}
+                            >
+                                Elije la base de datos para este dispositivo
+                            </Text>
+
+                            {
+                                !inventariosDisponibles.length && <>
+
+                                    <Text
+                                        style={[
+                                            stylesModal.modalText,
+                                            {
+                                                fontWeight: "bold", fontSize: 16,
+                                            },
+                                        ]}
+                                    >
+                                        Por favor, introduce tu ip y puerto para obtener los inventarios.
+                                    </Text>
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%" }}>
+                                        <View style={{ width: "100%" }}>
+                                            <Text style={{ fontWeight: "bold", fontSize: 16, marginBottom: 5 }}>IP</Text>
+                                            <TextInput
+                                                style={{
+                                                    height: 40,
+                                                    borderColor: "gray",
+                                                    borderWidth: 1,
+                                                    borderRadius: 5,
+                                                    paddingLeft: 10,
+                                                }}
+                                                onChangeText={(text) => setIp(text)}
+                                                value={ip}
+                                                onEndEditing={() => getInventarios()}
+                                            />
+
+                                        </View>
+                                    </View>
+
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%" }}>
+                                        <TouchableOpacity
+                                            style={[stylesModal.button, { marginTop: 20 }]}
+                                            onPress={() => getInventarios()}
+                                        >
+                                            <Text style={stylesModal.textStyle}>Aceptar</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </>
+                            }
+
+                            {
+                                inventariosDisponibles.length > 0 && <>
+                                    <CustomPicker options={inventariosDisponibles.map((value) => {
+                                        return { label: `Inventario ${value}`, value: value };
+                                    })} placeHolder={
+                                        invSeleccionado ? `Inventario ${invSeleccionado}` : "Selecciona un inventario"
+                                    } onValueChange={
+                                        (value) => setInvSeleccionado(value)
+                                    } />
+
+                                    <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%" }}>
+                                        <TouchableOpacity
+                                            style={[stylesModal.button, { marginTop: 20 }]}
+                                            onPress={() => getDB()}
+                                        >
+                                            <Text style={stylesModal.textStyle}>Aceptar</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </>
+                            }
+
+                            {
+                                error && <Text style={{ color: "red", marginTop: 10 }}>{error}</Text>
+                            }
+                        </View>
+                    </ReplaceWithLoading>
+                </View>
+            </Modal>
+        </View>
+    );
+};
+export default SelectDBModal;
+
+const stylesModal = StyleSheet.create({
+    centeredView: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: "#ffc107",
+        borderRadius: 20,
+        padding: 25,
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+        width: "95%",
+        height: "95%",
+    },
+    button: {
+        borderRadius: 10,
+        width: '100%',
+        height: 35,
+        borderColor: "blue",
+        justifyContent: "center",
+        backgroundColor: "#4960F9",
+    },
+    buttonOpen: {
+        backgroundColor: "#F194FF",
+    },
+    textStyle: {
+        color: "#fefefe",
+        textAlign: "center",
+    },
+    modalText: {
+        marginBottom: 15,
+        textAlign: "center",
+    },
+});

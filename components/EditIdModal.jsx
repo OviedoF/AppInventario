@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Modal,
@@ -9,8 +9,9 @@ import {
   TextInput,
 } from "react-native";
 import styles from "../styles/styles";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const EditIdModal = ({ id, setId, setModalVisible, modalVisible, onConfirm, codCapturador, setCodCapturador }) => {
+const EditIdModal = ({ id, setId, setModalVisible, modalVisible, onConfirm, codCapturador, setCodCapturador, ip, setIp }) => {
   const inputEdit = useRef(null);
 
   return (
@@ -66,6 +67,25 @@ const EditIdModal = ({ id, setId, setModalVisible, modalVisible, onConfirm, codC
                 showSoftInputOnFocus={false}
                 ref={inputEdit}
                 autoFocus
+                onSubmitEditing={() => {
+                  onConfirm()
+                }}
+              />
+
+              <Text
+                style={[
+                  stylesModal.modalText,
+                  { fontWeight: "bold", fontSize: 16 },
+                ]}
+              >
+                Ingrese IP del API
+              </Text>
+
+              <TextInput
+                onChangeText={(value) => setIp(value.toString())}
+                value={ip.toString()}
+                style={[styles.input, { width: '100%' }]}
+                showSoftInputOnFocus={false}
                 onSubmitEditing={() => {
                   onConfirm()
                 }}
