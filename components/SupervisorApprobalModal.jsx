@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import {
   Alert,
   Modal,
@@ -11,11 +11,11 @@ import styles from "../styles/styles";
 import { TextInput } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import env from "../env";
+import { dataContext } from "../context/dataContext";
 
 const SupervisorApprobalModal = ({
   setModalVisible,
   modalVisible,
-  setSnackbar,
   user,
   idDesired,
   setSelectedId,
@@ -23,7 +23,9 @@ const SupervisorApprobalModal = ({
   config,
   authType,
   setAuthType,
+  setSelectDBModal
 }) => {
+  const {setSnackbar} = useContext(dataContext)
   const [code, setCode] = useState("");
   const input = useRef(null);
 
@@ -58,6 +60,11 @@ const SupervisorApprobalModal = ({
           catalog_products: !config.catalog_products,
         });
       }
+
+      if (authType === "new_db") {
+        setSelectDBModal(true);
+      }
+
       setSnackbar({
         visible: true,
         text: `Permisos de supervisor conseguidos`,

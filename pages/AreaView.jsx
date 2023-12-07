@@ -15,11 +15,10 @@ const CDReview = () => {
   const [products, setProducts] = useState(null);
   const { area } = useParams();
   const {setArea} = useContext(dataContext);
-  console.log(area);
 
   const getProducts = async () => {
     const db = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM INVENTARIO_APP WHERE type = "INV" ORDER BY id DESC`;
+    const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND area = "${area}" ORDER BY id DESC`;
     await ExecuteQuery(
       db,
       query,
@@ -27,6 +26,8 @@ const CDReview = () => {
       (results) => {
         /* console.log("Query completed");
         console.log(results.rows._array); */
+        console.log("Query completed");
+        console.log(results.rows._array);
         return setProducts(results.rows._array);
       },
       (error) => {
@@ -75,19 +76,19 @@ const CDReview = () => {
                 {item.id}
               </Text>
               <Text
-                style={{ width: "45%", fontSize: 12, paddingHorizontal: 5 }}
+                style={{ width: "55%", fontSize: 12, paddingHorizontal: 5 }}
               >
-                {item.name}
+                {item.name} - {item.descripcion}
               </Text>
               <Text
-                style={{ width: "20%", fontSize: 12, paddingHorizontal: 5 }}
+                style={{ width: "10%", fontSize: 12, paddingHorizontal: 5 }}
               >
                 {item.quantity < 0 ? item.quantity : `+${item.quantity}`}
               </Text>
               <Text
                 style={{ width: "25%", fontSize: 12, paddingHorizontal: 5 }}
               >
-                {item.date}
+                {new Date(item.date).toLocaleDateString()} {new Date(item.date).toLocaleTimeString()}
               </Text>
             </TouchableOpacity>
           ))}

@@ -237,19 +237,19 @@ const CDReview = () => {
                 {item.id}
               </Text>
               <Text
-                style={{ width: "45%", fontSize: 12, paddingHorizontal: 5 }}
+                style={{ width: "55%", fontSize: 12, paddingHorizontal: 5 }}
               >
-                {item.name}
+                {item.name} - {item.descripcion}
               </Text>
               <Text
-                style={{ width: "20%", fontSize: 12, paddingHorizontal: 5 }}
+                style={{ width: "10%", fontSize: 12, paddingHorizontal: 5 }}
               >
                 {item.quantity < 0 ? item.quantity : `+${item.quantity}`}
               </Text>
               <Text
                 style={{ width: "25%", fontSize: 12, paddingHorizontal: 5 }}
               >
-                {item.date}
+                {new Date(item.date).toLocaleDateString()} {new Date(item.date).toLocaleTimeString()}
               </Text>
             </TouchableOpacity>
           ))}

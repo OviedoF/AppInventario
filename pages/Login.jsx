@@ -25,17 +25,20 @@ import { BackHandler } from "react-native";
 import SelectDBModal from "../components/SelectDBModal";
 // import { cargarInventario } from "../api/db";
 import * as SecureStore from 'expo-secure-store';
-import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
+import SupervisorApprobalModal from "../components/SupervisorApprobalModal";
+import * as Application from 'expo-application';
 
 const Login = () => {
   const [selectDBModal, setSelectDBModal] = useState(false);
+  const [adminPassModal, setAdminPassModal] = useState(false)
   const navigate = useNavigate();
   const { setUser, setSnackbar, setConfig, setHardwareId, setInventario, config, setDangerModal, inventario, codCapturador, setCodCapturador } = useContext(dataContext);
   const refs = {
     user: useRef(null),
     password: useRef(null),
   };
+  console.log(Application.androidId)
 
   const {
     handleSubmit,
@@ -51,12 +54,10 @@ const Login = () => {
   const getBasicData = async () => {
     try {
       const value = await SecureStore.getItemAsync('hardwareId')
-      if(value === null) {
-        const newHardwareId = uuidv4()
-        await SecureStore.setItemAsync('hardwareId', newHardwareId.slice(newHardwareId.length - 8, newHardwareId.length))
-        setHardwareId(newHardwareId)
+      if (value === null) {
+        await SecureStore.setItemAsync('hardwareId', Application.androidId)
+        setHardwareId(Application.androidId)
       } else {
-        console.log(value.slice(value.length - 8, value.length))
         setHardwareId(value)
       } // * Se guarda el hardwareId en el contexto y en el SecureStore, para que sea persistente en el tiempo
 
@@ -64,7 +65,7 @@ const Login = () => {
       if (codCapturador !== null) {
         setCodCapturador(codCapturador)
       } // * Se guarda el codCapturador en el contexto y en el SecureStore, para que sea persistente en el tiempo
-      
+
       const adminPassword = await AsyncStorage.getItem(env.asyncStorage.adminPassword)
       if (!adminPassword) {
         console.log("No existe la contraseña de administrador, se procede a crearla");
@@ -126,7 +127,7 @@ const Login = () => {
           BackHandler.addEventListener("hardwareBackPress", () => {
             navigate(-1);
             return true;
-          } ); // * Agregar evento para el botón de atrás
+          }); // * Agregar evento para el botón de atrás
           navigate(userProx.admin ? routes.menuAdmin : routes.captureMenu);
         },
         (error) => {
@@ -173,8 +174,8 @@ const Login = () => {
           inv_activo: invSelected ? invSelected.split('.')[0] : null,
         });
 
-        const ip = await AsyncStorage.getItem("IP") 
-        if(!ip) await AsyncStorage.setItem("IP", config[6] ? config[6].LARGO_CAMPO : "192.168.0.1");
+        const ip = await AsyncStorage.getItem("IP")
+        if (!ip) await AsyncStorage.setItem("IP", config[6] ? config[6].LARGO_CAMPO : "192.168.0.1");
       },
       (error) => {
         console.log(error);
@@ -217,7 +218,7 @@ const Login = () => {
 
     await ExecuteQuery(
       openDb,
-      `CREATE TABLE IF NOT EXISTS INVENTARIO_APP (id INTEGER PRIMARY KEY AUTOINCREMENT, operator TEXT, name TEXT, quantity INT, date TEXT, posicion TEXT, area TEXT, pallet TEXT, caja TEXT, type TEXT, inventario TEXT, serie TEXT, existe TEXT, EstadoTag TEXT, CorrelativoApertura TEXT, invtype TEXT);`,
+      `CREATE TABLE IF NOT EXISTS INVENTARIO_APP (id INTEGER PRIMARY KEY AUTOINCREMENT, operator TEXT, name TEXT, quantity INT, date TEXT, posicion TEXT, area TEXT, pallet TEXT, caja TEXT, type TEXT, inventario TEXT, serie TEXT, existe TEXT, EstadoTag TEXT, CorrelativoApertura TEXT, invtype TEXT, descripcion TEXT);`,
       [],
       (result) => {
         if (result.rowsAffected > 0) {
@@ -272,6 +273,7 @@ const Login = () => {
       }
     };
 
+    setUser(undefined);
     openOrCreateDB();
     readIfTheDBIsEmtpy();
 
@@ -283,12 +285,28 @@ const Login = () => {
     refs.user.current.focus();
   }, [errors, control]);
 
+  useEffect(() => {
+    console.log("config", adminPassModal);
+  }, [adminPassModal]);
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
       {selectDBModal && <SelectDBModal onEnd={onDataBaseCharge} />}
+      {adminPassModal && <SupervisorApprobalModal
+        setModalVisible={setAdminPassModal}
+        modalVisible={adminPassModal}
+        user={null}
+        idDesired={null}
+        setSelectedId={null}
+        setConfig={null}
+        config={null}
+        authType={"new_db"}
+        setAuthType={() => { }}
+        setSelectDBModal={setSelectDBModal}
+      />}
 
       <ScrollView>
         <TopBar />
@@ -298,14 +316,17 @@ const Login = () => {
             style={{
               ...styles.img,
               objectFit: "contain",
-              height: 120,
+              height: 80,
+              marginTop: 0,
             }}
             source={logo}
           />
         </View>
 
         <View style={[styles.container]}>
-          <Text style={styles.title}>Iniciar Sesión</Text>
+          <Text style={[styles.title, {
+            fontSize: 16,
+          }]}>Iniciar Sesión</Text>
           <Controller
             control={control}
             render={({ field: { onChange, onBlur, value } }) => (
@@ -314,7 +335,9 @@ const Login = () => {
                 onChangeText={(value) => onChange(value)}
                 onSubmitEditing={() => handleFocus(refs.password)}
                 value={value}
-                style={styles.input}
+                style={[styles.input, {
+                  height: 40
+                }]}
                 placeholder="Operador"
                 showSoftInputOnFocus={false}
                 ref={refs.user}
@@ -335,7 +358,9 @@ const Login = () => {
                 ref={refs.password}
                 value={value}
                 secureTextEntry={true}
-                style={styles.input}
+                style={[styles.input, {
+                  height: 40
+                }]}
                 placeholder="Contraseña"
               />
             )}
@@ -356,7 +381,16 @@ const Login = () => {
 
         <TouchableOpacity
           accessibilityLabel="Botón de Configuración"
-          onPress={() => setSelectDBModal(true)}
+          onPress={async () => {
+            console.log("Se presionó el botón de configuración");
+            const ifDbExist = await AsyncStorage.getItem('existFirstDB')
+            if (!ifDbExist) {
+              setSelectDBModal(true)
+            } else {
+              console.log("La base de datos existe");
+              setAdminPassModal(true)
+            }
+          }}
           style={{
             height: 20,
             marginTop: 5,
@@ -367,11 +401,11 @@ const Login = () => {
         </TouchableOpacity>
 
         <Text style={[styles.textCenter, { marginTop: 5 }]}>
-          Versión: {dataApp.expo.version}
+          Cod Capturador: {codCapturador}
         </Text>
 
         <Text style={[styles.textCenter, { marginTop: 5 }]}>
-          Cod Capturador: {codCapturador}
+          Versión: {dataApp.expo.version}
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>

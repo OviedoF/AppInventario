@@ -177,7 +177,6 @@ const SendWIFI = () => {
           setLoading(false)
           setSnackbar({ open: true, message: 'Error al obtener token', type: 'error' })
         })
-        console.log(id)
 
       if (!token) return setSnackbar({ visible: true, text: 'Error al obtener token', type: 'error' })
 
@@ -216,8 +215,6 @@ const SendWIFI = () => {
               CorrelativoApertura: item.CorrelativoApertura,
             })
           });
-
-          console.log(data)
 
           const sendedArea = await axios.post(`http://${ip}/isam/api/recepcion_areas.php`, data)
           if (sendedArea.data.status !== 'error') {
@@ -290,6 +287,7 @@ const SendWIFI = () => {
   }
 
   useEffect(() => {
+    setLoading(false)
     getAreasWithProducts()
     getIP()
   }, [])
@@ -334,26 +332,26 @@ const SendWIFI = () => {
           <ReplaceWithLoading>
             <View style={[styles.flex_row, { justifyContent: "space-between", width: '90%', marginVertical: 10 }]}>
               <TouchableOpacity style={{
-                width: '25%', textAlign: 'center', backgroundColor: '#2E97A7', paddingVertical: 5, borderRadius: 5,
+                width: '30%', textAlign: 'center', backgroundColor: '#2E97A7', paddingVertical: 5, borderRadius: 5,
                 backgroundColor: selectedAreas.length === 0 ? '#00000020' : '#2E97A7'
               }}
                 onPress={() => sendSelectedAreas()}
 
               >
-                <Text style={{ color: 'white', textAlign: 'center', fontSize: 10 }}>Enviar Seleccionadas</Text>
+                <Text style={{ color: selectedAreas.length === 0 ? 'black' : 'white', textAlign: 'center', fontSize: 13 }}>Enviar Seleccionadas</Text>
               </TouchableOpacity>
 
 
-              <TouchableOpacity style={{ width: '25%', textAlign: 'center', backgroundColor: '#2E97A7', paddingVertical: 5, borderRadius: 5 }}
+              <TouchableOpacity style={{ width: '30%', textAlign: 'center', backgroundColor: '#2E97A7', paddingVertical: 5, borderRadius: 5 }}
                 onPress={() => sendPendingAreas()}
               >
-                <Text style={{ color: 'white', textAlign: 'center', fontSize: 10 }}>Enviar pendientes</Text>
+                <Text style={{ color: 'white', textAlign: 'center', fontSize: 13 }}>Enviar pendientes</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={{ width: '25%', textAlign: 'center', backgroundColor: '#2E97A7', paddingVertical: 5, borderRadius: 5 }}
+              <TouchableOpacity style={{ width: '30%', textAlign: 'center', backgroundColor: '#2E97A7', paddingVertical: 5, borderRadius: 5 }}
                 onPress={() => sendAllAreas()}
               >
-                <Text style={{ color: 'white', textAlign: 'center', fontSize: 10 }}>Enviar Todas</Text>
+                <Text style={{ color: 'white', textAlign: 'center', fontSize: 13 }}>Enviar Todas</Text>
               </TouchableOpacity>
             </View>
 

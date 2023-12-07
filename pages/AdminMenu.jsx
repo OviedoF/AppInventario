@@ -22,13 +22,13 @@ import PickInventoryModal from "../components/PickInventarioModal";
 import * as SecureStore from 'expo-secure-store';
 
 const AdminMenu = () => {
-  const { setSnackbar, user, setHardwareId, config, setConfig, hardwareId, codCapturador, setCodCapturador} = useContext(dataContext);
+  const { setSnackbar, reset, setHardwareId, config, setConfig, hardwareId, codCapturador, setCodCapturador} = useContext(dataContext);
   const [id, setId] = useState(hardwareId);
   const [modalId, setModalId] = useState(false);
   const [ip, setIp] = useState('')
   const [changePasswordModal, setChangePasswordModal] = useState(false)
   const [supervisorPassword, setSupervisorPassword] = useState("")
-  const [changeInventory, setChangeInventory] = useState(false)
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function getIp() {
@@ -104,6 +104,12 @@ const AdminMenu = () => {
     }
   }
 
+  const changeInventory = async () => {
+    reset()
+    await AsyncStorage.removeItem('existFirstDB')
+    navigate(routes.login);
+  }
+
   useEffect(() => {
     async function getSupervisorPassword() {
       const supervisorPassword = await AsyncStorage.getItem(env.asyncStorage.adminPassword);
@@ -176,7 +182,7 @@ const AdminMenu = () => {
 
           <TouchableOpacity
             style={styles.primaryBtn}
-            onPress={() => setChangeInventory(true)}
+            onPress={() => changeInventory()}
           >
             <View style={{ flexDirection: "row", justifyContent: "center" }}>
               <Text
@@ -276,11 +282,6 @@ const AdminMenu = () => {
           </View>
         </View>
       </ScrollView>
-
-      <PickInventoryModal
-        setModalVisible={setChangeInventory}
-        modalVisible={changeInventory}
-      />
 
       <EditIdModal
         id={id}

@@ -33,6 +33,21 @@ export const DataProvider = ({ children }) => {
   })
   const [cdInfo, setCdInfo] = useState({})
 
+  const reset = () => {
+    setArea('')
+    setSerie('')
+    setUser(undefined)
+    setLoading(false)
+    setConfig({
+      ...config,
+      largo_tag: 0,
+      largo_prod: 0,
+      buttons_config: '',
+      catalog_products: true,
+      index_capt: 1,
+    })
+  }
+
   useEffect(() => {
     console.log('dataContext')
     console.log(config)
@@ -63,6 +78,7 @@ export const DataProvider = ({ children }) => {
         setCodCapturador,
         loading,
         setLoading,
+        reset
         /* cartCant,
         addToCart,
         clearCart,

@@ -1,5 +1,4 @@
-import axios from "axios";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
     Modal,
     Text,
@@ -12,9 +11,14 @@ import CustomPicker from "./CustomPicker";
 import { dataContext } from "../context/dataContext";
 import * as FileSystem from "expo-file-system";
 import ReplaceWithLoading from "./ReplaceWithLoading";
+import Constants from "expo-constants";
+const { expoConfig } = Constants;
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import env from "../env";
+
 
 const SelectDBModal = ({ onEnd }) => {
-    const { setSnackbar, setLoading } = useContext(dataContext)
+    const { setSnackbar, setLoading, reset, setConfig, setInventario, config } = useContext(dataContext)
     const [invSeleccionado, setInvSeleccionado] = useState(0)
     const [inventariosDisponibles, setInventariosDisponibles] = useState([]);
     const [ip, setIp] = useState("");
@@ -23,19 +27,23 @@ const SelectDBModal = ({ onEnd }) => {
     const getInventarios = async () => {
         try {
             setLoading(true)
-            const response = await axios.get(
-                `http://${ip}/isam/api/inventarios_disponibles.php`
-            );
 
-            if (response.data.status !== 'ok') {
+            const response = await fetch(`http://${ip}/isam/api/inventarios_disponibles.php`, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }).then((response) => response.json());
+
+            if (response.status !== 'ok') {
                 setError('No se pudo obtener los inventarios')
                 return;
             }
 
             setError(false)
             setLoading(false)
-            return setInventariosDisponibles(response.data.result);
+            return setInventariosDisponibles(response.result);
         } catch (error) {
+            console.log(error);
             setError('No se pudo obtener los inventarios')
             setLoading(false)
             setSnackbar({
@@ -48,6 +56,9 @@ const SelectDBModal = ({ onEnd }) => {
 
     const getDB = async () => {
         try {
+            const inventario = inventariosDisponibles.find((value) => value.id.toString() === invSeleccionado.toString())
+            console.log(inventario)
+
             setLoading(true)
             await fetch(`http://${ip}/isam/api/descargar_maestroInv.php`, {
                 headers: {
@@ -66,7 +77,11 @@ const SelectDBModal = ({ onEnd }) => {
                                 encoding: FileSystem.EncodingType.Base64,
                             }
                         )
-                            .then(() => {
+                            .then(async () => {
+                                await AsyncStorage.setItem(env.asyncStorage.invSelected, `${inventario.id}. ${inventario.description}`)
+                                setInventario(`${inventario.id}. ${inventario.description}`)
+                                setConfig({ ...config, inv_activo: inventario.id })
+                                reset()
                                 setSnackbar({
                                     visible: true,
                                     text: "Base de datos descargada",
@@ -109,6 +124,15 @@ const SelectDBModal = ({ onEnd }) => {
             });
         }
     };
+
+    const getIP = async () => {
+        console.log(expoConfig.hostUri.split(":")[0])
+        setIp(expoConfig.hostUri.split(":")[0])
+    }
+    
+    useEffect(() => {
+        getIP()
+    }, [])
 
     return (
         <View style={stylesModal.centeredView}>
@@ -173,6 +197,7 @@ const SelectDBModal = ({ onEnd }) => {
                                                 onChangeText={(text) => setIp(text)}
                                                 value={ip}
                                                 onEndEditing={() => getInventarios()}
+                                                autoFocus
                                             />
 
                                         </View>
@@ -192,7 +217,7 @@ const SelectDBModal = ({ onEnd }) => {
                             {
                                 inventariosDisponibles.length > 0 && <>
                                     <CustomPicker options={inventariosDisponibles.map((value) => {
-                                        return { label: `Inventario ${value}`, value: value };
+                                        return { label: `${value.id}. ${value.description}`, value: value.id };
                                     })} placeHolder={
                                         invSeleccionado ? `Inventario ${invSeleccionado}` : "Selecciona un inventario"
                                     } onValueChange={

@@ -22,6 +22,7 @@ import ExecuteQuery from "../helpers/ExecuteQuery";
 import reverse_icon from "../assets/reverse.png";
 import * as FileSystem from 'expo-file-system';
 import { Alert } from "react-native";
+import 'react-native-get-random-values';
 
 function GTIN8Digit(codigoGTIN8) {
   if (codigoGTIN8.length !== 7) {
@@ -200,26 +201,28 @@ const ProductEntry = ({ type }) => {
   const getScansData = async () => {
     const db = SQLite.openDatabase("Maestro.db");
     const productsDb = [];
-    const query = `SELECT * FROM INVENTARIO_APP WHERE type = "INV"`;
+    const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV"`;
 
     await ExecuteQuery(
       db,
       query,
       [],
       (results) => {
-        console.log("Query completed");
-
         // * Leemos los scans de la base de datos y contamos los productos no repetidos
         results.rows._array.forEach((product) => {
           if (!productsDb.includes(product.name)) productsDb.push(product.name);
         });
 
-        const productsWithSameArea = results.rows._array.filter((product) => product.area === area);
+        let totalProducts = 0;
+
+        results.rows._array.forEach((product) => {
+          if (product.area === area) totalProducts += parseFloat(product.quantity);
+        });
 
         setScansData({
           products: productsDb.length.toFixed(1),
           scans: results.rows._array.length.toFixed(1),
-          totalOfArea: productsWithSameArea.length.toFixed(1),
+          totalOfArea: totalProducts
         });
       },
       (error) => {
@@ -257,7 +260,7 @@ const ProductEntry = ({ type }) => {
 
     ExecuteQuery(
       db,
-      "INSERT INTO INVENTARIO_APP (operator, name, quantity, date, posicion, area, pallet, caja, type, inventario, serie, existe, EstadoTag, CorrelativoApertura, invtype) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO INVENTARIO_APP (operator, name, quantity, date, posicion, area, pallet, caja, type, inventario, serie, existe, EstadoTag, CorrelativoApertura, invtype, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         user.COD_USUARIO,
         product.COD_PROD,
@@ -273,7 +276,8 @@ const ProductEntry = ({ type }) => {
         product.exists ? product.exists : 'S',
         areaData.UESTADO == 'INI' ? '0' : areaData.UESTADO,
         areaData.ESTADOTAG,
-        'INV'
+        'INV',
+        product.DESCRIPCION
       ],
       (results) => {
         getScansData();
