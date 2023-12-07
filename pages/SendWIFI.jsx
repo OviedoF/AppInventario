@@ -109,7 +109,7 @@ const SendWIFI = () => {
       const fileUri = `${FileSystem.documentDirectory}texto.txt`;
       console.log(fileUri)
 
-      await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data), { encoding: FileSystem.EncodingType.UTF8 })
+      await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data) || 'TEXTO DE PRUEBA', { encoding: FileSystem.EncodingType.UTF8 })
 
       const file = await FileSystem.getInfoAsync(fileUri);
       console.log('file', file)
