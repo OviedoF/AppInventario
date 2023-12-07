@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
+  Alert,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { useNavigate } from "react-router-native";
@@ -25,9 +26,10 @@ import { BackHandler } from "react-native";
 import SelectDBModal from "../components/SelectDBModal";
 // import { cargarInventario } from "../api/db";
 import * as SecureStore from 'expo-secure-store';
-import { v4 as uuidv4 } from 'uuid';
 import SupervisorApprobalModal from "../components/SupervisorApprobalModal";
 import * as Application from 'expo-application';
+import * as FileSystem from 'expo-file-system';
+const { StorageAccessFramework } = FileSystem;
 
 const Login = () => {
   const [selectDBModal, setSelectDBModal] = useState(false);
@@ -37,8 +39,37 @@ const Login = () => {
   const refs = {
     user: useRef(null),
     password: useRef(null),
-  };
-  console.log(Application.androidId)
+  }
+
+  const requestPermissions = async () => {
+    const storageDir = await SecureStore.getItemAsync(env.asyncStorage.storageDir)
+    console.log('storageDir', storageDir)
+
+    if (!storageDir) {
+      const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+      if (!permissions.granted) {
+        Alert.alert(
+          'Error',
+          'No se han otorgado los permisos necesarios para guardar el archivo de respaldo.',
+          [
+            {
+              text: 'REVISAR PERMISOS',
+              onPress: () => requestPermissions(),
+            },
+          ],
+          { cancelable: false },
+        )
+        return;
+      }
+
+      directoryUri = permissions.directoryUri
+      await SecureStore.setItemAsync(env.asyncStorage.storageDir, permissions.directoryUri)
+    }
+  }
+
+  useEffect(() => {
+    requestPermissions()
+  }, [])
 
   const {
     handleSubmit,
@@ -68,10 +99,8 @@ const Login = () => {
 
       const adminPassword = await AsyncStorage.getItem(env.asyncStorage.adminPassword)
       if (!adminPassword) {
-        console.log("No existe la contraseña de administrador, se procede a crearla");
         await AsyncStorage.setItem(env.asyncStorage.adminPassword, '789')
       } else {
-        console.log("La contraseña de administrador existe");
       } // * Se guarda la contraseña de administrador en el AsyncStorage, para que sea persistente en el tiempo
     } catch (e) {
       console.log(e);
@@ -102,8 +131,6 @@ const Login = () => {
             });
             return;
           }
-
-          console.log(user);
 
           const userProx = {
             ...user,
@@ -265,11 +292,9 @@ const Login = () => {
       const existFirstDB = await AsyncStorage.getItem('existFirstDB')
 
       if (!existFirstDB) {
-        console.log("No existe la base de datos, se procede a copiarla");
         setSelectDBModal(true)
       } else {
         onDataBaseCharge()
-        console.log("La base de datos existe");
       }
     };
 
@@ -284,10 +309,6 @@ const Login = () => {
   useEffect(() => {
     refs.user.current.focus();
   }, [errors, control]);
-
-  useEffect(() => {
-    console.log("config", adminPassModal);
-  }, [adminPassModal]);
 
   return (
     <KeyboardAvoidingView
@@ -382,12 +403,10 @@ const Login = () => {
         <TouchableOpacity
           accessibilityLabel="Botón de Configuración"
           onPress={async () => {
-            console.log("Se presionó el botón de configuración");
             const ifDbExist = await AsyncStorage.getItem('existFirstDB')
             if (!ifDbExist) {
               setSelectDBModal(true)
             } else {
-              console.log("La base de datos existe");
               setAdminPassModal(true)
             }
           }}

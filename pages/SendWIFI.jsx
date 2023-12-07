@@ -18,6 +18,9 @@ import { dataContext } from "../context/dataContext";
 import axios from "axios";
 import ReplaceWithLoading from "../components/ReplaceWithLoading";
 import * as SecureStore from 'expo-secure-store';
+import * as FileSystem from "expo-file-system";
+const { StorageAccessFramework } = FileSystem;
+import env from "../env";
 
 const SendWIFI = () => {
   const { config, setSnackbar, setLoading } = useContext(dataContext)
@@ -26,6 +29,106 @@ const SendWIFI = () => {
   const [ip, setIp] = useState('')
   const [maxAreas, setMaxAreas] = useState([])
   const [selectedAreas, setSelectedAreas] = useState([])
+
+  // * Función para crear el archivo de respaldo
+
+  const ensureDirAsync = async (dir, intermediates = true) => {
+    const props = await FileSystem.getInfoAsync(dir)
+    console.log('props', props)
+    if (props.exists && props.isDirectory) {
+      return props;
+    }
+
+    await FileSystem.makeDirectoryAsync(dir, { intermediates })
+    return await ensureDirAsync(dir, intermediates)
+  }
+
+  const saveAndroidFile = async (fileUri, fileName = 'File') => {
+    try {
+      const fileString = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.Base64 });
+      let directoryUri = ""
+
+      const storageDir = await SecureStore.getItemAsync(env.asyncStorage.storageDir)
+
+      if (!storageDir) {
+        const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+        if (!permissions.granted) {
+          return;
+        }
+
+        directoryUri = permissions.directoryUri
+        await SecureStore.setItemAsync(env.asyncStorage.storageDir, permissions.directoryUri)
+      }
+
+      directoryUri = storageDir
+
+      try {
+        await StorageAccessFramework.createFileAsync(directoryUri, fileName, 'text/plain')
+          .then(async (uri) => {
+            await FileSystem.writeAsStringAsync(uri, fileString, { encoding: FileSystem.EncodingType.Base64 });
+          })
+          .catch((e) => {
+          });
+      } catch (e) {
+        throw new Error(e);
+      }
+
+    } catch (err) {
+    }
+  }
+
+  const requestPermissions = async () => {
+    const storageDir = await SecureStore.getItemAsync(env.asyncStorage.storageDir)
+    console.log('storageDir', storageDir)
+
+    if (!storageDir) {
+      const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+      if (!permissions.granted) {
+        Alert.alert(
+          'Error',
+          'No se han otorgado los permisos necesarios para guardar el archivo de respaldo.',
+          [
+            {
+              text: 'REVISAR PERMISOS',
+              onPress: () => requestPermissions(),
+            },
+          ],
+          { cancelable: false },
+        )
+        return;
+      }
+
+      directoryUri = permissions.directoryUri
+      await SecureStore.setItemAsync(env.asyncStorage.storageDir, permissions.directoryUri)
+    }
+  }
+
+  const writeTxtFile = async (data) => {
+    try {
+      requestPermissions()
+      const fileUri = `${FileSystem.documentDirectory}texto.txt`;
+      console.log(fileUri)
+
+      await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data), { encoding: FileSystem.EncodingType.UTF8 })
+
+      const file = await FileSystem.getInfoAsync(fileUri);
+      console.log('file', file)
+
+      const dir = await ensureDirAsync(`${FileSystem.documentDirectory}`);
+      console.log('dir', dir)
+
+      saveAndroidFile(fileUri, 'texto.txt')
+    } catch (error) {
+      console.log(error)
+      return setSnackbar({ visible: true, text: 'Error al crear el archivo de respaldo', type: 'error' })
+    }
+  }
+
+  useEffect(() => {
+    requestPermissions()
+  }, [])
+
+  // * Función para dar formato a la fecha
 
   function formatDate(date) {
     const year = date.getFullYear();
@@ -37,6 +140,8 @@ const SendWIFI = () => {
 
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
+
+  // * Función para obtener el total de productos de cada área
 
   const getTotalProductsOfAreas = async (areas) => {
     const db = SQLite.openDatabase("Maestro.db");
@@ -53,7 +158,7 @@ const SendWIFI = () => {
         });
 
         console.log(areasConTotalProd)
-        
+
 
         setAreas(areasConTotalProd);
       },
@@ -218,7 +323,7 @@ const SendWIFI = () => {
 
           const sendedArea = await axios.post(`http://${ip}/isam/api/recepcion_areas.php`, data)
           if (sendedArea.data.status !== 'error') {
-            console.log(sendedArea.data)
+            await writeTxtFile(data)
             setLoading(false)
             setAreas(areas.filter(item => item.NUM_AREA !== area.NUM_AREA))
             setAreasSended([...areasSended, area])
@@ -230,7 +335,6 @@ const SendWIFI = () => {
               ["INIT", area.NUM_AREA],
               (res) => {
                 console.log('Se actualizó el estado del área N° ' + area.NUM_AREA + ' a INIT')
-
                 return setSnackbar({ visible: true, text: "Carga y Respaldo Realizado con Exito", type: 'success' })
               },
               (err) => {
@@ -293,11 +397,11 @@ const SendWIFI = () => {
   }, [])
 
   useEffect(() => {
-    if(areas.length === maxAreas) {
+    if (areas.length === maxAreas) {
       // * Hay algún área sin totalProd?
       const areasWithTotalProd = areas.filter(area => area.totalProd === undefined)
 
-      if(areasWithTotalProd.length) {
+      if (areasWithTotalProd.length) {
         getTotalProductsOfAreas(areasWithTotalProd)
       }
     }
@@ -390,9 +494,11 @@ const SendWIFI = () => {
                 }>
                   <Text style={{ width: '32%', textAlign: 'center' }}>{area.NUM_AREA}</Text>
                   <Text style={{ width: '32%', textAlign: 'center' }}>{area.totalProd}</Text>
-                  <TouchableOpacity style={{ width: '32%', textAlign: 'center', 
-                  backgroundColor: area.ENVIADA === 1 ? '#00000020' : '#2E97A7', 
-                  paddingVertical: 5, borderRadius: 5 }}
+                  <TouchableOpacity style={{
+                    width: '32%', textAlign: 'center',
+                    backgroundColor: area.ENVIADA === 1 ? '#00000020' : '#2E97A7',
+                    paddingVertical: 5, borderRadius: 5
+                  }}
                     onPress={() => {
                       if (area.ENVIADA === 1) return setSnackbar({ visible: true, text: 'Esta área ya fue enviada', type: 'error' })
                       if (area.ESTADO !== 'CERRADA') return setSnackbar({ visible: true, text: 'Esta área no está cerrada', type: 'error' })
@@ -415,9 +521,11 @@ const SendWIFI = () => {
                 }]}>
                   <Text style={{ width: '32%', textAlign: 'center' }}>{area.NUM_AREA}</Text>
                   <Text style={{ width: '32%', textAlign: 'center' }}>{area.totalProd}</Text>
-                  <TouchableOpacity style={{ width: '32%', textAlign: 'center', 
-                  backgroundColor: '#00000020', 
-                  paddingVertical: 5, borderRadius: 5 }}
+                  <TouchableOpacity style={{
+                    width: '32%', textAlign: 'center',
+                    backgroundColor: '#00000020',
+                    paddingVertical: 5, borderRadius: 5
+                  }}
                   >
                     <Text style={{ color: 'white', textAlign: 'center' }}>Enviado</Text>
                   </TouchableOpacity>
