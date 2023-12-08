@@ -24,7 +24,7 @@ import { Alert } from "react-native";
 
 const CaptureMenu = () => {
   const navigate = useNavigate();
-  const { area, setArea, config, setConfig, setSnackbar, user, setDangerModal, setSerie } =
+  const { area, setArea, config, setConfig, setSnackbar, user, setDangerModal, setSerie, sendArea } =
     useContext(dataContext);
   const [modal, setModal] = useState(false);
   const [selectedId, setSelectedId] = useState(parseInt(config.buttons_config));
@@ -438,18 +438,104 @@ const confirmCloseArea = async () => {
       {
         text: "Cerrar",
         onPress: async () => {
-          setArea("");
+          setDangerModal({
+            visible: false,
+            title: "",
+            text: "",
+            buttons: [],
+          });
           const db = SQLite.openDatabase("Maestro.db");
+
           ExecuteQuery(
             db,
-            `UPDATE AREAS SET ESTADO = "CERRADA" WHERE NUM_AREA = "${area}"`,
-            [],
-            (result) => {
-              setSnackbar({
-                visible: true,
-                text: "Área cerrada correctamente",
-                type: "success",
-              });
+            "SELECT * FROM INVENTARIO_APP WHERE area = ?",
+            [area],
+            (results) => {
+              if (results.rows._array.length === 0) {
+                setSnackbar({
+                  visible: true,
+                  text: "El área está vacía, no se cerrará",
+                  type: "error",
+                });
+                return;
+              }
+
+              if (results.rows._array.length > 0) {
+                ExecuteQuery(
+                  db,
+                  `UPDATE AREAS SET ESTADO = "CERRADA" WHERE NUM_AREA = "${area}"`,
+                  [],
+                  (result) => {
+                    setSnackbar({
+                      visible: true,
+                      text: "Área cerrada correctamente",
+                      type: "success",
+                    });
+
+                    setDangerModal({
+                      visible: true,
+                      title: "Cargar y Respaldo",
+                      text: "¿Desea cargar y respaldar el área?",
+                      bg: "#28a745",
+                      buttons: [
+                        {
+                          text: "Cancelar",
+                          onPress: () => {
+                            setDangerModal({
+                              visible: false,
+                              title: "",
+                              text: "",
+                              buttons: [],
+                            });
+                            setArea("");
+                            navigate(routes.captureMenu);
+                          },
+                          style: "cancel",
+                        },
+                        {
+                          text: "Cargar y Respaldo",
+                          onPress: () => {
+                            setDangerModal({
+                              visible: false,
+                              title: "",
+                              text: "",
+                              buttons: [],
+                            });
+                            ExecuteQuery(
+                              db,
+                              "SELECT * FROM AREAS WHERE NUM_AREA = ?",
+                              [area],
+                              (results) => {
+                                const area = results.rows._array[0];
+                                sendArea(area, navigate(routes.captureMenu));
+                              },
+                              (error) => {
+                                console.log(error);
+                                setSnackbar({
+                                  visible: true,
+                                  text: "Error al cargar el área",
+                                  type: "error",
+                                });
+                              }
+                            );
+                          },
+                        },
+                      ],
+                    });
+                  },
+                  (error) => {
+                    console.log(error);
+                    setSnackbar({
+                      visible: true,
+                      text: "Error al cerrar el área",
+                      type: "error",
+                    });
+                  }
+                );
+
+                setArea("");
+                navigate(routes.captureMenu);
+              }
             },
             (error) => {
               console.log(error);
@@ -460,8 +546,6 @@ const confirmCloseArea = async () => {
               });
             }
           );
-
-          return setModal(true);
         },
       },
     ]

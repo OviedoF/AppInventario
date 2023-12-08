@@ -23,6 +23,12 @@ import reverse_icon from "../assets/reverse.png";
 import * as FileSystem from 'expo-file-system';
 import { Alert } from "react-native";
 import 'react-native-get-random-values';
+import axios from "axios";
+import * as SecureStore from 'expo-secure-store';
+import env from "../env";
+import { StorageAccessFramework } from 'expo-file-system';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 function GTIN8Digit(codigoGTIN8) {
   if (codigoGTIN8.length !== 7) {
@@ -66,7 +72,7 @@ function GtoKG(gramos) {
 }
 
 const ProductEntry = ({ type }) => {
-  const { area, setArea, setSnackbar, config, user, setDangerModal, serie } = useContext(dataContext);
+  const { area, setArea, setSnackbar, config, user, setDangerModal, serie, sendArea, setLoading } = useContext(dataContext);
   const [areaData, setAreaData] = useState({
     UESTADO: '',
     ESTADOTAG: ''
@@ -108,34 +114,6 @@ const ProductEntry = ({ type }) => {
     setModal(false);
   };
 
-  const createDataFile = async () => {
-    try {
-      const content = 'Contenido del archivo .txt';
-
-      // * Obtener el directorio de documentos
-      const dir = FileSystem.documentDirectory;
-
-      // * Construir la ruta completa al archivo en el directorio "downloads"
-      const filePath = `${dir}downloads/myFile.txt`;
-
-      // * Escribir el contenido en el archivo
-      await FileSystem.writeAsStringAsync(filePath, content);
-
-      Alert.alert(
-        'Archivo creado',
-        `El archivo se creó correctamente en ${filePath}`,
-        [
-          {
-            text: 'Ok',
-            style: 'cancel'
-          }
-        ]
-      );
-    } catch (error) {
-      console.error('Error al crear o guardar el archivo:', error);
-    }
-  };
-
   const confirmCloseArea = async () => {
     setDangerModal({
       visible: true,
@@ -163,19 +141,82 @@ const ProductEntry = ({ type }) => {
               text: "",
               buttons: [],
             });
-            setArea("");
             const db = SQLite.openDatabase("Maestro.db");
 
             ExecuteQuery(
               db,
-              `UPDATE AREAS SET ESTADO = "CERRADA" WHERE NUM_AREA = "${area}"`,
-              [],
-              (result) => {
-                setSnackbar({
-                  visible: true,
-                  text: "Área cerrada correctamente",
-                  type: "success",
-                });
+              "SELECT * FROM INVENTARIO_APP WHERE area = ?",
+              [area],
+              (results) => {
+                if (results.rows._array.length === 0) {
+                  setSnackbar({
+                    visible: true,
+                    text: "El área está vacía, no se cerrará",
+                    type: "error",
+                  });
+                  return;
+                }
+
+                if (results.rows._array.length > 0) {
+                  ExecuteQuery(
+                    db,
+                    `UPDATE AREAS SET ESTADO = "CERRADA" WHERE NUM_AREA = "${area}"`,
+                    [],
+                    (result) => {
+                      setSnackbar({
+                        visible: true,
+                        text: "Área cerrada correctamente",
+                        type: "success",
+                      });
+
+                      setDangerModal({
+                        visible: true,
+                        title: "Cargar y Respaldo",
+                        text: "¿Desea cargar y respaldar el área?",
+                        bg: "#28a745",
+                        buttons: [
+                          {
+                            text: "Cancelar",
+                            onPress: () => {
+                              setDangerModal({
+                                visible: false,
+                                title: "",
+                                text: "",
+                                buttons: [],
+                              });
+                              setArea("");
+                              navigate(routes.captureMenu);
+                            },
+                            style: "cancel",
+                          },
+                          {
+                            text: "Cargar y Respaldo",
+                            onPress: () => {
+                              setDangerModal({
+                                visible: false,
+                                title: "",
+                                text: "",
+                                buttons: [],
+                              });
+                              sendArea(areaData, navigate(routes.captureMenu));
+                            },
+                          },
+                        ],
+                      });
+                    },
+                    (error) => {
+                      console.log(error);
+                      setSnackbar({
+                        visible: true,
+                        text: "Error al cerrar el área",
+                        type: "error",
+                      });
+                    }
+                  );
+
+                  setArea("");
+                  navigate(routes.captureMenu);
+                }
               },
               (error) => {
                 console.log(error);
@@ -186,12 +227,6 @@ const ProductEntry = ({ type }) => {
                 });
               }
             );
-
-            createDataFile();
-
-            setArea("");
-            navigate(routes.captureMenu);
-            return;
           },
         },
       ],
@@ -281,11 +316,6 @@ const ProductEntry = ({ type }) => {
       ],
       (results) => {
         getScansData();
-        setSnackbar({
-          visible: true,
-          text: "Producto agregado correctamente",
-          type: "success",
-        });
         setCode("");
         setLastProduct({ ...product, quantity, type: additionType });
         if (type === 'multi') setQuantity('');
@@ -491,6 +521,12 @@ const ProductEntry = ({ type }) => {
         type: "error",
       });
 
+    if(!quantity && sendedBy === "qtyInput") return setSnackbar({
+      visible: true,
+      text: "Ingrese una cantidad",
+      type: "error",
+    });
+
     let codeImplicit = code;
     let codeToSend = code;
     if (codeToSend.length < config.largo_prod) {
@@ -508,7 +544,7 @@ const ProductEntry = ({ type }) => {
 
     if (config.pesables && firstTwoDigits.toString() == "25") return validatePesable(codeToSend, codeImplicit); // * Si el software está para PESABLES, validamos el código
 
-    if(!config.pesables && firstTwoDigits.toString() == "25") return setDangerModal({
+    if (!config.pesables && firstTwoDigits.toString() == "25") return setDangerModal({
       visible: true,
       title: "Producto PESABLE",
       text: "Este producto es pesable. Si quiere añadirlo active la opción de pesables.",
@@ -559,7 +595,13 @@ const ProductEntry = ({ type }) => {
                     buttons: [],
                   });
 
-                  if (type === 'multi' && sendedBy !== 'qtyInput') return refs.quantity.current.focus();
+                  if (type === 'multi' && sendedBy !== 'qtyInput') {
+                    setLastProduct({
+                      DESCRIPCION: `NO ENCONTRADO ${codeToSend}`,
+                    });
+
+                    return refs.quantity.current.focus();
+                  }
 
                   addProductToDb({
                     COD_PROD: codeToSend,
@@ -591,7 +633,14 @@ const ProductEntry = ({ type }) => {
           });
         } // * Si el producto no se encuentra en la base de datos, preguntamos si se quiere agregar igualmente
 
-        if (type === 'multi' && sendedBy !== 'qtyInput') return refs.quantity.current.focus();
+        if (type === 'multi' && sendedBy !== 'qtyInput') {
+          setLastProduct({
+            ...product,
+            DESCRIPCION: product.DESCRIPCION,
+          });
+
+          return refs.quantity.current.focus();
+        }
 
         if (config.catalog_products && product.CATALOGADO == 1) {
           setDangerModal({
@@ -690,7 +739,7 @@ const ProductEntry = ({ type }) => {
           type: "error",
         });
 
-        console.log(res.rows._array[0])
+        console.log(res.rows._array[0]);
         setAreaData(res.rows._array[0]);
       },
       (err) => {
@@ -788,7 +837,10 @@ const ProductEntry = ({ type }) => {
                   padding: 0,
                   justifyContent: "center",
                 }}
-                onPress={() => setCode("")}
+                onPress={() => {
+                  setCode("");
+                  return refs.code.current.focus();
+                }}
               >
                 <Text
                   style={{

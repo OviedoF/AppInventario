@@ -106,10 +106,17 @@ const SendWIFI = () => {
   const writeTxtFile = async (data) => {
     try {
       requestPermissions()
-      const fileUri = `${FileSystem.documentDirectory}texto.txt`;
-      console.log(fileUri)
+      const fecha = data.Datos.FechaEnvio.split(' ')[0];
+      const hora = data.Datos.FechaEnvio.split(' ')[1].replaceAll(':', '-')
+      const nombreArchivo = `1_${data.Datos.CodEmpresa}_${data.Datos.CodInv}_${data.Datos.CodCapturador}_${data.Datos.Area}_${fecha}_${hora}.txt`
+      const fileUri = `${FileSystem.documentDirectory}${nombreArchivo}`;
 
-      await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data) || 'TEXTO DE PRUEBA', { encoding: FileSystem.EncodingType.UTF8 })
+      let text = ``;
+      data.Lecturas.forEach(item => {
+        text += `${item.CorrPt}|${item.FechaLectura}|${data.Datos.CodCapturador}|${item.CodOperador}|${item.Serie}|${data.Datos.Area}|${item.CodProducto}|${item.Cantidad}|${item.ExistenciaProducto}|${item.TipoLectura}|${item.EstadoTag}|${item.CorrelativoApertura}\n`
+      })
+
+      await FileSystem.writeAsStringAsync(fileUri, text, { encoding: FileSystem.EncodingType.UTF8 })
 
       const file = await FileSystem.getInfoAsync(fileUri);
       console.log('file', file)
@@ -117,7 +124,7 @@ const SendWIFI = () => {
       const dir = await ensureDirAsync(`${FileSystem.documentDirectory}`);
       console.log('dir', dir)
 
-      saveAndroidFile(fileUri, 'texto.txt')
+      saveAndroidFile(fileUri, nombreArchivo)
     } catch (error) {
       console.log(error)
       return setSnackbar({ visible: true, text: 'Error al crear el archivo de respaldo', type: 'error' })
@@ -280,7 +287,7 @@ const SendWIFI = () => {
         .catch(error => {
           console.log(error)
           setLoading(false)
-          setSnackbar({ open: true, message: 'Error al obtener token', type: 'error' })
+          setSnackbar({ visible: true, text: 'Error al obtener token', type: 'error' })
         })
 
       if (!token) return setSnackbar({ visible: true, text: 'Error al obtener token', type: 'error' })
@@ -328,19 +335,7 @@ const SendWIFI = () => {
             setAreas(areas.filter(item => item.NUM_AREA !== area.NUM_AREA))
             setAreasSended([...areasSended, area])
 
-            // * Abrir área
-            ExecuteQuery(
-              db,
-              "UPDATE AREAS SET ESTADO = ? WHERE NUM_AREA = ?",
-              ["INIT", area.NUM_AREA],
-              (res) => {
-                console.log('Se actualizó el estado del área N° ' + area.NUM_AREA + ' a INIT')
-                return setSnackbar({ visible: true, text: "Carga y Respaldo Realizado con Exito", type: 'success' })
-              },
-              (err) => {
-                console.log(err)
-              }
-            )
+            return setSnackbar({ visible: true, text: "Carga y Respaldo Realizado con Exito", type: 'success' })
           } else {
             setLoading(false)
             return setSnackbar({ visible: true, text: sendedArea.data.result.error_msg, type: 'error' })

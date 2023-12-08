@@ -133,7 +133,7 @@ const CDReview = () => {
 
   const getCDProducts = async () => {
     const db = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" ORDER BY id DESC`;
+    const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND area = "${area}" ORDER BY id DESC`;
     await ExecuteQuery(
       db,
       query,
@@ -141,6 +141,7 @@ const CDReview = () => {
       (results) => {
         /* console.log("Query completed");
         console.log(results.rows._array); */
+        console.log(results.rows._array);
         return setProducts(results.rows._array);
       },
       (error) => {
@@ -209,7 +210,7 @@ const CDReview = () => {
 
         {products && products.length === 0 && (
           <Text style={{ textAlign: "center" }}>
-            No hay productos en el inventario
+            No hay productos en este área
           </Text>
         )}
 
@@ -234,7 +235,7 @@ const CDReview = () => {
               <Text
                 style={{ width: "10%", fontSize: 12, paddingHorizontal: 5 }}
               >
-                {item.id}
+                {item.CorrelativoApertura}
               </Text>
               <Text
                 style={{ width: "55%", fontSize: 12, paddingHorizontal: 5 }}
