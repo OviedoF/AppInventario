@@ -236,7 +236,7 @@ const ProductEntry = ({ type }) => {
   const getScansData = async () => {
     const db = SQLite.openDatabase("Maestro.db");
     const productsDb = [];
-    const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV"`;
+    const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND area = "${area}"`;
 
     await ExecuteQuery(
       db,
@@ -276,60 +276,61 @@ const ProductEntry = ({ type }) => {
     const db = SQLite.openDatabase("Maestro.db");
     const date = new Date().toISOString();
 
-    console.log([
-      user.COD_USUARIO,
-      product.COD_PROD,
-      qty,
-      date,
-      "",
-      area,
-      "",
-      "",
-      product.type,
-      config.inv_activo,
-      serie,
-      product.exists ? product.exists : 'S',
-      areaData.UESTADO == 'INI' ? '0' : areaData.UESTADO,
-      areaData.ESTADOTAG
-    ]);
-
-    ExecuteQuery(
+    await ExecuteQuery(
       db,
-      "INSERT INTO INVENTARIO_APP (operator, name, quantity, date, posicion, area, pallet, caja, type, inventario, serie, existe, EstadoTag, CorrelativoApertura, invtype, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        user.COD_USUARIO,
-        product.COD_PROD,
-        qty,
-        date,
-        "",
-        area,
-        "",
-        "",
-        product.type,
-        config.inv_activo,
-        serie,
-        product.exists ? product.exists : 'S',
-        areaData.UESTADO == 'INI' ? '0' : areaData.UESTADO,
-        areaData.ESTADOTAG,
-        'INV',
-        product.DESCRIPCION
-      ],
+      `SELECT * FROM INVENTARIO_APP WHERE area = "${area}"`,
+      [],
       (results) => {
-        getScansData();
-        setCode("");
-        setLastProduct({ ...product, quantity, type: additionType });
-        if (type === 'multi') setQuantity('');
-        if (type === 'single') setQuantity(1);
-        refs.code.current.clear();
-        refs.code.current.focus();
+
+        ExecuteQuery(
+          db,
+          "INSERT INTO INVENTARIO_APP (operator, name, quantity, date, posicion, area, pallet, caja, type, inventario, serie, existe, EstadoTag, CorrelativoApertura, invtype, descripcion, CorrPT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          [
+            user.COD_USUARIO,
+            product.COD_PROD,
+            qty,
+            date,
+            "",
+            area,
+            "",
+            "",
+            product.type,
+            config.inv_activo,
+            serie,
+            product.exists ? product.exists : 'S',
+            areaData.UESTADO == 'INI' ? '0' : areaData.UESTADO,
+            areaData.ESTADOTAG,
+            'INV',
+            product.DESCRIPCION,
+            results.rows._array.length + 1
+          ],
+          (results) => {
+            getScansData();
+            setCode("");
+            setLastProduct({ ...product, quantity, type: additionType });
+            if (type === 'multi') setQuantity('');
+            if (type === 'single') setQuantity(1);
+            refs.code.current.clear();
+            refs.code.current.focus();
+          },
+          (error) => {
+            console.log("Error", error);
+            setSnackbar({
+              visible: true,
+              text: "Error al agregar el producto",
+              type: "error",
+            });
+          }
+        );
       },
       (error) => {
-        console.log("Error", error);
         setSnackbar({
           visible: true,
-          text: "Error al agregar el producto",
+          text: "Error al obtener los datos de los escaneos",
           type: "error",
         });
+        console.log(error);
+        return false;
       }
     );
   };
@@ -388,6 +389,25 @@ const ProductEntry = ({ type }) => {
             text: "¿Desea agregarlo igualmente?",
             buttons: [
               {
+                text: "NO, NO AGREGAR",
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+                  refs.code.current.focus();
+                  setLastProduct({
+                    ...lastProduct,
+                    DESCRIPCION: "",
+                  });
+                  setCode("");
+                  return;
+                },
+                style: "cancel",
+              },
+              {
                 text: "Sí, agregar",
                 onPress: () => {
                   setDangerModal({
@@ -406,24 +426,6 @@ const ProductEntry = ({ type }) => {
 
                   return;
                 },
-              },
-              {
-                text: "NO, NO AGREGAR",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  refs.code.current.focus();
-                  setLastProduct({
-                    ...lastProduct,
-                    DESCRIPCION: "",
-                  });
-                  return;
-                },
-                style: "cancel",
               },
             ],
           });
@@ -586,6 +588,23 @@ const ProductEntry = ({ type }) => {
             text: "¿Desea agregarlo igualmente?",
             buttons: [
               {
+                text: "NO, NO AGREGAR",
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+                  refs.code.current.focus();
+                  setLastProduct({
+                    DESCRIPCION: "",
+                  });
+                  return;
+                },
+                style: "cancel",
+              },
+              {
                 text: "Sí, agregar",
                 onPress: () => {
                   setDangerModal({
@@ -611,23 +630,6 @@ const ProductEntry = ({ type }) => {
                   }, quantity, "1X1");
                   return;
                 },
-              },
-              {
-                text: "NO, NO AGREGAR",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  refs.code.current.focus();
-                  setLastProduct({
-                    DESCRIPCION: "",
-                  });
-                  return;
-                },
-                style: "cancel",
               },
             ],
           });

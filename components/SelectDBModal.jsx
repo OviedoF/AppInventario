@@ -15,7 +15,8 @@ import Constants from "expo-constants";
 const { expoConfig } = Constants;
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import env from "../env";
-
+import ExecuteQuery from "../helpers/ExecuteQuery";
+import * as SQLite from "expo-sqlite";
 
 const SelectDBModal = ({ onEnd }) => {
     const { setSnackbar, setLoading, reset, setConfig, setInventario, config } = useContext(dataContext)
@@ -57,7 +58,6 @@ const SelectDBModal = ({ onEnd }) => {
     const getDB = async () => {
         try {
             const inventario = inventariosDisponibles.find((value) => value.id.toString() === invSeleccionado.toString())
-            console.log(inventario)
 
             setLoading(true)
             await fetch(`http://${ip}/isam/api/descargar_maestroInv.php`, {
@@ -69,7 +69,7 @@ const SelectDBModal = ({ onEnd }) => {
                 .then((blob) => {
                     const reader = new FileReader();
                     reader.onloadend = () => {
-                        const base64data = reader.result.split(",")[1]; // Obtener la parte de datos de la cadena Data URL
+                        const base64data = reader.result.split(",")[1]; //Obtener la parte de datos de la cadena Data URL
                         FileSystem.writeAsStringAsync(
                             `${FileSystem.documentDirectory}SQLite/Maestro.db`,
                             base64data,
@@ -78,17 +78,34 @@ const SelectDBModal = ({ onEnd }) => {
                             }
                         )
                             .then(async () => {
-                                await AsyncStorage.setItem(env.asyncStorage.invSelected, `${inventario.id}. ${inventario.description}`)
-                                setInventario(`${inventario.id}. ${inventario.description}`)
-                                setConfig({ ...config, inv_activo: inventario.id })
-                                reset()
-                                setSnackbar({
-                                    visible: true,
-                                    text: "Base de datos descargada",
-                                    type: "success",
-                                });
-                                setLoading(false)
-                                onEnd()
+                                const openDb = SQLite.openDatabase(`Maestro.db`);
+                                ExecuteQuery(
+                                    openDb,
+                                    'SELECT * FROM config',
+                                    [],
+                                    async (res) => {
+                                        if (res.rows.length > 0) {
+                                            await AsyncStorage.setItem(env.asyncStorage.invSelected, `${inventario.id}. ${inventario.description}`)
+                                            setInventario(`${inventario.id}. ${inventario.description}`)
+                                            setConfig({ ...config, inv_activo: inventario.id })
+                                            reset()
+                                            setSnackbar({
+                                                visible: true,
+                                                text: "Base de datos descargada",
+                                                type: "success",
+                                            });
+                                            setLoading(false)
+                                            onEnd()
+                                        } else {
+                                            setLoading(false)
+                                            setError(`La base "Maestro_${inventario.id}.db" no existe.`)
+                                        }
+                                    },
+                                    (err) => {
+                                        setLoading(false)
+                                        setError(`La base "Maestro_${inventario.id}.db" no existe.`)
+                                    }
+                                );
                             })
                             .catch((error) => {
                                 console.log(error);
@@ -106,10 +123,10 @@ const SelectDBModal = ({ onEnd }) => {
                 .catch((error) => {
                     console.log(error);
                     setLoading(false)
-                    setError('No se pudo descargar la base de datos')
+                    setError(`La base "Maestro_${inventario.id}.db" no existe.`)
                     setSnackbar({
                         visible: true,
-                        text: "No se pudo descargar la base de datos",
+                        text: `La base "Maestro_${inventario.id}.db" no existe.`,
                         type: "error",
                     });
                 });

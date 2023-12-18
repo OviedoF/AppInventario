@@ -25,16 +25,14 @@ import env from "../env";
 const SendWIFI = () => {
   const { config, setSnackbar, setLoading } = useContext(dataContext)
   const [areas, setAreas] = useState([])
-  const [areasSended, setAreasSended] = useState([])
   const [ip, setIp] = useState('')
-  const [maxAreas, setMaxAreas] = useState([])
+  const [filter, setFilter] = useState('PENDIENTES')
   const [selectedAreas, setSelectedAreas] = useState([])
 
   // * Función para crear el archivo de respaldo
 
   const ensureDirAsync = async (dir, intermediates = true) => {
     const props = await FileSystem.getInfoAsync(dir)
-    console.log('props', props)
     if (props.exists && props.isDirectory) {
       return props;
     }
@@ -79,7 +77,6 @@ const SendWIFI = () => {
 
   const requestPermissions = async () => {
     const storageDir = await SecureStore.getItemAsync(env.asyncStorage.storageDir)
-    console.log('storageDir', storageDir)
 
     if (!storageDir) {
       const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
@@ -119,10 +116,8 @@ const SendWIFI = () => {
       await FileSystem.writeAsStringAsync(fileUri, text, { encoding: FileSystem.EncodingType.UTF8 })
 
       const file = await FileSystem.getInfoAsync(fileUri);
-      console.log('file', file)
 
       const dir = await ensureDirAsync(`${FileSystem.documentDirectory}`);
-      console.log('dir', dir)
 
       saveAndroidFile(fileUri, nombreArchivo)
     } catch (error) {
@@ -151,6 +146,7 @@ const SendWIFI = () => {
   // * Función para obtener el total de productos de cada área
 
   const getTotalProductsOfAreas = async (areas) => {
+    console.log('areas en total', areas)
     const db = SQLite.openDatabase("Maestro.db");
     ExecuteQuery(
       db,
@@ -164,8 +160,7 @@ const SendWIFI = () => {
           return { ...area, totalProd };
         });
 
-        console.log(areasConTotalProd)
-
+        console.log('areasConTotalProd', areasConTotalProd)
 
         setAreas(areasConTotalProd);
       },
@@ -177,90 +172,26 @@ const SendWIFI = () => {
 
   const getAreasWithProducts = async () => {
     const db = SQLite.openDatabase("Maestro.db");
-    const areasFinded = [];
 
     await ExecuteQuery(
       db,
       "SELECT DISTINCT area FROM INVENTARIO_APP",
       [],
       (res) => {
-        setMaxAreas(res.rows._array.length)
-
-        res.rows._array.forEach(async (item) => {
-          await ExecuteQuery(
-            db,
-            "SELECT * FROM AREAS WHERE NUM_AREA = ?",
-            [item.area],
-            (res) => {
-              setAreas([
-                ...areasFinded,
-                res.rows._array[0]
-              ]);
-            },
-            (err) => {
-              console.log(err)
-            }
-          );
-        });
-      },
-      (err) => {
-        console.log(err)
-      }
-    )
-  }
-
-  const passDataToInventarioAppEnviados = async (data) => {
-    const db = SQLite.openDatabase("Maestro.db");
-
-    data.Lecturas.forEach(item => {
-      ExecuteQuery(
-        db,
-        "INSERT INTO INVENTARIO_APP_ENVIADOS (CorrPt, FechaLectura, CodOperador, Serie, CodProducto, Cantidad, ExistenciaProducto, TipoLectura, EstadoTag, CorrelativoApertura, idDispositivo, CodInv, CodCapturador, Area) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [
-          item.CorrPt,
-          item.FechaLectura,
-          item.CodOperador,
-          item.Serie,
-          item.CodProducto,
-          item.Cantidad,
-          item.ExistenciaProducto,
-          item.TipoLectura,
-          item.EstadoTag,
-          item.CorrelativoApertura,
-          data.Datos.id,
-          data.Datos.CodInv,
-          data.Datos.CodCapturador,
-          data.Datos.Area,
-        ],
-        (res) => {
-          if (res.rowsAffected > 0) {
-            ExecuteQuery(
-              db,
-              "DELETE FROM INVENTARIO_APP WHERE id = ?",
-              [item.CorrPt],
-              (res) => {
-                console.log('Se eliminó el registro de INVENTARIO_APP N° ' + item.CorrPt)
-              },
-              (err) => {
-                console.log(err)
-              }
-            )
+        const areasNumbers = res.rows._array.map(item => item.area);
+        ExecuteQuery(
+          db,
+          `SELECT * FROM AREAS WHERE NUM_AREA IN (${areasNumbers.map((item, index) => `?`).join(', ')}) AND ${
+            filter === 'PENDIENTES' ? 'ENVIADA = 0 AND ESTADO = "CERRADA"' : filter === 'ENVIADAS' ? 'ENVIADA = 1' : filter === 'ABIERTAS' ? 'ESTADO = "INI"' : ''
+          }`,
+          [...areasNumbers],
+          (res) => {
+            setAreas(res.rows._array)
+          },
+          (err) => {
+            console.log(err)
           }
-        },
-        (err) => {
-          console.log(err)
-        }
-      )
-    })
-
-    // * Actualizar el estado de las áreas a "INIT"
-    ExecuteQuery(
-      db,
-      "UPDATE AREAS SET estado = ? WHERE NUM_AREA = ?",
-      ["INIT", data.Datos.Area],
-      (res) => {
-        console.log('Se actualizó el estado del área N° ' + data.Datos.Area + ' a INIT')
-        getAreasWithProducts()
+        );
       },
       (err) => {
         console.log(err)
@@ -315,7 +246,7 @@ const SendWIFI = () => {
         async (res) => {
           res.rows._array.forEach(item => {
             data.Lecturas.push({
-              CorrPt: item.id,
+              CorrPt: parseInt(item.CorrPT),
               FechaLectura: formatDate(new Date(item.date)),
               CodOperador: parseInt(item.operator),
               Serie: item.serie,
@@ -332,10 +263,19 @@ const SendWIFI = () => {
           if (sendedArea.data.status !== 'error') {
             await writeTxtFile(data)
             setLoading(false)
-            setAreas(areas.filter(item => item.NUM_AREA !== area.NUM_AREA))
-            setAreasSended([...areasSended, area])
 
-            return setSnackbar({ visible: true, text: "Carga y Respaldo Realizado con Exito", type: 'success' })
+            await ExecuteQuery(
+              db,
+              "UPDATE AREAS SET ENVIADA = 1 WHERE NUM_AREA = ?",
+              [area.NUM_AREA],
+              (res) => {
+                getAreasWithProducts()
+                return setSnackbar({ visible: true, text: "Carga y Respaldo Realizado con Exito", type: 'success' })
+              },
+              (err) => {
+                console.log(err)
+              }
+            )
           } else {
             setLoading(false)
             return setSnackbar({ visible: true, text: sendedArea.data.result.error_msg, type: 'error' })
@@ -362,9 +302,33 @@ const SendWIFI = () => {
 
   const sendPendingAreas = async () => {
     try {
-      areas.forEach(async (area) => {
-        console.log(area)
-      })
+      const db = SQLite.openDatabase("Maestro.db");
+
+      ExecuteQuery(
+        db,
+        "SELECT * FROM AREAS WHERE ENVIADA = 0 AND ESTADO = 'CERRADA'",
+        [],
+        (res) => {
+          if(!res.rows._array.length) return setSnackbar({ visible: true, text: 'No hay áreas pendientes', type: 'error' })
+
+          res.rows._array.forEach(async (area) => {
+            await ExecuteQuery(
+              db,
+              "SELECT SUM(quantity) FROM INVENTARIO_APP WHERE area = ?",
+              [area.NUM_AREA],
+              async (res) => {
+                await sendArea({
+                  ...area,
+                  totalProd: res.rows._array[0]['SUM(quantity)']
+                })
+              }
+            )
+          });
+        },
+        (err) => {
+          console.log(err)
+        }
+      )
     } catch (error) {
       console.log(error)
     }
@@ -373,7 +337,32 @@ const SendWIFI = () => {
   const sendSelectedAreas = async () => {
     try {
       selectedAreas.forEach(async (area) => {
-        await sendArea(area)
+        db = SQLite.openDatabase("Maestro.db");
+        ExecuteQuery(
+          db,
+          `SELECT * FROM AREAS WHERE NUM_AREA IN (${selectedAreas.map((item, index) => `?`).join(', ')})`,
+          [...selectedAreas],
+          (res) => {
+            res.rows._array.forEach(async (area) => {
+              if(area.ESTADO !== 'CERRADA') return setSnackbar({ visible: true, text: `El área ${area.NUM_AREA} no está cerrada, se salteó.`, type: 'error' })
+
+              await ExecuteQuery(
+                db,
+                "SELECT SUM(quantity) FROM INVENTARIO_APP WHERE area = ?",
+                [area.NUM_AREA],
+                async (res) => {
+                  await sendArea({
+                    ...area,
+                    totalProd: res.rows._array[0]['SUM(quantity)']
+                  })
+                }
+              )
+            });
+          },
+          (err) => {
+            console.log(err)
+          }
+        )
       })
     } catch (error) {
       console.log(error)
@@ -387,18 +376,18 @@ const SendWIFI = () => {
 
   useEffect(() => {
     setLoading(false)
-    getAreasWithProducts()
     getIP()
   }, [])
 
   useEffect(() => {
-    if (areas.length === maxAreas) {
-      // * Hay algún área sin totalProd?
-      const areasWithTotalProd = areas.filter(area => area.totalProd === undefined)
+    getAreasWithProducts()
+  }, [filter])
 
-      if (areasWithTotalProd.length) {
-        getTotalProductsOfAreas(areasWithTotalProd)
-      }
+  useEffect(() => {
+    const areasWithTotalProd = areas.filter(area => area.totalProd === undefined)
+
+    if (areasWithTotalProd.length) {
+      getTotalProductsOfAreas(areasWithTotalProd)
     }
   }, [areas])
 
@@ -429,6 +418,52 @@ const SendWIFI = () => {
           </View>
 
           <ReplaceWithLoading>
+            <View style={[styles.flex_row, { justifyContent: "space-between", width: '90%', marginVertical: 10 }]}>
+              <TouchableOpacity style={{
+                width: '30%', textAlign: 'center', backgroundColor: '#2E97A7', paddingVertical: 5, borderRadius: 5,
+                backgroundColor: filter === 'PENDIENTES' ? '#2E97A7' : '#00000020'
+              }}
+                onPress={() => setFilter('PENDIENTES')}
+
+              >
+                <Text style={{
+                  color: filter === 'PENDIENTES' ? 'white' : 'black',
+                  textAlign: 'center',
+                  fontSize: 13
+                }}>PENDIENTES</Text>
+              </TouchableOpacity>
+
+
+              <TouchableOpacity style={{
+                width: '30%', textAlign: 'center',
+                backgroundColor: filter === 'ENVIADAS' ? '#2E97A7' : '#00000020',
+                paddingVertical: 5, borderRadius: 5
+              }}
+                onPress={() => setFilter('ENVIADAS')}
+              >
+                <Text style={{
+                  color: filter === 'ENVIADAS' ? 'white' : 'black',
+                  textAlign: 'center',
+                  fontSize: 13
+                }}>ENVIADAS</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={{
+                width: '30%', textAlign: 'center',
+                backgroundColor: filter === 'ABIERTAS' ? '#2E97A7' : '#00000020',
+                paddingVertical: 5,
+                borderRadius: 5
+              }}
+                onPress={() => setFilter('ABIERTAS')}
+              >
+                <Text style={{
+                  color: filter === 'ABIERTAS' ? 'white' : 'black',
+                  textAlign: 'center',
+                  fontSize: 13
+                }}>SIN CERRAR</Text>
+              </TouchableOpacity>
+            </View>
+
             <View style={[styles.flex_row, { justifyContent: "space-between", width: '90%', marginVertical: 10 }]}>
               <TouchableOpacity style={{
                 width: '30%', textAlign: 'center', backgroundColor: '#2E97A7', paddingVertical: 5, borderRadius: 5,
@@ -487,42 +522,19 @@ const SendWIFI = () => {
                     }
                   }
                 }>
-                  <Text style={{ width: '32%', textAlign: 'center' }}>{area.NUM_AREA}</Text>
+                  <Text style={{ width: '32%', textAlign: 'center' }}>{area.NUM_AREA.slice(0, area.NUM_AREA.length - 1)}-{area.NUM_AREA[area.NUM_AREA.length - 1]}</Text>
                   <Text style={{ width: '32%', textAlign: 'center' }}>{area.totalProd}</Text>
                   <TouchableOpacity style={{
                     width: '32%', textAlign: 'center',
-                    backgroundColor: area.ENVIADA === 1 ? '#00000020' : '#2E97A7',
+                    backgroundColor: '#2E97A7',
                     paddingVertical: 5, borderRadius: 5
                   }}
                     onPress={() => {
-                      if (area.ENVIADA === 1) return setSnackbar({ visible: true, text: 'Esta área ya fue enviada', type: 'error' })
                       if (area.ESTADO !== 'CERRADA') return setSnackbar({ visible: true, text: 'Esta área no está cerrada', type: 'error' })
                       sendArea(area)
                     }}
                   >
                     <Text style={{ color: 'white', textAlign: 'center' }}>Enviar</Text>
-                  </TouchableOpacity>
-                </TouchableOpacity>
-              ))}
-
-              {areasSended.map((area, index) => (
-                <TouchableOpacity key={index} style={[styles.flex_row, {
-                  width: "90%",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 10,
-                  paddingVertical: 10,
-                  backgroundColor: selectedAreas.includes(area.NUM_AREA) ? '#00000020' : 'white',
-                }]}>
-                  <Text style={{ width: '32%', textAlign: 'center' }}>{area.NUM_AREA}</Text>
-                  <Text style={{ width: '32%', textAlign: 'center' }}>{area.totalProd}</Text>
-                  <TouchableOpacity style={{
-                    width: '32%', textAlign: 'center',
-                    backgroundColor: '#00000020',
-                    paddingVertical: 5, borderRadius: 5
-                  }}
-                  >
-                    <Text style={{ color: 'white', textAlign: 'center' }}>Enviado</Text>
                   </TouchableOpacity>
                 </TouchableOpacity>
               ))}

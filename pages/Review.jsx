@@ -111,7 +111,6 @@ const CDReview = () => {
                 }
               );
 
-              setArea("");
               navigate(
                 type === "single"
                   ? routes.singleProductEntry
@@ -235,7 +234,7 @@ const CDReview = () => {
               <Text
                 style={{ width: "10%", fontSize: 12, paddingHorizontal: 5 }}
               >
-                {item.CorrelativoApertura}
+                {parseInt(item.CorrPT)}  
               </Text>
               <Text
                 style={{ width: "55%", fontSize: 12, paddingHorizontal: 5 }}

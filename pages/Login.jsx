@@ -245,7 +245,7 @@ const Login = () => {
 
     await ExecuteQuery(
       openDb,
-      `CREATE TABLE IF NOT EXISTS INVENTARIO_APP (id INTEGER PRIMARY KEY AUTOINCREMENT, operator TEXT, name TEXT, quantity INT, date TEXT, posicion TEXT, area TEXT, pallet TEXT, caja TEXT, type TEXT, inventario TEXT, serie TEXT, existe TEXT, EstadoTag TEXT, CorrelativoApertura TEXT, invtype TEXT, descripcion TEXT);`,
+      `CREATE TABLE IF NOT EXISTS INVENTARIO_APP (id INTEGER PRIMARY KEY AUTOINCREMENT, operator TEXT, name TEXT, quantity INT, date TEXT, posicion TEXT, area TEXT, pallet TEXT, caja TEXT, type TEXT, inventario TEXT, serie TEXT, existe TEXT, EstadoTag TEXT, CorrelativoApertura TEXT, invtype TEXT, descripcion TEXT, CorrPT TEXT);`,
       [],
       (result) => {
         if (result.rowsAffected > 0) {

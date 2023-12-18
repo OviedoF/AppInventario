@@ -140,12 +140,12 @@ export const DataProvider = ({ children }) => {
             requestPermissions()
             const fecha = data.Datos.FechaEnvio.split(' ')[0];
             const hora = data.Datos.FechaEnvio.split(' ')[1].replaceAll(':', '-')
-            const nombreArchivo = `1_${data.Datos.CodEmpresa}_${data.Datos.CodInv}_${data.Datos.CodCapturador}_${data.Datos.Area}_${fecha}_${hora}.txt`
+            const nombreArchivo = `1_${data.Datos.CodEmpresa}_${data.Datos.CodInv}_${data.Datos.CodCapturador}_${data.Datos.Area.slice(0, -1)}_${fecha}_${hora}.txt`
             const fileUri = `${FileSystem.documentDirectory}${nombreArchivo}`;
       
             let text = ``;
             data.Lecturas.forEach(item => {
-              text += `${item.CorrPt}|${item.FechaLectura}|${data.Datos.CodCapturador}|${item.CodOperador}|${item.Serie}|${data.Datos.Area}|${item.CodProducto}|${item.Cantidad}|${item.ExistenciaProducto}|${item.TipoLectura}|${item.EstadoTag}|${item.CorrelativoApertura}\n`
+              text += `${item.CorrPt}|${item.FechaLectura}|${data.Datos.CodCapturador}|${item.CodOperador}|${item.Serie}|${data.Datos.Area.slice(0, -1)}|${item.CodProducto}|${item.Cantidad}|${item.ExistenciaProducto}|${item.TipoLectura}|${item.EstadoTag}|${item.CorrelativoApertura}\n`
             })
       
             await FileSystem.writeAsStringAsync(fileUri, text, { encoding: FileSystem.EncodingType.UTF8 })
@@ -246,6 +246,19 @@ export const DataProvider = ({ children }) => {
               setLoading(false)
               setArea("");
               navigateFn && navigateFn()
+
+              ExecuteQuery(
+                db,
+                'UPDATE AREAS SET ENVIADA = 1 WHERE NUM_AREA = ?',
+                [area.NUM_AREA],
+                (res) => {
+                  console.log('res', res)
+                },
+                (err) => {
+                  console.log('err', err)
+                }
+              )
+
               return setSnackbar({ visible: true, text: "Carga y Respaldo Realizado con Exito", type: 'success' })
             } else {
               setLoading(false)

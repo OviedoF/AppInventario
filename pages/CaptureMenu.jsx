@@ -116,7 +116,7 @@ const CaptureMenu = () => {
                 refs.area.current.focus();
                 return setSnackbar({
                   visible: true,
-                  text: `El área ${numArea + digitVerifArea} no existe`,
+                  text: `El área ${numArea + '-' + digitVerifArea} no existe`,
                   type: "error",
                 });
               }
@@ -138,7 +138,7 @@ const CaptureMenu = () => {
                 setDangerModal({
                   visible: true,
                   title: "Área cerrada",
-                  text: `El área ${area.NUM_AREA} se encuentra cerrada, ¿qué desea hacer?`,
+                  text: `El área ${numArea}-${digitVerifArea} se encuentra cerrada, ¿qué desea hacer?`,
                   buttons: [
                     {
                       text: "Ver",
@@ -169,10 +169,10 @@ const CaptureMenu = () => {
                           }
                         );
     
-                        // * CAMBIAR EL ESTADO DEL ÁREA A INIT
+                        // * CAMBIAR EL ESTADO DEL ÁREA A INI
                         ExecuteQuery(
                           db,
-                          `UPDATE AREAS SET ESTADO = "INIT" WHERE NUM_AREA = "${area.NUM_AREA}"`,
+                          `UPDATE AREAS SET ESTADO = "INI" WHERE NUM_AREA = "${area.NUM_AREA}"`,
                           [],
                           (result) => {
                             setSnackbar({
@@ -233,10 +233,10 @@ const CaptureMenu = () => {
                           }
                         );
     
-                        // * Cambiamos el estado del área a INIT
+                        // * Cambiamos el estado del área a INI
                         ExecuteQuery(
                           db,
-                          `UPDATE AREAS SET ESTADO = "INIT" WHERE NUM_AREA = "${area.NUM_AREA}"`,
+                          `UPDATE AREAS SET ESTADO = "INI" WHERE NUM_AREA = "${area.NUM_AREA}"`,
                           [],
                           (result) => {
                             setSnackbar({
@@ -299,10 +299,10 @@ const CaptureMenu = () => {
                 //           }
                 //         );
     
-                //         // * CAMBIAR EL ESTADO DEL ÁREA A INIT
+                //         // * CAMBIAR EL ESTADO DEL ÁREA A INI
                 //         ExecuteQuery(
                 //           db,
-                //           `UPDATE AREAS SET ESTADO = "INIT" WHERE NUM_AREA = "${area.NUM_AREA}"`,
+                //           `UPDATE AREAS SET ESTADO = "INI" WHERE NUM_AREA = "${area.NUM_AREA}"`,
                 //           [],
                 //           (result) => {
                 //             setSnackbar({
@@ -363,10 +363,10 @@ const CaptureMenu = () => {
                 //           }
                 //         );
     
-                //         // * Cambiamos el estado del área a INIT
+                //         // * Cambiamos el estado del área a INI
                 //         ExecuteQuery(
                 //           db,
-                //           `UPDATE AREAS SET ESTADO = "INIT" WHERE NUM_AREA = "${area.NUM_AREA}"`,
+                //           `UPDATE AREAS SET ESTADO = "INI" WHERE NUM_AREA = "${area.NUM_AREA}"`,
                 //           [],
                 //           (result) => {
                 //             setSnackbar({
