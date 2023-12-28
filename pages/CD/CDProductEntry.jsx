@@ -8,27 +8,17 @@ import {
   Image,
 } from "react-native";
 import React, { useContext, useEffect, useRef, useState } from "react";
-import styles from "../styles/styles";
-import SectionBar from "../components/SectionBar";
-import routes from "../router/routes";
-import { StyleSheet } from "react-native";
-import ConfirmCloseAreaModal from "../components/ConfirmCloseAreaModal";
-import Calculator from "../components/Calculator";
-import TopBar from "../components/TopBar";
-import { dataContext } from "../context/dataContext";
+import styles from "../../styles/styles";
+import SectionBar from "../../components/SectionBar";
+import routes from "../../router/routes";
+import Calculator from "../../components/Calculator";
+import TopBar from "../../components/TopBar";
+import { dataContext } from "../../context/dataContext";
 import { useNavigate } from "react-router-native";
 import * as SQLite from "expo-sqlite";
-import ExecuteQuery from "../helpers/ExecuteQuery";
-import reverse_icon from "../assets/reverse.png";
-import * as FileSystem from 'expo-file-system';
-import { Alert } from "react-native";
+import ExecuteQuery from "../../helpers/ExecuteQuery";
+import reverse_icon from "../../assets/reverse.png";
 import 'react-native-get-random-values';
-import axios from "axios";
-import * as SecureStore from 'expo-secure-store';
-import env from "../env";
-import { StorageAccessFramework } from 'expo-file-system';
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
 
 function GTIN8Digit(codigoGTIN8) {
   if (codigoGTIN8.length !== 7) {
@@ -71,11 +61,11 @@ function GtoKG(gramos) {
   return kilogramos;
 }
 
-const ProductEntry = ({ type }) => {
-  const { area, setArea, setSnackbar, config, user, setDangerModal, serie, sendArea, setLoading } = useContext(dataContext);
-  const [areaData, setAreaData] = useState({
-    UESTADO: '',
-    ESTADOTAG: ''
+const CDProductEntry = ({ type }) => {
+  const { setSnackbar, config, user, setDangerModal, serie, cdInfo, setCdInfo } = useContext(dataContext);
+  const [infoData, setInfoData] = useState({
+    ESTADO: '',
+    ESTADONUM: ''
   })
   const [calculatorModal, setCalculatorModal] = useState(false);
   const [code, setCode] = useState("");
@@ -86,8 +76,6 @@ const ProductEntry = ({ type }) => {
     DESCRIPCION: "",
     TYPE: "",
   });
-  const [confirmingClose, setConfirmingClose] = useState(false);
-  const [modal, setModal] = useState(false);
   const [scansData, setScansData] = useState({
     products: "...",
     scans: "...",
@@ -101,148 +89,22 @@ const ProductEntry = ({ type }) => {
     quantity: useRef(null),
   };
 
-  const confirmArea = () => {
-    if (area === "") {
-      setSnackbar({
-        visible: true,
-        text: "Ingrese un área",
-        type: "error",
-      });
-      return;
-    }
-
-    setModal(false);
-  };
-
-  const confirmCloseArea = async () => {
-    setDangerModal({
-      visible: true,
-      title: "Cerrar área",
-      text: "¿Está seguro que desea cerrar el área?",
-      buttons: [
-        {
-          text: "Cancelar",
-          onPress: () => {
-            setDangerModal({
-              visible: false,
-              title: "",
-              text: "",
-              buttons: [],
-            });
-          },
-          style: "cancel",
-        },
-        {
-          text: "Cerrar",
-          onPress: async () => {
-            setDangerModal({
-              visible: false,
-              title: "",
-              text: "",
-              buttons: [],
-            });
-            const db = SQLite.openDatabase("Maestro.db");
-
-            ExecuteQuery(
-              db,
-              "SELECT * FROM INVENTARIO_APP WHERE area = ?",
-              [area],
-              (results) => {
-                if (results.rows._array.length === 0) {
-                  setSnackbar({
-                    visible: true,
-                    text: "El área está vacía, no se cerrará",
-                    type: "error",
-                  });
-                  return;
-                }
-
-                if (results.rows._array.length > 0) {
-                  ExecuteQuery(
-                    db,
-                    `UPDATE AREAS SET ESTADO = "CERRADA" WHERE NUM_AREA = "${area}"`,
-                    [],
-                    (result) => {
-                      setSnackbar({
-                        visible: true,
-                        text: "Área cerrada correctamente",
-                        type: "success",
-                      });
-
-                      setDangerModal({
-                        visible: true,
-                        title: "Cargar y Respaldo",
-                        text: "¿Desea Enviar datos al servidor de inmediato?",
-                        bg: "#28a745",
-                        buttons: [
-                          {
-                            text: "NO",
-                            onPress: () => {
-                              setArea("");
-                              setDangerModal({
-                                visible: false,
-                                title: "",
-                                text: "",
-                                buttons: [],
-                              });
-                              navigate(routes.captureMenu);
-                            },
-                            style: "cancel",
-                          },
-                          {
-                            text: "Si",
-                            onPress: () => {
-                              setDangerModal({
-                                visible: false,
-                                title: "",
-                                text: "",
-                                buttons: [],
-                              });
-                              sendArea(areaData, navigate(routes.captureMenu));
-                            },
-                          },
-                        ],
-                      });
-                    },
-                    (error) => {
-                      console.log(error);
-                      setSnackbar({
-                        visible: true,
-                        text: "Error al cerrar el área",
-                        type: "error",
-                      });
-                    }
-                  );
-
-                  setArea("");
-                  navigate(routes.captureMenu);
-                }
-              },
-              (error) => {
-                console.log(error);
-                setSnackbar({
-                  visible: true,
-                  text: "Error al cerrar el área",
-                  type: "error",
-                });
-              }
-            );
-          },
-        },
-      ],
-    });
-  }
-
   const getScansData = async () => {
+    const posicion = cdInfo.posicion || '';
+    const pallet = cdInfo.pallet || '';
+    const caja = cdInfo.caja || '';
+    const area = cdInfo.area || '';
+
     const db = SQLite.openDatabase("Maestro.db");
     const productsDb = [];
-    const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND area = "${area}"`;
+    let query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND posicion = "${posicion}" AND pallet = "${pallet}" AND caja = "${caja}" AND area = "${area}"`;
 
     await ExecuteQuery(
       db,
       query,
       [],
       (results) => {
+        console.log("Results", results.rows._array);
         // * Leemos los scans de la base de datos y contamos los productos no repetidos
         results.rows._array.forEach((product) => {
           if (!productsDb.includes(product.name)) productsDb.push(product.name);
@@ -251,7 +113,9 @@ const ProductEntry = ({ type }) => {
         let totalProducts = 0;
 
         results.rows._array.forEach((product) => {
-          if (product.area === area) totalProducts += parseFloat(product.quantity);
+          if(config.index_capt == 2 && product.posicion == cdInfo.posicion) totalProducts += parseFloat(product.quantity);
+          if((config.index_capt == 3 || config.index_capt == 5) && product.area == cdInfo.area) totalProducts += parseFloat(product.quantity);
+          if((config.index_capt == 4 || config.index_capt == 6) && product.caja == cdInfo.caja) totalProducts += parseFloat(product.quantity);
         });
 
         setScansData({
@@ -275,13 +139,16 @@ const ProductEntry = ({ type }) => {
   const addProductToDb = async (product, qty = quantity, additionType) => {
     const db = SQLite.openDatabase("Maestro.db");
     const date = new Date().toISOString();
+    const posicion = cdInfo.posicion;
+    const pallet = config.index_capt == 4 || config.index_capt == 5 ? cdInfo.pallet ? cdInfo.pallet : '' : "";
+    const caja = config.index_capt == 4 || config.index_capt == 6 ? cdInfo.caja ? cdInfo.caja : '' : "";
+    const area = config.index_capt == 3 || config.index_capt == 5 ? cdInfo.area ? cdInfo.area : '' : "";
 
     await ExecuteQuery(
       db,
-      `SELECT * FROM INVENTARIO_APP WHERE area = "${area}"`,
+      `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND posicion = "${posicion}" AND pallet = "${pallet}" AND caja = "${caja}" AND area = "${area}"`,
       [],
       (results) => {
-
         ExecuteQuery(
           db,
           "INSERT INTO INVENTARIO_APP (operator, name, quantity, date, posicion, area, pallet, caja, type, inventario, serie, existe, EstadoTag, CorrelativoApertura, invtype, descripcion, CorrPT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -290,16 +157,16 @@ const ProductEntry = ({ type }) => {
             product.COD_PROD,
             config.num_decimales ? parseFloat(qty).toFixed(config.num_decimales) : parseInt(qty),
             date,
-            "",
+            posicion,
             area,
-            "",
-            "",
+            pallet,
+            caja,
             product.type,
             config.inv_activo,
-            serie,
+            serie ? serie : '',
             product.exists ? product.exists : 'S',
-            areaData.UESTADO == 'INI' ? '0' : areaData.UESTADO,
-            areaData.ESTADOTAG,
+            infoData.ESTADO == 'INI' ? '0' : infoData.ESTADO,
+            infoData.ESTADONUM,
             'INV',
             product.DESCRIPCION,
             results.rows._array.length + 1
@@ -370,7 +237,7 @@ const ProductEntry = ({ type }) => {
     console.log("Cantidad", quantity);
 
     const masterDb = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM MAESTRA  WHERE COD_PROD = '${codeToVerify}'`;
+    const query = `SELECT * FROM MAESTRA WHERE COD_PROD = '${codeToVerify}'`;
 
     ExecuteQuery(
       masterDb,
@@ -732,21 +599,30 @@ const ProductEntry = ({ type }) => {
 
   useEffect(() => {
     getScansData();
+    const posicion = cdInfo.posicion || '';
+    const pallet = cdInfo.pallet || '';
+    const caja = cdInfo.caja || '';
+    const area = cdInfo.area || '';
 
     const db = SQLite.openDatabase("Maestro.db");
+    let query = `SELECT * FROM COMBINACIONES_CD WHERE posicion = "${posicion}" AND pallet = "${pallet}" AND caja = "${caja}" AND area = "${area}"`;
+
     ExecuteQuery(
       db,
-      "SELECT * FROM AREAS WHERE NUM_AREA = ?",
-      [area],
+      query,
+      [],
       (res) => {
+        console.log("Combinaciones", res.rows._array);
         if (!res.rows._array[0]) return setSnackbar({
           visible: true,
-          text: "El área no existe",
+          text: "No se encontró la combinación",
           type: "error",
         });
 
-        console.log(res.rows._array[0]);
-        setAreaData(res.rows._array[0]);
+        setInfoData({
+          ESTADONUM: res.rows._array[0].status_num,
+          ESTADO: res.rows._array[0].status_corr,
+        });
       },
       (err) => {
         console.log(err)
@@ -766,8 +642,8 @@ const ProductEntry = ({ type }) => {
       <ScrollView keyboardShouldPersistTaps='handled'>
         <TopBar />
         <SectionBar
-          section={type === "single" ? `Ingreso 1x1 - Área: ${area.slice(0, area.length - 1)}-${area.slice(-1)}` : `Ingreso por cantidad - Área: ${area.slice(0, area.length - 1)}-${area.slice(-1)}`}
-          backTo={routes.captureMenu}
+          section={type === "single" ? `Ingreso 1x1 - Pos: ${cdInfo.posicion} - CD` : `Ingreso por cantidad - Pos: ${cdInfo.posicion} - CD`}
+          backTo={routes.cD}
         />
 
         <View
@@ -788,8 +664,7 @@ const ProductEntry = ({ type }) => {
           >
             <TouchableOpacity
               onPress={() => {
-                setArea("");
-                return navigate(routes.captureMenu);
+                return navigate(routes.cDEdit);
               }}
               style={{
                 ...styles.logBtn,
@@ -806,11 +681,11 @@ const ProductEntry = ({ type }) => {
                 color: "#fff",
                 textAlign: "center",
                 fontSize: 12
-              }}>NUEVA ÁREA</Text>
+              }}>NUEVOS DATOS</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => confirmCloseArea()}
+              onPress={() => navigate(routes.cDFastSend)}
               style={{
                 ...styles.logBtn,
                 width: 120,
@@ -827,7 +702,7 @@ const ProductEntry = ({ type }) => {
                 color: "#fff",
                 textAlign: "center",
                 fontSize: 12
-              }}>CERRAR ÁREA</Text>
+              }}>CERRAR DATOS</Text>
             </TouchableOpacity>
           </View>
 
@@ -1058,7 +933,7 @@ const ProductEntry = ({ type }) => {
               }}
               onPress={() =>
                 navigate(
-                  type === "single" ? "/review/single" : "/review/multiple"
+                  type === "single" ? "/cdReview/single" : "/cdReview/multiple"
                 )
               }
             >
@@ -1082,7 +957,7 @@ const ProductEntry = ({ type }) => {
                 borderRadius: 5,
                 alignItems: "center",
               }}
-              onPress={() => navigate(routes.captureMenu)}
+              onPress={() => navigate(routes.cD)}
             >
               <Text
                 style={{
@@ -1115,71 +990,8 @@ const ProductEntry = ({ type }) => {
           setQuantity={setQuantity}
         />
       </ScrollView>
-
-      {confirmingClose && (
-        <ConfirmCloseAreaModal
-          area={area}
-          onClose={() => setConfirmingClose(false)}
-        />
-      )}
-
-      {modal && (
-        <View style={styles.modal}>
-          <View style={styles.modalContent}>
-            <Text
-              style={{
-                fontSize: 16,
-              }}
-            >
-              Ingresar Área
-            </Text>
-
-            <TextInput
-              keyboardType="numeric"
-              style={styles.input}
-              onChangeText={setArea}
-              value={area}
-              ref={refs.area}
-              placeholder="Área"
-              onSubmitEditing={confirmArea}
-            />
-
-            <View
-              style={{
-                display: "flex",
-                flexDirection: "row",
-              }}
-            >
-              <TouchableOpacity
-                onPress={confirmArea}
-                style={{
-                  ...styles.logBtn,
-                  width: "40%",
-                }}
-              >
-                <Text style={[styles.white, styles.textCenter]}>INGRESAR</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => {
-                  setModal(false);
-                }}
-                style={{
-                  ...styles.logBtn,
-                  width: "40%",
-                  backgroundColor: "#ccc",
-                }}
-              >
-                <Text style={[styles.white, styles.textCenter]}>VOLVER</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
     </KeyboardAvoidingView>
   );
 };
 
-const stylesLocal = StyleSheet.create({});
-
-export default ProductEntry;
+export default CDProductEntry;

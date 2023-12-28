@@ -1,26 +1,25 @@
 import { View, Text, Alert } from "react-native";
 import React, { useContext, useState, useEffect, useRef } from "react";
-import TopBar from "../components/TopBar";
-import SectionBar from "../components/SectionBar";
+import TopBar from "../../components/TopBar";
+import SectionBar from "../../components/SectionBar";
 import { KeyboardAvoidingView } from "react-native";
 import { ScrollView } from "react-native";
-import { dataContext } from "../context/dataContext";
-import routes from "../router/routes";
+import { dataContext } from "../../context/dataContext";
+import routes from "../../router/routes";
 import { useNavigate, useParams } from "react-router-native";
 import { TouchableOpacity } from "react-native";
-import styles from "../styles/styles";
+import styles from "../../styles/styles";
 import * as SQLite from "expo-sqlite";
-import ExecuteQuery from "../helpers/ExecuteQuery";
-import EditEntryModal from "../components/EditEntryModal";
+import ExecuteQuery from "../../helpers/ExecuteQuery";
+import EditEntryModal from "../../components/EditEntryModal";
 
 const CDReview = () => {
   const [selectedId, setSelectedId] = useState(null);
   const [modalEdit, setEditModal] = useState(false);
   const [quantity, setQuantity] = useState("");
   const [products, setProducts] = useState(null);
-  const { area } = useContext(dataContext);
   const { type } = useParams();
-  const { setSnackbar, config, setDangerModal } = useContext(dataContext);
+  const { setSnackbar, config, setDangerModal, cdInfo } = useContext(dataContext);
   const navigate = useNavigate();
   console.log("config", config);
 
@@ -76,10 +75,19 @@ const CDReview = () => {
 
   const clearActualArea = async () => {
     try {
+      const posicion = cdInfo.posicion || "";
+      const area = cdInfo.area || "";
+      const caja = cdInfo.caja || "";
+      const pallet = cdInfo.pallet || "";
+
       setDangerModal({
         visible: true,
         title: "Limpiar área actual",
-        text: `¿Estás seguro de que deseas limpiar el área ${area}?`,
+        text: `¿Estás seguro de que deseas limpiar el ${
+          config.index_capt == 2 ? "posicion" : config.index_capt == 3 || config.index_capt == 5 ? "área" : "caja"
+        } ${
+          config.index_capt == 2 ? cdInfo.posicion : config.index_capt == 3 || config.index_capt == 5 ? cdInfo.area : cdInfo.caja
+        }?`,
         buttons: [
           {
             text: "Cancelar",
@@ -90,10 +98,14 @@ const CDReview = () => {
             text: "Aceptar",
             onPress: async () => {
               const db = SQLite.openDatabase("Maestro.db");
+              let query = `DELETE FROM INVENTARIO_APP WHERE posicion = "${posicion}" AND area = "${area}" AND caja = "${caja}" AND pallet = "${pallet}"`;
+              if(config.index_capt == 3 || config.index_capt == 5) query = `DELETE FROM INVENTARIO_APP WHERE area = "${cdInfo.area}"`;
+              if(config.index_capt == 4 || config.index_capt == 6) query = `DELETE FROM INVENTARIO_APP WHERE caja = "${cdInfo.caja}"`;
+
               await ExecuteQuery(
                 db,
-                "DELETE FROM INVENTARIO_APP WHERE area = ?",
-                [area],
+                query,
+                [],
                 (results) => {
                   setSnackbar({
                     visible: true,
@@ -114,8 +126,8 @@ const CDReview = () => {
 
               navigate(
                 type === "single"
-                  ? routes.singleProductEntry
-                  : routes.multipleProductEntry
+                  ? routes.cdSingleProductEntry
+                  : routes.cdMultipleProductEntry
               );
             },
           },
@@ -133,7 +145,10 @@ const CDReview = () => {
 
   const getCDProducts = async () => {
     const db = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND area = "${area}" ORDER BY id DESC`;
+    let query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND posicion = "${cdInfo.posicion}" ORDER BY id DESC`;
+    if(config.index_capt == 3 || config.index_capt == 5) query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND area = "${cdInfo.area}" ORDER BY id DESC`;
+    if(config.index_capt == 4 || config.index_capt == 6) query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND caja = "${cdInfo.caja}" ORDER BY id DESC`;
+
     await ExecuteQuery(
       db,
       query,
@@ -151,6 +166,7 @@ const CDReview = () => {
       }
     );
   };
+
   useEffect(() => {
     getCDProducts();
   }, []);
@@ -160,11 +176,11 @@ const CDReview = () => {
       <ScrollView>
         <TopBar />
         <SectionBar
-          section={`Revisión`}
+          section={`Revisión - CD`}
           backTo={
             type === "single"
-              ? routes.singleProductEntry
-              : routes.multipleProductEntry
+              ? routes.cdSingleProductEntry
+              : routes.cdMultipleProductEntry
           }
         />
         <View
@@ -206,14 +222,14 @@ const CDReview = () => {
             }}
           >
             <Text style={[styles.white, { textAlign: "center", alignItems: 'center' }]}>
-              Limpiar área actual
+              Limpiar {config.index_capt == 2 && 'pos'} {(config.index_capt == 3 ||config.index_capt == 5) && 'área'} {(config.index_capt == 4 ||config.index_capt == 6) && 'caja'} actual
             </Text>
           </TouchableOpacity>
         </View>
 
         {products && products.length === 0 && (
           <Text style={{ textAlign: "center" }}>
-            No hay productos en este área
+            No hay productos en {config.index_capt == 2 && 'esta posición'} {(config.index_capt == 3 ||config.index_capt == 5) && 'este área'} {(config.index_capt == 4 ||config.index_capt == 6) && 'esta caja'}
           </Text>
         )}
 

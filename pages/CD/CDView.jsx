@@ -1,52 +1,25 @@
-import { View, Text } from "react-native";
+import { View, Text, Alert } from "react-native";
 import React, { useContext, useState, useEffect, useRef } from "react";
-import TopBar from "../components/TopBar";
-import SectionBar from "../components/SectionBar";
+import TopBar from "../../components/TopBar";
+import SectionBar from "../../components/SectionBar";
 import { KeyboardAvoidingView } from "react-native";
 import { ScrollView } from "react-native";
-import { dataContext } from "../context/dataContext";
-import routes from "../router/routes";
+import { dataContext } from "../../context/dataContext";
+import routes from "../../router/routes";
 import { useNavigate, useParams } from "react-router-native";
 import { TouchableOpacity } from "react-native";
-import styles from "../styles/styles";
+import styles from "../../styles/styles";
 import * as SQLite from "expo-sqlite";
-import ExecuteQuery from "../helpers/ExecuteQuery";
-import EditEntryModal from "../components/EditEntryModal";
+import ExecuteQuery from "../../helpers/ExecuteQuery";
+import EditEntryModal from "../../components/EditEntryModal";
 
-const CDReview = () => {
-  const navigate = useNavigate();
+const CDView = () => {
   const [selectedId, setSelectedId] = useState(null);
   const [modalEdit, setEditModal] = useState(false);
   const [quantity, setQuantity] = useState("");
   const [products, setProducts] = useState(null);
-  const { area } = useContext(dataContext);
-  const { type } = useParams();
-  const { setSnackbar } = useContext(dataContext);
-
-  const deleteEntryFromInventario = async (db_id) => {
-    const db = SQLite.openDatabase("Maestro.db");
-    await ExecuteQuery(
-      db,
-      "DELETE FROM INVENTARIO_APP WHERE id = ?",
-      [db_id],
-      (results) => {
-        setSnackbar({
-          visible: true,
-          text: "Entrada de producto eliminada correctamente",
-          type: "success",
-        });
-        getCDProducts();
-      },
-      (error) => {
-        console.log("Error", error);
-        setSnackbar({
-          visible: true,
-          text: "Error al eliminar entrada de producto",
-          type: "error",
-        });
-      }
-    );
-  };
+  const { setSnackbar, config, setCdInfo, cdInfo } = useContext(dataContext);
+  console.log("config", config);
 
   const editEntryFromInventario = async (cant, db_id) => {
     const db = SQLite.openDatabase("Maestro.db");
@@ -72,10 +45,12 @@ const CDReview = () => {
       }
     );
   };
-
   const getCDProducts = async () => {
     const db = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM INVENTARIO_APP WHERE type = "CD"`;
+    let query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND posicion = "${cdInfo.posicion}" ORDER BY id DESC`;
+    if(config.index_capt == 3 || config.index_capt == 5) query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND area = "${cdInfo.area}" ORDER BY id DESC`;
+    if(config.index_capt == 4 || config.index_capt == 6) query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND caja = "${cdInfo.caja}" ORDER BY id DESC`;
+
     await ExecuteQuery(
       db,
       query,
@@ -83,6 +58,7 @@ const CDReview = () => {
       (results) => {
         /* console.log("Query completed");
         console.log(results.rows._array); */
+        console.log(results.rows._array);
         return setProducts(results.rows._array);
       },
       (error) => {
@@ -92,6 +68,7 @@ const CDReview = () => {
       }
     );
   };
+
   useEffect(() => {
     getCDProducts();
   }, []);
@@ -101,42 +78,16 @@ const CDReview = () => {
       <ScrollView>
         <TopBar />
         <SectionBar
-          section={`CD - Revisar`}
-          backTo={
-            type === "single"
-              ? routes.cdSingleProductEntry
-              : routes.cdMultipleProductEntry
-          }
+          section={`Revisión - CD`}
+          backTo={routes.cDEdit}
         />
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            gap: 10,
-            marginBottom: 10,
-          }}
-        >
-          <TouchableOpacity
-            style={[styles.primaryBtn, { width: "30%" }]}
-            onPress={() => {
-              setEditModal(true);
-            }}
-          >
-            <Text style={[styles.white, { textAlign: "center" }]}>
-              Modificar
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.primaryBtn, { width: "30%" }]}
-            onPress={() => {
-              deleteEntryFromInventario(selectedId);
-            }}
-          >
-            <Text style={[styles.white, { textAlign: "center" }]}>
-              Eliminar
-            </Text>
-          </TouchableOpacity>
-        </View>
+
+        {products && products.length === 0 && (
+          <Text style={{ textAlign: "center" }}>
+            No hay productos en {config.index_capt == 2 && 'esta posiónci'} {(config.index_capt == 3 ||config.index_capt == 5) && 'este área'} {(config.index_capt == 4 ||config.index_capt == 6) && 'esta caja'}
+          </Text>
+        )}
+
         {products &&
           products[0] &&
           products.map((item, id) => (
@@ -156,14 +107,14 @@ const CDReview = () => {
               ]}
             >
               <Text
-                style={{ width: "25%", fontSize: 12, paddingHorizontal: 5 }}
+                style={{ width: "10%", fontSize: 12, paddingHorizontal: 5 }}
               >
-                {item.id}
+                {parseInt(item.CorrPT)}
               </Text>
               <Text
-                style={{ width: "40%", fontSize: 12, paddingHorizontal: 5 }}
+                style={{ width: "55%", fontSize: 12, paddingHorizontal: 5 }}
               >
-                {item.name}
+                {item.name} - {item.descripcion}
               </Text>
               <Text
                 style={{ width: "10%", fontSize: 12, paddingHorizontal: 5 }}
@@ -173,7 +124,7 @@ const CDReview = () => {
               <Text
                 style={{ width: "25%", fontSize: 12, paddingHorizontal: 5 }}
               >
-                {item.date}
+                {new Date(item.date).toLocaleDateString()} {new Date(item.date).toLocaleTimeString()}
               </Text>
             </TouchableOpacity>
           ))}
@@ -190,4 +141,4 @@ const CDReview = () => {
   );
 };
 
-export default CDReview;
+export default CDView;

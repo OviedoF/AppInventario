@@ -3,13 +3,15 @@ import routes from "./routes";
 import Login from "../pages/Login";
 import CaptureMenu from "../pages/CaptureMenu";
 import ProductEntry from "../pages/ProductEntry";
-import CDProductEntry from "../pages/CDProductEntry";
-import CDReview from "../pages/CDReview";
-import CD from "../pages/CD";
+import CDProductEntry from "../pages/CD/CDProductEntry";
+import CDReview from "../pages/CD/CDReview";
+import CD from "../pages/CD/CD";
 import SendWIFI from "../pages/SendWIFI";
 import Review from "../pages/Review";
 import AdminMenu from "../pages/AdminMenu";
 import AreaView from "../pages/AreaView";
+import CDView from "../pages/CD/CDView";
+import CDWifiSend from "../pages/CD/CDWifiSend";
 
 const AppRouter = () => {
   return (
@@ -35,6 +37,14 @@ const AppRouter = () => {
       {/* ---------------- CD ---------------- */}
 
       <Route exact path={routes.cD} element={<CD />} />
+      <Route exact path={routes.cDFastSend} element={<CD fastSend={true}/>}  />
+      <Route exact path={routes.cDClear} element={<CD clear={true}/>}  />
+      <Route exact path={routes.cDEdit} element={<CD fastEdit={true}/>}  />
+      
+      <Route exact path={routes.cDWifiSend} element={<CDWifiSend />}  />
+
+      <Route exact path={routes.cdView} element={<CDView />} />
+
       <Route
         exact
         path={routes.cdSingleProductEntry}

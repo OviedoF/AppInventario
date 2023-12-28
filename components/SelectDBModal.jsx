@@ -60,6 +60,7 @@ const SelectDBModal = ({ onEnd }) => {
             const inventario = inventariosDisponibles.find((value) => value.id.toString() === invSeleccionado.toString())
 
             setLoading(true)
+
             await fetch(`http://${ip}/isam/api/descargar_maestroInv.php`, {
                 headers: {
                     "id": invSeleccionado,
@@ -119,6 +120,25 @@ const SelectDBModal = ({ onEnd }) => {
                             });
                     };
                     reader.readAsDataURL(blob);
+
+                    const openDb = SQLite.openDatabase(`Maestro.db`);
+
+                    ExecuteQuery(
+                        openDb,
+                        'DELETE FROM COMBINACIONES_CD',
+                        [],
+                        (res) => {
+                            if (res.rows.length > 0) {
+                                console.log(`COMBINACIONES_CD eliminado.`)
+                            } else {
+                                console.log(`COMBINACIONES_CD.`)
+                            }
+                        },
+                        (err) => {
+                            setLoading(false)
+                            console.log(`COMBINACIONES_CD.`)
+                        }
+                    );
                 })
                 .catch((error) => {
                     console.log(error);

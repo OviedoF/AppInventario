@@ -35,7 +35,7 @@ const Login = () => {
   const [selectDBModal, setSelectDBModal] = useState(false);
   const [adminPassModal, setAdminPassModal] = useState(false)
   const navigate = useNavigate();
-  const { setUser, setSnackbar, setConfig, setHardwareId, setInventario, config, setDangerModal, inventario, codCapturador, setCodCapturador } = useContext(dataContext);
+  const { setUser, setSnackbar, setConfig, setHardwareId, setInventario, config, setDangerModal, setCdInfo, codCapturador, setCodCapturador } = useContext(dataContext);
   const refs = {
     user: useRef(null),
     password: useRef(null),
@@ -145,17 +145,36 @@ const Login = () => {
 
           setUser(userProx);
 
-          setSnackbar({
-            visible: true,
-            text: "Sesión iniciada correctamente.",
-            type: "success",
-          });
+          ExecuteQuery(
+            openDb,
+            "SELECT * FROM CONFIG",
+            [],
+            async (data) => {
+              const config = data.rows._array;
 
-          BackHandler.addEventListener("hardwareBackPress", () => {
-            navigate(-1);
-            return true;
-          }); // * Agregar evento para el botón de atrás
-          navigate(userProx.admin ? routes.menuAdmin : routes.captureMenu);
+              setSnackbar({
+                visible: true,
+                text: "Sesión iniciada correctamente.",
+                type: "success",
+              });
+    
+              BackHandler.addEventListener("hardwareBackPress", () => {
+                navigate(-1);
+                return true;
+              }); // * Agregar evento para el botón de atrás
+
+              setCdInfo({})
+
+              if(!config[4].LARGO_CAMPO || config[4].LARGO_CAMPO == 1) {
+                navigate(userProx.admin ? routes.menuAdmin : routes.captureMenu);
+              } else {
+                navigate(userProx.admin ? routes.menuAdmin : routes.cD);
+              }
+            },
+            (error) => {
+              console.log(error);
+            }
+          );
         },
         (error) => {
           console.log(error);
@@ -192,12 +211,14 @@ const Login = () => {
             ? 3
             : parseInt(config[2].LARGO_CAMPO),
           catalog_products: config[3].LARGO_CAMPO === "N" ? false : true,
-          index_capt: 1,
+          index_capt: config[4].LARGO_CAMPO ? config[4].LARGO_CAMPO : 1,
+          // index_capt: 4, // ! CAMBIAR 
           pesables: config[5]
             ? config[5].LARGO_CAMPO === "N"
               ? false
               : true
             : false,
+          num_decimales: config[7] ? config[7].LARGO_CAMPO : 0,
           inv_activo: invSelected ? invSelected.split('.')[0] : null,
         });
 
@@ -271,6 +292,21 @@ const Login = () => {
       }
     );
 
+    await ExecuteQuery(
+      openDb,
+      `CREATE TABLE IF NOT EXISTS COMBINACIONES_CD (id INTEGER PRIMARY KEY AUTOINCREMENT, posicion, area, caja, pallet, status, status_num, status_corr, enviada);`,
+      [],
+      (result) => {
+        console.log(result)
+        if (result.rowsAffected > 0) {
+          console.log("Tabla COMBINACIONES_CD creada correctamente.");
+        }
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+
   };
 
   const onDataBaseCharge = async () => {
@@ -280,6 +316,7 @@ const Login = () => {
       getBasicData();
       await AsyncStorage.setItem('existFirstDB', 'true')
       setSelectDBModal(false)
+      refs.user.current.focus();
     } catch (e) {
       console.log(e);
     }

@@ -18,9 +18,8 @@ import routes from "../router/routes";
 
 const PickInventoryModal = ({ setModalVisible, modalVisible }) => {
   const [inventories, setInventories] = useState([]);
-  const { config, setConfig, user, setSnackbar, inventario, setInventario } =
+  const { config, setConfig, setSnackbar, setInventario } =
     useContext(dataContext);
-  const navigate = useNavigate();
 
   useEffect(() => {
     

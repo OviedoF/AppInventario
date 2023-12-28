@@ -22,7 +22,7 @@ import PickInventoryModal from "../components/PickInventarioModal";
 import * as SecureStore from 'expo-secure-store';
 
 const AdminMenu = () => {
-  const { setSnackbar, reset, setHardwareId, config, setConfig, hardwareId, codCapturador, setCodCapturador} = useContext(dataContext);
+  const { setSnackbar, reset, setHardwareId, config, setConfig, hardwareId, codCapturador, setCodCapturador, setDangerModal } = useContext(dataContext);
   const [id, setId] = useState(hardwareId);
   const [modalId, setModalId] = useState(false);
   const [ip, setIp] = useState('')
@@ -35,32 +35,61 @@ const AdminMenu = () => {
       const ip = await AsyncStorage.getItem("IP");
       setIp(ip)
     }
-     
+
     getIp()
   }, [])
 
   const eliminarTablaInventarios = () => {
-    const db = SQLite.openDatabase("Maestro.db");
-    db.transaction((tx) => {
-      tx.executeSql(
-        "DELETE FROM INVENTARIO",
-        [],
-        () =>
-          setSnackbar({
-            visible: true,
-            text: "Inventarios cargados eliminados con éxito",
-            type: "success",
-          }),
-        (error) => {
-          console.log("Error", error);
-          setSnackbar({
-            visible: true,
-            text: `Error al eliminar la tabla INVENTARIO: ${error}`,
-            type: "error",
+    setDangerModal({
+      title: "¿Estás seguro?",
+      text: "Esta acción eliminará todos los inventarios y sus datos",
+      visible: true,
+      buttons: [{
+        text: "Cancelar",
+        onPress: () => setDangerModal({ visible: false, buttons: [] })
+      }, {
+        text: "Eliminar",
+        onPress: () => {
+          const db = SQLite.openDatabase("Maestro.db");
+          db.transaction((tx) => {
+            tx.executeSql(
+              "DELETE FROM INVENTARIO_APP",
+              [],
+              () =>
+                setSnackbar({
+                  visible: true,
+                  text: "Inventarios cargados eliminados con éxito",
+                  type: "success",
+                }),
+              (error) => {
+                console.log("Error", error);
+                setSnackbar({
+                  visible: true,
+                  text: `Error al eliminar la tabla INVENTARIO: ${error}`,
+                  type: "error",
+                });
+              }
+            );
+          });
+
+          db.transaction((tx) => {
+            tx.executeSql(
+              "DELETE FROM COMBINACIONES_CD",
+              [],
+              () => console.log("COMBINACIONES_CD con éxito"),
+              (error) => {
+                console.log("Error", error);
+                setSnackbar({
+                  visible: true,
+                  text: `Error al eliminar la tabla INVENTARIO_CARGADO: ${error}`,
+                  type: "error",
+                });
+              }
+            );
           });
         }
-      );
-    });
+      }]
+    })
   };
 
   const changeHardwareID = async () => {

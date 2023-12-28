@@ -6,28 +6,28 @@ import {
   KeyboardAvoidingView,
   ScrollView,
 } from "react-native";
-import routes from "../router/routes";
-import styles from "../styles/styles";
-import SectionBar from "../components/SectionBar";
-import TopBar from "../components/TopBar";
+import routes from "../../router/routes";
+import styles from "../../styles/styles";
+import SectionBar from "../../components/SectionBar";
+import TopBar from "../../components/TopBar";
 import * as SQLite from "expo-sqlite";
-import ExecuteQuery from "../helpers/ExecuteQuery";
+import ExecuteQuery from "../../helpers/ExecuteQuery";
 import { TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { dataContext } from "../context/dataContext";
+import { dataContext } from "../../context/dataContext";
 import axios from "axios";
-import ReplaceWithLoading from "../components/ReplaceWithLoading";
+import ReplaceWithLoading from "../../components/ReplaceWithLoading";
 import * as SecureStore from 'expo-secure-store';
 import * as FileSystem from "expo-file-system";
 const { StorageAccessFramework } = FileSystem;
-import env from "../env";
+import env from "../../env";
 
-const SendWIFI = () => {
+const CDWifiSend = () => {
   const { config, setSnackbar, setLoading } = useContext(dataContext)
-  const [areas, setAreas] = useState([])
+  const [combinaciones, setCombinaciones] = useState([])
   const [ip, setIp] = useState('')
   const [filter, setFilter] = useState('PENDIENTES')
-  const [selectedAreas, setSelectedAreas] = useState([])
+  const [selected, setSelected] = useState([])
   const [orderBy, setOrderBy] = useState('ASC')
 
   // * Función para crear el archivo de respaldo
@@ -106,13 +106,35 @@ const SendWIFI = () => {
       requestPermissions()
       const fecha = data.Datos.FechaEnvio.split(' ')[0];
       const hora = data.Datos.FechaEnvio.split(' ')[1].replaceAll(':', '-')
-      const nombreArchivo = `1_${data.Datos.CodEmpresa}_${data.Datos.CodInv}_${data.Datos.CodCapturador}_${data.Datos.Area}_${fecha}_${hora}.txt`
+      const nombreArchivo = `1_${data.Datos.CodEmpresa}_${data.Datos.CodInv}_${data.Datos.CodCapturador}${
+        data.Datos.Posicion ? `_${data.Datos.Posicion}` : ''
+      }${
+        data.Datos.Pallet ? `_${data.Datos.Pallet}` : ''
+      }${
+        data.Datos.Area ? `_${data.Datos.Area}` : ''
+      }${
+        data.Datos.Caja ? `_${data.Datos.Caja}` : ''
+      }_${fecha}_${hora}.txt`
       const fileUri = `${FileSystem.documentDirectory}${nombreArchivo}`;
+
+      console.log(nombreArchivo)
 
       let text = ``;
       data.Lecturas.forEach(item => {
-        text += `${item.CorrPt}|${item.FechaLectura}|${data.Datos.CodCapturador}|${item.CodOperador}|${item.Serie}|${data.Datos.Area}|${item.CodProducto}|${item.Cantidad}|${item.ExistenciaProducto}|${item.TipoLectura}|${item.EstadoTag}|${item.CorrelativoApertura}\n`
+        text += `${item.CorrPt}|${item.FechaLectura}|${data.Datos.CodCapturador}|${item.CodOperador}${
+          item.serie ? `|${item.serie}` : ''
+        }${
+          data.Datos.Posicion ? `|${data.Datos.Posicion}` : ''
+        }${
+          data.Datos.Pallet ? `|${data.Datos.Pallet}` : ''
+        }${
+          data.Datos.Area ? `|${data.Datos.Area}` : ''
+        }${
+          data.Datos.Caja ? `|${data.Datos.Caja}` : ''
+        }|${item.CodProducto}|${item.Cantidad}|${item.ExistenciaProducto}|${item.TipoLectura}|${item.EstadoTag}|${item.CorrelativoApertura}\n`
       })
+
+      console.log(text)
 
       await FileSystem.writeAsStringAsync(fileUri, text, { encoding: FileSystem.EncodingType.UTF8 })
 
@@ -144,55 +166,40 @@ const SendWIFI = () => {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
 
-  // * Función para obtener el total de productos de cada área
-
-  const getTotalProductsOfAreas = async (areas) => {
-    console.log('areas en total', areas)
+  const getCombinaciones = async () => {
     const db = SQLite.openDatabase("Maestro.db");
-    ExecuteQuery(
-      db,
-      "SELECT area, quantity FROM INVENTARIO_APP",
-      [],
-      (res) => {
-
-        // Mapear el array de áreas y agregar la variable "totalProd" a cada objeto
-        const areasConTotalProd = areas.map(area => {
-          const totalProd = res.rows._array.filter(item => item.area === area.NUM_AREA).reduce((acc, item) => acc + item.quantity, 0);
-          return { ...area, totalProd };
-        });
-
-        console.log('areasConTotalProd', areasConTotalProd)
-
-        setAreas(areasConTotalProd);
-      },
-      (err) => {
-        console.log(err)
-      }
-    )
-  }
-
-  const getAreasWithProducts = async () => {
-    const db = SQLite.openDatabase("Maestro.db");
+    let combinacionesFinded = []
 
     await ExecuteQuery(
       db,
-      "SELECT DISTINCT area FROM INVENTARIO_APP",
+      `SELECT * FROM COMBINACIONES_CD WHERE ${filter === 'PENDIENTES' ? 'enviada = 0 AND status = "CERRADA"' : filter === 'ENVIADAS' ? 'enviada = 1' : filter === 'ABIERTAS' ? 'status = "INI"' : ''} ORDER BY posicion ${orderBy}`,
       [],
       (res) => {
-        const areasNumbers = res.rows._array.map(item => item.area);
-        ExecuteQuery(
-          db,
-          `SELECT * FROM AREAS WHERE NUM_AREA IN (${areasNumbers.map((item, index) => `?`).join(', ')}) AND ${
-            filter === 'PENDIENTES' ? 'ENVIADA = 0 AND ESTADO = "CERRADA"' : filter === 'ENVIADAS' ? 'ENVIADA = 1' : filter === 'ABIERTAS' ? 'ESTADO = "INI"' : ''
-          } ORDER BY NUM_AREA ${orderBy}`,
-          [...areasNumbers],
-          (res) => {
-            setAreas(res.rows._array)
-          },
-          (err) => {
-            console.log(err)
-          }
-        );
+
+        if(!res.rows._array.length) return setCombinaciones([])
+
+        // * Conseguir el total de productos de cada combinación (la suma de los productos de cada una)
+
+        res.rows._array.forEach(async (combinacion, index) => {
+          await ExecuteQuery(
+            db,
+            "SELECT SUM(quantity) FROM INVENTARIO_APP WHERE area = ? AND pallet = ? AND caja = ? AND posicion = ?",
+            [combinacion.area, combinacion.pallet, combinacion.caja, combinacion.posicion],
+            (res) => {
+              combinacionesFinded.push({
+                ...combinacion,
+                totalProd: res.rows._array[0]['SUM(quantity)']
+              })
+
+              setCombinaciones([
+                ...combinacionesFinded
+              ])
+            },
+            (err) => {
+              console.log(err)
+            }
+          )
+        })
       },
       (err) => {
         console.log(err)
@@ -200,17 +207,25 @@ const SendWIFI = () => {
     )
   }
 
-  const sendArea = async (area) => {
+  const sendComb = async (comb) => {
     try {
+      console.log(comb)
       setLoading(true)
       if (!ip) return setSnackbar({ open: true, message: 'Ingrese una IP', type: 'error' })
       if (!config.inv_activo) return setSnackbar({ open: true, message: 'No hay inventario activo', type: 'error' })
 
       const id = await SecureStore.getItemAsync("hardwareId");
       const codCapturador = await SecureStore.getItemAsync('codCapturador')
+      if(!codCapturador) {
+        setLoading(false)
+        return setSnackbar({ visible: true, text: 'No se ha ingresado el código del capturador', type: 'error' })
+      }
       const CodEmpresa = '1';
       const CodInv = config.inv_activo;
-      const Area = area.NUM_AREA
+      const Area = comb.area;
+      const Pallet = comb.pallet;
+      const Caja = comb.caja;
+      const Posicion = comb.posicion;
       const FechaEnvio = formatDate(new Date());
 
       const token = await axios.post(`http://${ip}/isam/api/auth.php`, {
@@ -232,11 +247,11 @@ const SendWIFI = () => {
           CodInv,
           CodCapturador: codCapturador || '',
           Area,
-          Pallet: "",
-          Caja: "",
-          Posicion: "",
+          Pallet,
+          Caja,
+          Posicion,
           FechaEnvio,
-          TotalLectura: area.totalProd,
+          TotalLectura: comb.totalProd,
         },
         Lecturas: [],
       }
@@ -245,8 +260,8 @@ const SendWIFI = () => {
 
       ExecuteQuery(
         db,
-        "SELECT * FROM INVENTARIO_APP WHERE area = ?",
-        [area.NUM_AREA],
+        "SELECT * FROM INVENTARIO_APP WHERE area = ? AND pallet = ? AND caja = ? AND posicion = ?",
+        [comb.area, comb.pallet, comb.caja, comb.posicion],
         async (res) => {
           res.rows._array.forEach(item => {
             data.Lecturas.push({
@@ -258,12 +273,12 @@ const SendWIFI = () => {
               Cantidad: item.quantity,
               ExistenciaProducto: item.existe,
               TipoLectura: item.type,
-              EstadoTag: area.UESTADO == 'INI' ? '0' : area.UESTADO,
-              CorrelativoApertura: area.ESTADOTAG,
-              // EstadoTag: item.EstadoTag,
-              // CorrelativoApertura: item.CorrelativoApertura,
+              EstadoTag: comb.status_corr == 'INI' ? '0' : comb.status_corr,
+              CorrelativoApertura: comb.status_num,
             })
           });
+
+          setLoading(false)
 
           const sendedArea = await axios.post(`http://${ip}/isam/api/recepcion_areas.php`, data)
           if (sendedArea.data.status !== 'error') {
@@ -272,10 +287,10 @@ const SendWIFI = () => {
 
             await ExecuteQuery(
               db,
-              "UPDATE AREAS SET ENVIADA = 1 WHERE NUM_AREA = ?",
-              [area.NUM_AREA],
+              "UPDATE COMBINACIONES_CD SET enviada = 1 WHERE area = ? AND pallet = ? AND caja = ? AND posicion = ?",
+              [comb.area, comb.pallet, comb.caja, comb.posicion],
               (res) => {
-                getAreasWithProducts()
+                getCombinaciones()
                 return setSnackbar({ visible: true, text: "Carga y Respaldo Realizado con Exito", type: 'success' })
               },
               (err) => {
@@ -296,35 +311,35 @@ const SendWIFI = () => {
     }
   }
 
-  const sendAllAreas = async () => {
+  const sendAll = async () => {
     try {
-      areas.forEach(async (area) => {
-        await sendArea(area)
+      combinaciones.forEach(async (area) => {
+        await sendComb(area)
       })
     } catch (error) {
       console.log(error)
     }
   }
 
-  const sendPendingAreas = async () => {
+  const sendPending = async () => {
     try {
       const db = SQLite.openDatabase("Maestro.db");
 
       ExecuteQuery(
         db,
-        "SELECT * FROM AREAS WHERE ENVIADA = 0 AND ESTADO = 'CERRADA'",
+        "SELECT * FROM COMBINACIONES_CD WHERE enviada = 0 AND status = 'CERRADA'",
         [],
         (res) => {
-          if(!res.rows._array.length) return setSnackbar({ visible: true, text: 'No hay áreas pendientes', type: 'error' })
+          if (!res.rows._array.length) return setSnackbar({ visible: true, text: 'No hay combinaciones pendientes', type: 'error' })
 
-          res.rows._array.forEach(async (area) => {
+          res.rows._array.forEach(async (comb) => {
             await ExecuteQuery(
               db,
-              "SELECT SUM(quantity) FROM INVENTARIO_APP WHERE area = ?",
-              [area.NUM_AREA],
+              "SELECT SUM(quantity) FROM INVENTARIO_APP WHERE area = ? AND pallet = ? AND caja = ? AND posicion = ?",
+              [comb.area, comb.pallet, comb.caja, comb.posicion],
               async (res) => {
-                await sendArea({
-                  ...area,
+                await sendComb({
+                  ...comb,
                   totalProd: res.rows._array[0]['SUM(quantity)']
                 })
               }
@@ -342,34 +357,11 @@ const SendWIFI = () => {
 
   const sendSelectedAreas = async () => {
     try {
-      selectedAreas.forEach(async (area) => {
-        db = SQLite.openDatabase("Maestro.db");
-        ExecuteQuery(
-          db,
-          `SELECT * FROM AREAS WHERE NUM_AREA IN (${selectedAreas.map((item, index) => `?`).join(', ')})`,
-          [...selectedAreas],
-          (res) => {
-            res.rows._array.forEach(async (area) => {
-              if(area.ESTADO !== 'CERRADA') return setSnackbar({ visible: true, text: `El área ${area.NUM_AREA} no está cerrada, se salteó.`, type: 'error' })
-
-              await ExecuteQuery(
-                db,
-                "SELECT SUM(quantity) FROM INVENTARIO_APP WHERE area = ?",
-                [area.NUM_AREA],
-                async (res) => {
-                  await sendArea({
-                    ...area,
-                    totalProd: res.rows._array[0]['SUM(quantity)']
-                  })
-                }
-              )
-            });
-          },
-          (err) => {
-            console.log(err)
-          }
-        )
+      selected.forEach(async (comb) => {
+        await sendComb(JSON.parse(comb))
       })
+
+      setSelected([])
     } catch (error) {
       console.log(error)
     }
@@ -386,16 +378,8 @@ const SendWIFI = () => {
   }, [])
 
   useEffect(() => {
-    getAreasWithProducts()
+    getCombinaciones()
   }, [filter, orderBy])
-
-  useEffect(() => {
-    const areasWithTotalProd = areas.filter(area => area.totalProd === undefined)
-
-    if (areasWithTotalProd.length) {
-      getTotalProductsOfAreas(areasWithTotalProd)
-    }
-  }, [areas])
 
   return (
     <KeyboardAvoidingView
@@ -405,7 +389,7 @@ const SendWIFI = () => {
       <ScrollView>
         <TopBar />
 
-        <SectionBar section={"Enviar conteo WIFI"} backTo={routes.captureMenu} />
+        <SectionBar section={"Enviar conteo WIFI - CD"} backTo={routes.cD} />
 
         <View style={styles.container}>
           <View style={[styles.flex_row]}>
@@ -473,23 +457,23 @@ const SendWIFI = () => {
             <View style={[styles.flex_row, { justifyContent: "space-between", width: '90%', marginVertical: 10 }]}>
               <TouchableOpacity style={{
                 width: '30%', textAlign: 'center', backgroundColor: '#2E97A7', paddingVertical: 5, borderRadius: 5,
-                backgroundColor: selectedAreas.length === 0 ? '#00000020' : '#2E97A7'
+                backgroundColor: selected.length === 0 ? '#00000020' : '#2E97A7'
               }}
                 onPress={() => sendSelectedAreas()}
 
               >
-                <Text style={{ color: selectedAreas.length === 0 ? 'black' : 'white', textAlign: 'center', fontSize: 13 }}>Enviar Seleccionadas</Text>
+                <Text style={{ color: selected.length === 0 ? 'black' : 'white', textAlign: 'center', fontSize: 13 }}>Enviar Seleccionadas</Text>
               </TouchableOpacity>
 
 
               <TouchableOpacity style={{ width: '30%', textAlign: 'center', backgroundColor: '#2E97A7', paddingVertical: 5, borderRadius: 5 }}
-                onPress={() => sendPendingAreas()}
+                onPress={() => sendPending()}
               >
                 <Text style={{ color: 'white', textAlign: 'center', fontSize: 13 }}>Enviar pendientes</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={{ width: '30%', textAlign: 'center', backgroundColor: '#2E97A7', paddingVertical: 5, borderRadius: 5 }}
-                onPress={() => sendAllAreas()}
+                onPress={() => sendAll()}
               >
                 <Text style={{ color: 'white', textAlign: 'center', fontSize: 13 }}>Enviar Todas</Text>
               </TouchableOpacity>
@@ -511,39 +495,56 @@ const SendWIFI = () => {
                     setOrderBy(orderBy === 'ASC' ? 'DESC' : 'ASC')
                   }}
                 >
-                  <Text style={{ color: 'white', textAlign: 'center' }}>Área ({orderBy})</Text>
+                  <Text style={{ color: 'white', textAlign: 'center' }}>Datos ({orderBy})</Text>
                 </TouchableOpacity>
                 <Text style={{ width: '32%', textAlign: 'center', color: 'white' }}>Total de productos</Text>
                 <Text style={{ width: '32%', textAlign: 'center', color: 'white' }}>Enviar</Text>
               </View>
 
-              {areas.map((area, index) => (
+              {combinaciones.map((combinacion, index) => (
                 <TouchableOpacity key={index} style={[styles.flex_row, {
                   width: "90%",
                   alignItems: "center",
                   justifyContent: "space-between",
                   marginBottom: 10,
                   paddingVertical: 10,
-                  backgroundColor: selectedAreas.includes(area.NUM_AREA) ? '#00000020' : 'white',
+                  backgroundColor: selected.includes(JSON.stringify(combinacion)) ? '#00000020' : 'white',
                 }]} onPress={
                   () => {
-                    if (selectedAreas.includes(area.NUM_AREA)) {
-                      setSelectedAreas(selectedAreas.filter(item => item !== area.NUM_AREA))
+                    if (selected.includes(JSON.stringify(combinacion))) {
+                      setSelected(selected.filter(item => item !== JSON.stringify(combinacion)))
                     } else {
-                      setSelectedAreas([...selectedAreas, area.NUM_AREA])
+                      setSelected([...selected, JSON.stringify(combinacion)])
                     }
                   }
                 }>
-                  <Text style={{ width: '32%', textAlign: 'center' }}>{area.NUM_AREA.slice(0, area.NUM_AREA.length - 1)}-{area.NUM_AREA[area.NUM_AREA.length - 1]}</Text>
-                  <Text style={{ width: '32%', textAlign: 'center' }}>{area.totalProd}</Text>
+                  <View style={{ width: '32%', textAlign: 'center' }}>
+                    <Text style={{ width: '100%', textAlign: 'center', fontSize: 11 }}>
+                      POS: {combinacion.posicion}
+                    </Text>
+                    {combinacion.pallet && <Text style={{ width: '100%', textAlign: 'center', fontSize: 9 }}>
+                      PALLET: {combinacion.pallet}
+                    </Text>}
+
+                    {combinacion.caja && <Text style={{ width: '100%', textAlign: 'center', fontSize: 8 }}>
+                      CAJA: {combinacion.caja}
+                    </Text>}
+
+                    {combinacion.area && <Text style={{ width: '100%', textAlign: 'center', fontSize: 8 }}>
+                      AREA: {combinacion.area}
+                    </Text>}
+                  </View>
+
+                  <Text style={{ width: '32%', textAlign: 'center' }}>{combinacion.totalProd}</Text>
+
                   <TouchableOpacity style={{
                     width: '32%', textAlign: 'center',
                     backgroundColor: '#2E97A7',
                     paddingVertical: 5, borderRadius: 5
                   }}
                     onPress={() => {
-                      if (area.ESTADO !== 'CERRADA') return setSnackbar({ visible: true, text: 'Esta área no está cerrada', type: 'error' })
-                      sendArea(area)
+                      if (combinacion.status !== 'CERRADA') return setSnackbar({ visible: true, text: 'Esta área no está cerrada', type: 'error' })
+                      sendComb(combinacion)
                     }}
                   >
                     <Text style={{ color: 'white', textAlign: 'center' }}>
@@ -560,4 +561,4 @@ const SendWIFI = () => {
   );
 };
 
-export default SendWIFI;
+export default CDWifiSend;

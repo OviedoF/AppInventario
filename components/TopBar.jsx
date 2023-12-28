@@ -5,7 +5,10 @@ import { dataContext } from "../context/dataContext";
 
 const TopBar = () => {
   const {hardwareId, inventario, user} = useContext(dataContext);
-  console.log("user", user);
+  const userTxt = user ? `OP: ${user.COD_USUARIO} - ${user.NOMBRES}` : "SIN USUARIO";
+  const userTxtSimplified = userTxt.length > 23 ? userTxt.substring(0, 23) + "..." : userTxt;
+  const invTxt = inventario ? `INV: ${inventario}` : "SIN INVENTARIO";
+  const invTxtSimplified = invTxt.length > 28 ? invTxt.substring(0, 28) + "..." : invTxt;
 
   return (
     <View style={styles.topSectionContainer}>
@@ -14,7 +17,7 @@ const TopBar = () => {
       }]}>
         {!user && `ID: ${hardwareId || "SIN ID TODAVÍA"} | INV: ${inventario || "SIN INVENTARIO"}`}
 
-        {user && `OP: ${user.COD_USUARIO} - ${user.NOMBRES} | ${inventario || "SIN INVENTARIO"}`}
+        {user && `${userTxtSimplified} | ${invTxtSimplified}`}
       </Text>
     </View>
   );
