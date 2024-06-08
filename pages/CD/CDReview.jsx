@@ -23,29 +23,46 @@ const CDReview = () => {
   const navigate = useNavigate();
   console.log("config", config);
 
-  const deleteEntryFromInventario = async (db_id) => {
-    const db = SQLite.openDatabase("Maestro.db");
-    await ExecuteQuery(
-      db,
-      "DELETE FROM INVENTARIO_APP WHERE id = ?",
-      [db_id],
-      (results) => {
-        setSnackbar({
-          visible: true,
-          text: "Entrada de producto eliminada correctamente",
-          type: "success",
-        });
-        getCDProducts();
-      },
-      (error) => {
-        console.log("Error", error);
-        setSnackbar({
-          visible: true,
-          text: "Error al eliminar entrada de producto",
-          type: "error",
-        });
-      }
-    );
+  const deleteEntryFromInventario = async (db_id, corr) => {
+    setDangerModal({
+      visible: true,
+      title: "Eliminar entrada de producto",
+      text: `¿Estás seguro de que deseas eliminar la entrada de producto ${parseInt(corr)}?`,
+      buttons: [
+        {
+          text: "Cancelar",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel",
+        },
+        {
+          text: "Aceptar",
+          onPress: async () => {
+            const db = SQLite.openDatabase("Maestro.db");
+            await ExecuteQuery(
+              db,
+              "DELETE FROM INVENTARIO_APP WHERE id = ?",
+              [db_id],
+              (results) => {
+                setSnackbar({
+                  visible: true,
+                  text: "Entrada de producto eliminada correctamente",
+                  type: "success",
+                });
+                getCDProducts();
+              },
+              (error) => {
+                console.log("Error", error);
+                setSnackbar({
+                  visible: true,
+                  text: "Error al eliminar entrada de producto",
+                  type: "error",
+                });
+              }
+            );
+          },
+        },
+      ],
+    });
   };
 
   const editEntryFromInventario = async (cant, db_id) => {
@@ -145,9 +162,11 @@ const CDReview = () => {
 
   const getCDProducts = async () => {
     const db = SQLite.openDatabase("Maestro.db");
-    let query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND posicion = "${cdInfo.posicion}" ORDER BY id DESC`;
-    if(config.index_capt == 3 || config.index_capt == 5) query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND area = "${cdInfo.area}" ORDER BY id DESC`;
-    if(config.index_capt == 4 || config.index_capt == 6) query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND caja = "${cdInfo.caja}" ORDER BY id DESC`;
+    const posicion = cdInfo.posicion || '';
+    const pallet = cdInfo.pallet || '';
+    const caja = cdInfo.caja || '';
+    const area = cdInfo.area || '';
+    let query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND posicion = "${posicion}" AND pallet = "${pallet}" AND caja = "${caja}" AND area = "${area}"`;
 
     await ExecuteQuery(
       db,
@@ -207,7 +226,7 @@ const CDReview = () => {
           <TouchableOpacity
             style={[styles.primaryBtn, { width: "30%", justifyContent: 'center' }]}
             onPress={() => {
-              deleteEntryFromInventario(selectedId);
+              deleteEntryFromInventario(selectedId, products.find((item) => item.id === selectedId).CorrPT);
             }}
           >
             <Text style={[styles.white, { textAlign: "center", alignItems: 'center' }]}>

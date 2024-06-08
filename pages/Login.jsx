@@ -165,6 +165,8 @@ const Login = () => {
 
               setCdInfo({})
 
+              navigate(userProx.admin ? routes.menuAdmin : routes.cD);
+              return; // ! CAMBIAR
               if(!config[4].LARGO_CAMPO || config[4].LARGO_CAMPO == 1) {
                 navigate(userProx.admin ? routes.menuAdmin : routes.captureMenu);
               } else {
@@ -208,11 +210,11 @@ const Login = () => {
           largo_tag: config[0].LARGO_CAMPO,
           largo_prod: config[1].LARGO_CAMPO,
           buttons_config: isNaN(config[2].LARGO_CAMPO)
-            ? 3
+            ? 4
             : parseInt(config[2].LARGO_CAMPO),
           catalog_products: config[3].LARGO_CAMPO === "N" ? false : true,
-          index_capt: config[4].LARGO_CAMPO ? config[4].LARGO_CAMPO : 1,
-          // index_capt: 4, // ! CAMBIAR 
+          //index_capt: config[4].LARGO_CAMPO ? config[4].LARGO_CAMPO : 1,
+          index_capt: 3, // ! CAMBIAR 
           pesables: config[5]
             ? config[5].LARGO_CAMPO === "N"
               ? false

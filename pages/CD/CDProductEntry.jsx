@@ -642,7 +642,19 @@ const CDProductEntry = ({ type }) => {
       <ScrollView keyboardShouldPersistTaps='handled'>
         <TopBar />
         <SectionBar
-          section={type === "single" ? `Ingreso 1x1 - Pos: ${cdInfo.posicion} - CD` : `Ingreso por cantidad - Pos: ${cdInfo.posicion} - CD`}
+          section={type === "single" ? `Ingreso 1x1 - ${
+            config.index_capt === 2 ? `Pos: ${cdInfo.posicion}` : 
+            config.index_capt === 3 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
+            config.index_capt === 4 ? `Caja: ${cdInfo.caja}` :
+            config.index_capt === 5 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
+            config.index_capt === 6 ? `Caja: ${cdInfo.caja}` : `Pos: ${cdInfo.posicion}`
+          }` : `Ingreso por cantidad - ${
+            config.index_capt === 2 ? `Pos: ${cdInfo.posicion}` :
+            config.index_capt === 3 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
+            config.index_capt === 4 ? `Caja: ${cdInfo.caja}` :
+            config.index_capt === 5 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
+            config.index_capt === 6 ? `Caja: ${cdInfo.caja}` : `Pos: ${cdInfo.posicion}`
+          }`}
           backTo={routes.cD}
         />
 

@@ -215,6 +215,7 @@ const CDWifiSend = () => {
       if (!config.inv_activo) return setSnackbar({ open: true, message: 'No hay inventario activo', type: 'error' })
 
       const id = await SecureStore.getItemAsync("hardwareId");
+      console.log(id)
       const codCapturador = await SecureStore.getItemAsync('codCapturador')
       if(!codCapturador) {
         setLoading(false)

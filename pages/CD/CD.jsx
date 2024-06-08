@@ -61,6 +61,11 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
     area: useRef(null),
   };
 
+  const activeEdit = () => {
+    setEdit(true);
+    setModal(true);
+  }
+
 
   const sendComb = async (comb) => {
     try {
@@ -278,6 +283,7 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
                       "UPDATE COMBINACIONES_CD SET enviada = 1 WHERE area = ? AND pallet = ? AND caja = ? AND posicion = ?",
                       [comb.area, comb.pallet, comb.caja, comb.posicion],
                       (res) => {
+                        activeEdit();
                         return setSnackbar({ visible: true, text: "Carga y Respaldo Realizado con Exito", type: 'success' })
                       },
                       (err) => {
@@ -308,11 +314,6 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
     }
   }
 
-  const activeEdit = () => {
-    setEdit(true);
-    setModal(true);
-  }
-
   const resetModal = () => {
     setModal(false);
     setEdit(false);
@@ -329,7 +330,10 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
 
     switch (config.index_capt) {
       case 2:
-        if (!cdInfo.posicion) return setError('Ingrese todos los datos.');
+        if (!cdInfo.posicion) {
+          setError('Ingrese todos los datos.');
+          return;
+        }
         break;
       case 3:
         if (!cdInfo.posicion || !cdInfo.area) return setError('Ingrese todos los datos.');
@@ -873,7 +877,6 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
                                   text: "",
                                   buttons: [],
                                 });
-                                activeEdit();
                                 // sendArea(areaData, navigate(routes.cD));
                               },
                             },
@@ -985,47 +988,49 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
           break;
         case 3:
           setCdInfo({
-            ...cdInfo,
+            posicion: "",
             area: "",
           });
           setDisabled({
             ...disabled,
             posicion: true,
           });
-          refs.area.current.focus();
+          refs.posicion.current.focus();
           break;
         case 4:
           setCdInfo({
-            ...cdInfo,
+            posicion: "",
+            pallet: "",
             caja: "",
           });
           setDisabled({
             pallet: true,
             posicion: true,
           });
-          refs.caja.current.focus();
+          refs.posicion.current.focus();
           break;
         case 5:
           setCdInfo({
-            ...cdInfo,
+            posicion: "",
+            pallet: "",
             area: "",
           })
           setDisabled({
             pallet: true,
             posicion: true,
           });
-          refs.area.current.focus();
+          refs.posicion.current.focus();
           break;
         case 6:
           setCdInfo({
-            ...cdInfo,
+            posicion: "",
             caja: "",
           });
           setDisabled({
             ...disabled,
             posicion: true,
           });
-          refs.caja.current.focus();
+          refs.posicion.current.focus();
           break;
         default:
           break;
@@ -1076,7 +1081,7 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
               <Text style={{
                 color: "#fff",
                 textAlign: 'center'
-              }}>CAMBIAR DATOS </Text>
+              }}>CAMBIAR DATOS</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1116,7 +1121,9 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
             {config.index_capt == 3 || config.index_capt == 5 ? <Text
               style={[styles.subtitle, { fontSize: 16, fontWeight: "normal", textAlign: 'center' }]}
             >
-              Area: {cdInfo.area ? cdInfo.area : "..."}
+              Area: {cdInfo.area ? 
+              `${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}`
+              : "..."}
             </Text> : null}
             
             {config.index_capt == 4 || config.index_capt == 5 ? <Text
@@ -1253,6 +1260,7 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
 
             {error && <Text style={{ color: 'red' }}>{error}</Text>}
 
+            <Text style={{ fontSize: 14, fontWeight: 'bold', textAlign: 'left', width: '100%', marginLeft: 45 }}>Posición</Text>
             {edit ? config.index_capt == 2 ? <TextInput
               style={styles.input}
               onChangeText={(text) => {
@@ -1340,6 +1348,7 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
               autoFocus
             />}
 
+            {(config.index_capt == 4 || config.index_capt == 5) && <Text style={{ fontSize: 14, fontWeight: 'bold', textAlign: 'left', width: '100%', marginLeft: 45 }}>Pallet</Text>} 
             {(config.index_capt == 4 || config.index_capt == 5) && <>
               {edit ? <View style={{ height: 50, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                 <TouchableOpacity className="btn" style={{
@@ -1392,6 +1401,7 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
               />}
             </>}
 
+            {(config.index_capt == 3 || config.index_capt == 5) && <Text style={{ fontSize: 14, fontWeight: 'bold', textAlign: 'left', width: '100%', marginLeft: 45 }}>Área</Text>}
             {config.index_capt == 3 || config.index_capt == 5 ? <>
               <TextInput
                 style={styles.input}
@@ -1402,13 +1412,14 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
                   });
                 }}
                 value={cdInfo.area}
-                placeholder="Area"
+                placeholder="Área"
                 maxLength={parseInt(config.largo_tag) + 4}
                 ref={refs.area}
                 onSubmitEditing={() => confirmArea()}
               />
             </> : null}
 
+            {(config.index_capt == 4 || config.index_capt == 6) && <Text style={{ fontSize: 14, fontWeight: 'bold', textAlign: 'left', width: '100%', marginLeft: 45 }}>Caja</Text>}
             {config.index_capt == 6 || config.index_capt == 4 ? (
               <TextInput
                 style={styles.input}

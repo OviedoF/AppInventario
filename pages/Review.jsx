@@ -24,29 +24,46 @@ const CDReview = () => {
   const navigate = useNavigate();
   console.log("config", config);
 
-  const deleteEntryFromInventario = async (db_id) => {
-    const db = SQLite.openDatabase("Maestro.db");
-    await ExecuteQuery(
-      db,
-      "DELETE FROM INVENTARIO_APP WHERE id = ?",
-      [db_id],
-      (results) => {
-        setSnackbar({
-          visible: true,
-          text: "Entrada de producto eliminada correctamente",
-          type: "success",
-        });
-        getCDProducts();
-      },
-      (error) => {
-        console.log("Error", error);
-        setSnackbar({
-          visible: true,
-          text: "Error al eliminar entrada de producto",
-          type: "error",
-        });
-      }
-    );
+  const deleteEntryFromInventario = async (db_id, corr) => {
+    setDangerModal({
+      visible: true,
+      title: "Eliminar entrada de producto",
+      text: `¿Estás seguro de que deseas eliminar la entrada de producto ${parseInt(corr)}?`,
+      buttons: [
+        {
+          text: "Cancelar",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel",
+        },
+        {
+          text: "Aceptar",
+          onPress: async () => {
+            const db = SQLite.openDatabase("Maestro.db");
+            await ExecuteQuery(
+              db,
+              "DELETE FROM INVENTARIO_APP WHERE id = ?",
+              [db_id],
+              (results) => {
+                setSnackbar({
+                  visible: true,
+                  text: "Entrada de producto eliminada correctamente",
+                  type: "success",
+                });
+                getCDProducts();
+              },
+              (error) => {
+                console.log("Error", error);
+                setSnackbar({
+                  visible: true,
+                  text: "Error al eliminar entrada de producto",
+                  type: "error",
+                });
+              }
+            );
+          },
+        },
+      ],
+    });
   };
 
   const editEntryFromInventario = async (cant, db_id) => {
@@ -191,7 +208,7 @@ const CDReview = () => {
           <TouchableOpacity
             style={[styles.primaryBtn, { width: "30%", justifyContent: 'center' }]}
             onPress={() => {
-              deleteEntryFromInventario(selectedId);
+              deleteEntryFromInventario(selectedId, parseInt(products.find(item => item.id === selectedId).CorrPT));
             }}
           >
             <Text style={[styles.white, { textAlign: "center", alignItems: 'center' }]}>
