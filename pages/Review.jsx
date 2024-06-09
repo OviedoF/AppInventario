@@ -22,7 +22,6 @@ const CDReview = () => {
   const { type } = useParams();
   const { setSnackbar, config, setDangerModal } = useContext(dataContext);
   const navigate = useNavigate();
-  console.log("config", config);
 
   const deleteEntryFromInventario = async (db_id, corr) => {
     setDangerModal({
@@ -180,8 +179,8 @@ const CDReview = () => {
           section={`Revisión`}
           backTo={
             type === "single"
-              ? routes.singleProductEntry
-              : routes.multipleProductEntry
+              ? config.congelados ? routes.singleFreezedEntry : routes.singleProductEntry
+              : config.congelados ? routes.multipleFreezedEntry : routes.multipleProductEntry
           }
         />
         <View

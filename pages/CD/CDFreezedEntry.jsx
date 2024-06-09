@@ -61,7 +61,7 @@ function GtoKG(gramos) {
   return kilogramos;
 }
 
-const CDProductEntry = ({ type }) => {
+const CDFreezedEntry = ({ type }) => {
   const { setSnackbar, config, user, setDangerModal, serie, cdInfo } = useContext(dataContext);
   const [infoData, setInfoData] = useState({
     ESTADO: '',
@@ -69,6 +69,7 @@ const CDProductEntry = ({ type }) => {
   })
   const [calculatorModal, setCalculatorModal] = useState(false);
   const [code, setCode] = useState("");
+  const [codePallet, setCodePallet] = useState("")
   const [quantity, setQuantity] = useState(
     type === "single" ? 1 : ''
   );
@@ -87,6 +88,7 @@ const CDProductEntry = ({ type }) => {
   const refs = {
     code: useRef(null),
     quantity: useRef(null),
+    codePallet: useRef(null),
   };
 
   const getScansData = async () => {
@@ -104,7 +106,6 @@ const CDProductEntry = ({ type }) => {
       query,
       [],
       (results) => {
-        console.log("Results", results.rows._array);
         // * Leemos los scans de la base de datos y contamos los productos no repetidos
         results.rows._array.forEach((product) => {
           if (!productsDb.includes(product.name)) productsDb.push(product.name);
@@ -113,9 +114,9 @@ const CDProductEntry = ({ type }) => {
         let totalProducts = 0;
 
         results.rows._array.forEach((product) => {
-          if(config.index_capt == 2 && product.posicion == cdInfo.posicion) totalProducts += parseFloat(product.quantity);
-          if((config.index_capt == 3 || config.index_capt == 5) && product.area == cdInfo.area) totalProducts += parseFloat(product.quantity);
-          if((config.index_capt == 4 || config.index_capt == 6) && product.caja == cdInfo.caja) totalProducts += parseFloat(product.quantity);
+          if (config.index_capt == 2 && product.posicion == cdInfo.posicion) totalProducts += parseFloat(product.quantity);
+          if ((config.index_capt == 3 || config.index_capt == 5) && product.area == cdInfo.area) totalProducts += parseFloat(product.quantity);
+          if ((config.index_capt == 4 || config.index_capt == 6) && product.caja == cdInfo.caja) totalProducts += parseFloat(product.quantity);
         });
 
         setScansData({
@@ -174,11 +175,8 @@ const CDProductEntry = ({ type }) => {
           (results) => {
             getScansData();
             setCode("");
-            setLastProduct({ ...product, quantity, type: additionType });
             if (type === 'multi') setQuantity('');
             if (type === 'single') setQuantity(1);
-            refs.code.current.clear();
-            refs.code.current.focus();
           },
           (error) => {
             console.log("Error", error);
@@ -202,190 +200,6 @@ const CDProductEntry = ({ type }) => {
     );
   };
 
-  const validatePesable = (code, codeImplicit) => {
-    const sixDigits = codeImplicit.substring(0, 6);
-    const lastSixDigits = code.substring(config.largo_prod - 6, config.largo_prod - 1);
-
-    const controlDigit = GTIN8Digit(`0${sixDigits}`);
-
-    // * Rellenar con 0 hasta la longitud original del código
-
-    let codeToVerify = sixDigits;
-
-    const codeLength = codeToVerify.length;
-    const codeToAdd = codeImplicit.length - codeLength;
-    for (let i = 0; i < codeToAdd; i++) {
-      codeToVerify = `${codeToVerify}0`;
-    }
-
-    // * Reemplazar el último numero por el dígito de control
-
-    codeToVerify = codeToVerify.slice(0, -1) + controlDigit;
-    const quantity = GtoKG(lastSixDigits);
-
-    // * Si el código no cumple con la configuración, rellenamos el código con 0s a la izquierda
-
-    if (codeToVerify.length < config.largo_prod) {
-      const codeLength = codeToVerify.length;
-      const codeToAdd = config.largo_prod - codeLength;
-      for (let i = 0; i < codeToAdd; i++) {
-        codeToVerify = `0${codeToVerify}`;
-      }
-    }
-
-    console.log("Code to verify", codeToVerify);
-    console.log("Cantidad", quantity);
-
-    const masterDb = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM MAESTRA WHERE COD_PROD = '${codeToVerify}'`;
-
-    ExecuteQuery(
-      masterDb,
-      query,
-      [],
-      (results) => {
-
-        const product = results.rows._array[0];
-
-        if (results.rows._array.length === 0) {
-          return setDangerModal({
-            visible: true,
-            title: "Producto NO Encontrado",
-            bg: "#dc3545",
-            color: "#fff",
-            text: "¿Desea agregarlo igualmente?",
-            buttons: [
-              {
-                text: "NO, NO AGREGAR",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  refs.code.current.focus();
-                  setLastProduct({
-                    ...lastProduct,
-                    DESCRIPCION: "",
-                  });
-                  setCode("");
-                  return;
-                },
-                style: "cancel",
-              },
-              {
-                text: "Sí, agregar",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-
-                  addProductToDb({
-                    COD_PROD: codeToVerify,
-                    exists: 'N',
-                    type: "S",
-                    DESCRIPCION: `PESABLE ${codeToVerify} x ${quantity}kg`,
-                  }, quantity, "PESABLE");
-
-                  return;
-                },
-              },
-            ],
-          });
-        } // * Si el producto no se encuentra en la base de datos, preguntamos si se quiere agregar igualmente
-
-        if (config.catalog_products && product.CATALOGADO == 1) {
-          setDangerModal({
-            visible: true,
-            title: "Producto Catalogado",
-            text: "Este producto es catalogado. Si quiere añadirlo desactive la opción de no catalogados.",
-            buttons: [
-              {
-                text: "Entendido",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  refs.code.current.focus();
-                },
-                style: "cancel",
-              }
-            ],
-          });
-        } // * Si el software está para NO CATALOGADOS, avisamos sobre los que están CATALOGADOS ( CATALOGADO = 1 )
-
-        if (!config.catalog_products && product.CATALOGADO == 0) {
-          setDangerModal({
-            visible: true,
-            title: "Producto NO Catalogado",
-            text: "Este producto NO está catalogado, ¿Desea continuar?",
-            buttons: [
-              {
-                text: "Cancelar",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  setLastProduct({
-                    ...lastProduct,
-                    DESCRIPCION: "",
-                  });
-                  refs.code.current.focus();
-                },
-                style: "cancel",
-              },
-              {
-                text: "Continuar",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  addProductToDb({
-                    ...product,
-                    DESCRIPCION: `${product.DESCRIPCION} x ${quantity}kg`,
-                    type: "S"
-                  }, quantity, "PESABLE");
-                },
-              },
-            ],
-          });
-        } // * Si el software está para CATALOGADOS, avisamos sobre los que están NO CATALOGADOS ( CATALOGADO = 0 )
-
-        if (
-          (config.catalog_products && product.CATALOGADO == 0) ||
-          (!config.catalog_products && product.CATALOGADO == 1)
-        ) {
-          addProductToDb({
-            ...product,
-            DESCRIPCION: `${product.DESCRIPCION} x ${quantity}kg`,
-            type: "S"
-          }, quantity, "PESABLE");
-        }
-      },
-      (error) => {
-        console.log("Error", error);
-        setSnackbar({
-          visible: true,
-          text: "Error al buscar el producto en la base de datos",
-          type: "error",
-        });
-      }
-    );
-  };
-
   const onCodeSubmit = async (sendedBy) => {
     if (!code)
       return setSnackbar({
@@ -394,53 +208,14 @@ const CDProductEntry = ({ type }) => {
         type: "error",
       });
 
-    if(!quantity && sendedBy === "qtyInput") return setSnackbar({
+    if (!quantity && sendedBy === "qtyInput") return setSnackbar({
       visible: true,
       text: "Ingrese una cantidad",
       type: "error",
     });
 
-    let codeImplicit = code;
-    let codeToSend = code;
-    if (codeToSend.length < config.largo_prod) {
-      const codeLength = codeToSend.length;
-      const codeToAdd = config.largo_prod - codeLength;
-      for (let i = 0; i < codeToAdd; i++) {
-        codeToSend = `0${codeToSend}`;
-      }
-      setCode(codeToSend);
-    } // * Si el código no cumple con la configuración, rellenamos el código con 0s a la izquierda
-
-    // * ¿El código empieza con 25?
-
-    const firstTwoDigits = codeImplicit.substring(0, 2);
-
-    if (config.pesables && firstTwoDigits.toString() == "25") return validatePesable(codeToSend, codeImplicit); // * Si el software está para PESABLES, validamos el código
-
-    // if (!config.pesables && firstTwoDigits.toString() == "25") return setDangerModal({
-    //   visible: true,
-    //   title: "Producto PESABLE",
-    //   text: "Este producto es pesable. Si quiere añadirlo active la opción de pesables.",
-    //   buttons: [
-    //     {
-    //       text: "Entendido",
-    //       onPress: () => {
-    //         setDangerModal({
-    //           visible: false,
-    //           title: "",
-    //           text: "",
-    //           buttons: [],
-    //         });
-    //         refs.code.current.focus();
-    //         refs.code.current.clear();
-    //       },
-    //       style: "cancel",
-    //     }
-    //   ],
-    // });
-
     const masterDb = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM MAESTRA WHERE COD_PROD = '${codeToSend}'`;
+    const query = `SELECT * FROM CONGELADOS WHERE CODIGO = '${code}'`;
 
     ExecuteQuery(
       masterDb,
@@ -449,14 +224,23 @@ const CDProductEntry = ({ type }) => {
       (results) => {
         const product = results.rows._array[0];
 
-        console.log("Results", results.rows._array.length);
+        if (type === 'multi' && sendedBy !== 'qtyInput') {
+          return refs.quantity.current.focus();
+        }
+
+        if (!quantity && sendedBy === "qtyInput") return setSnackbar({
+          visible: true,
+          text: "Ingrese una cantidad",
+          type: "error",
+        });
+
         if (results.rows._array.length === 0) {
           return setDangerModal({
             visible: true,
-            title: `Producto ${codeToSend} NO Encontrado`,
+            title: `Caja ${code} NO Encontrada`,
             bg: "#dc3545",
             color: "#fff",
-            text: "¿Desea agregarlo igualmente?",
+            text: "¿Desea agregarla igualmente?",
             buttons: [
               {
                 text: "NO, NO AGREGAR",
@@ -485,20 +269,20 @@ const CDProductEntry = ({ type }) => {
                     buttons: [],
                   });
 
-                  if (type === 'multi' && sendedBy !== 'qtyInput') {
-                    setLastProduct({
-                      DESCRIPCION: `NO ENCONTRADO ${codeToSend}`,
-                    });
-
-                    return refs.quantity.current.focus();
-                  }
-
                   addProductToDb({
-                    COD_PROD: codeToSend,
+                    COD_PROD: code,
                     exists: 'N',
                     type: type === 'single' ? "A" : "S",
-                    DESCRIPCION: codeToSend,
+                    DESCRIPCION: `Caja ${code}`,
                   }, quantity, "1X1");
+
+                  setCode("");
+                  refs.code.current.focus();
+                  setSnackbar({
+                    visible: true,
+                    text: "Caja agregada correctamente",
+                    type: "success",
+                  });
                   return;
                 },
               },
@@ -506,85 +290,24 @@ const CDProductEntry = ({ type }) => {
           });
         } // * Si el producto no se encuentra en la base de datos, preguntamos si se quiere agregar igualmente
 
-        if (type === 'multi' && sendedBy !== 'qtyInput') {
-          setLastProduct({
-            ...product,
-            DESCRIPCION: product.DESCRIPCION,
-          });
+        addProductToDb({
+          COD_PROD: code,
+          exists: 'S',
+          type: type === 'single' ? "A" : "S",
+          DESCRIPCION: product['DESCRIPCIÓN'],
+        }, quantity, "1X1");
 
-          return refs.quantity.current.focus();
-        }
+        setLastProduct({
+          DESCRIPCION: product['DESCRIPCIÓN'],
+        })
 
-        if (config.catalog_products && product.CATALOGADO == 1) {
-          setDangerModal({
-            visible: true,
-            title: "Producto Catalogado",
-            text: "Este producto es catalogado. Si quiere añadirlo desactive la opción de no catalogados.",
-            buttons: [
-              {
-                text: "Entendido",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  refs.code.current.focus();
-                },
-                style: "cancel",
-              }
-            ],
-          });
-        } // * Si el software está para NO CATALOGADOS, avisamos sobre los que están CATALOGADOS ( CATALOGADO = 1 )
-
-        if (!config.catalog_products && product.CATALOGADO == 0) {
-          setDangerModal({
-            visible: true,
-            title: "Producto NO Catalogado",
-            text: "Este producto NO está catalogado, ¿Desea continuar?",
-            buttons: [
-              {
-                text: "Cancelar",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  refs.code.current.focus();
-                },
-                style: "cancel",
-              },
-              {
-                text: "Continuar",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  addProductToDb({
-                    ...product,
-                    type: type === 'single' ? "A" : "S"
-                  }, quantity, "1X1");
-                },
-              },
-            ],
-          });
-        } // * Si el software está para CATALOGADOS, avisamos sobre los que están NO CATALOGADOS ( CATALOGADO = 0 )
-
-        if (
-          (config.catalog_products && product.CATALOGADO == 0) ||
-          (!config.catalog_products && product.CATALOGADO == 1)
-        ) {
-          addProductToDb({
-            ...product,
-            type: type === 'single' ? "A" : "S"
-          }, quantity, "1X1");
-        }
+        setCode("");
+        refs.code.current.focus();
+        setSnackbar({
+          visible: true,
+          text: "Caja agregada correctamente",
+          type: "success",
+        });
       },
       (error) => {
         console.log("Error", error);
@@ -596,6 +319,89 @@ const CDProductEntry = ({ type }) => {
       }
     );
   };
+
+  const getPalletData = async (sendedBy) => {
+    const db = SQLite.openDatabase("Maestro.db");
+    const query = `SELECT * FROM CONGELADOS WHERE PALLET = '${codePallet}'`;
+
+    ExecuteQuery(
+      db,
+      query,
+      [],
+      (results) => {
+        if (results.rows._array.length === 0) {
+          refs.code.current.focus();
+          return setSnackbar({
+            visible: true,
+            text: "Pallet no encontrado",
+            type: "error",
+          });
+        }
+
+        if (type === 'multi' && sendedBy !== 'qtyInput') {
+          return refs.quantity.current.focus()
+        }
+
+        if (!quantity && sendedBy === "qtyInput") return setSnackbar({
+          visible: true,
+          text: "Ingrese una cantidad",
+          type: "error",
+        });
+
+        return setDangerModal({
+          visible: true,
+          title: `El pallet ${codePallet} tiene ${results.rows._array.length} caja(s)`,
+          color: "#fff",
+          bg: "#28a745",
+          text: "¿Desea agregar estas cajas al inventario?",
+          buttons: [
+            {
+              text: "NO, NO AGREGAR",
+              onPress: () => {
+                refs.code.current.focus();
+                return;
+              },
+              style: "cancel",
+            },
+            {
+              text: "Sí, agregar",
+              onPress: () => {
+                results.rows._array.forEach((product, index) => {
+                  addProductToDb({
+                    COD_PROD: product.CODIGO,
+                    exists: 'S',
+                    type: type === 'single' ? "A" : "S",
+                    DESCRIPCION: product['DESCRIPCIÓN'],
+                  }, quantity, "1X1");
+
+                  if (index === results.rows._array.length - 1) {
+                    setLastProduct({
+                      DESCRIPCION: `Pallet ${codePallet}`,
+                    });
+                  }
+                });
+
+                setDangerModal({
+                  visible: false,
+                  title: "",
+                  text: "",
+                  buttons: [],
+                });
+                setSnackbar({
+                  visible: true,
+                  text: "Cajas agregadas correctamente",
+                  type: "success",
+                });
+                setCodePallet("");
+                refs.codePallet.current.focus();
+                return;
+              },
+            },
+          ],
+        });
+      }
+    );
+  }
 
   useEffect(() => {
     getScansData();
@@ -612,7 +418,6 @@ const CDProductEntry = ({ type }) => {
       query,
       [],
       (res) => {
-        console.log("Combinaciones", res.rows._array);
         if (!res.rows._array[0]) return setSnackbar({
           visible: true,
           text: "No se encontró la combinación",
@@ -638,18 +443,16 @@ const CDProductEntry = ({ type }) => {
       <ScrollView keyboardShouldPersistTaps='handled'>
         <TopBar />
         <SectionBar
-          section={type === "single" ? `Ingreso 1x1 - ${
-            config.index_capt === 2 ? `Pos: ${cdInfo.posicion}` : 
+          section={type === "single" ? `Ingreso 1x1 - ${config.index_capt === 2 ? `Pos: ${cdInfo.posicion}` :
+              config.index_capt === 3 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
+                config.index_capt === 4 ? `Caja: ${cdInfo.caja}` :
+                  config.index_capt === 5 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
+                    config.index_capt === 6 ? `Caja: ${cdInfo.caja}` : `Pos: ${cdInfo.posicion}`
+            }` : `Ingreso por cantidad - ${config.index_capt === 2 ? `Pos: ${cdInfo.posicion}` :
             config.index_capt === 3 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
-            config.index_capt === 4 ? `Caja: ${cdInfo.caja}` :
-            config.index_capt === 5 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
-            config.index_capt === 6 ? `Caja: ${cdInfo.caja}` : `Pos: ${cdInfo.posicion}`
-          }` : `Ingreso por cantidad - ${
-            config.index_capt === 2 ? `Pos: ${cdInfo.posicion}` :
-            config.index_capt === 3 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
-            config.index_capt === 4 ? `Caja: ${cdInfo.caja}` :
-            config.index_capt === 5 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
-            config.index_capt === 6 ? `Caja: ${cdInfo.caja}` : `Pos: ${cdInfo.posicion}`
+              config.index_capt === 4 ? `Caja: ${cdInfo.caja}` :
+                config.index_capt === 5 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
+                  config.index_capt === 6 ? `Caja: ${cdInfo.caja}` : `Pos: ${cdInfo.posicion}`
           }`}
           backTo={routes.cD}
         />
@@ -727,6 +530,56 @@ const CDProductEntry = ({ type }) => {
                   justifyContent: "center",
                 }}
                 onPress={() => {
+                  setCodePallet("");
+                  setLastProduct({
+                    DESCRIPCION: "",
+                  });
+                  return refs.codePallet.current.focus();
+                }}
+              >
+                <Text
+                  style={{
+                    ...styles.white,
+                    textAlign: "center",
+                    fontWeight: "bold",
+                    fontSize: 15,
+                  }}
+                >
+                  B
+                </Text>
+              </TouchableOpacity>
+
+              <TextInput
+                style={{
+                  ...styles.input,
+                  width: "70%",
+                  height: 30,
+                  borderBottomColor: "transparent",
+                  fontSize: 20,
+                }}
+                onChangeText={setCodePallet}
+                value={codePallet}
+                ref={refs.codePallet}
+                placeholder="Folio Pallet"
+                onSubmitEditing={() => getPalletData('')}
+                autoFocus
+              />
+            </View>
+          </View>
+
+          <View style={{ width: "80%", justifyContent: "center" }}>
+            <View style={styles.flex_row}>
+              <TouchableOpacity
+                style={{
+                  ...styles.logBtn,
+                  width: 40,
+                  height: 35,
+                  borderRadius: 5,
+                  alignItems: "center",
+                  padding: 0,
+                  justifyContent: "center",
+                }}
+                onPress={() => {
                   setCode("");
                   setLastProduct({
                     DESCRIPCION: "",
@@ -757,10 +610,8 @@ const CDProductEntry = ({ type }) => {
                 onChangeText={setCode}
                 value={code}
                 ref={refs.code}
-                placeholder="Código"
+                placeholder="Folio Caja"
                 onSubmitEditing={() => onCodeSubmit()}
-                autoFocus
-                maxLength={parseInt(config.largo_prod)}
               />
             </View>
 
@@ -857,7 +708,9 @@ const CDProductEntry = ({ type }) => {
                       textAlign: "center",
                       color: "#000",
                     }}
-                    onEndEditing={() => onCodeSubmit('qtyInput')}
+                    onEndEditing={() => {
+                      codePallet ? getPalletData('qtyInput') : onCodeSubmit('qtyInput');
+                    }}
                   />
 
                 ) : (
@@ -1002,4 +855,4 @@ const CDProductEntry = ({ type }) => {
   );
 };
 
-export default CDProductEntry;
+export default CDFreezedEntry;

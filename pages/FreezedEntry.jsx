@@ -8,16 +8,18 @@ import {
   Image,
 } from "react-native";
 import React, { useContext, useEffect, useRef, useState } from "react";
-import styles from "../../styles/styles";
-import SectionBar from "../../components/SectionBar";
-import routes from "../../router/routes";
-import Calculator from "../../components/Calculator";
-import TopBar from "../../components/TopBar";
-import { dataContext } from "../../context/dataContext";
+import styles from "../styles/styles";
+import SectionBar from "../components/SectionBar";
+import routes from "../router/routes";
+import { StyleSheet } from "react-native";
+import ConfirmCloseAreaModal from "../components/ConfirmCloseAreaModal";
+import Calculator from "../components/Calculator";
+import TopBar from "../components/TopBar";
+import { dataContext } from "../context/dataContext";
 import { useNavigate } from "react-router-native";
 import * as SQLite from "expo-sqlite";
-import ExecuteQuery from "../../helpers/ExecuteQuery";
-import reverse_icon from "../../assets/reverse.png";
+import ExecuteQuery from "../helpers/ExecuteQuery";
+import reverse_icon from "../assets/reverse.png";
 import 'react-native-get-random-values';
 
 function GTIN8Digit(codigoGTIN8) {
@@ -61,14 +63,15 @@ function GtoKG(gramos) {
   return kilogramos;
 }
 
-const CDProductEntry = ({ type }) => {
-  const { setSnackbar, config, user, setDangerModal, serie, cdInfo } = useContext(dataContext);
-  const [infoData, setInfoData] = useState({
-    ESTADO: '',
-    ESTADONUM: ''
+const FreezedEntry = ({ type }) => {
+  const { area, setArea, setSnackbar, config, user, setDangerModal, serie, sendArea, setLoading } = useContext(dataContext);
+  const [areaData, setAreaData] = useState({
+    UESTADO: '',
+    ESTADOTAG: ''
   })
   const [calculatorModal, setCalculatorModal] = useState(false);
   const [code, setCode] = useState("");
+  const [codePallet, setCodePallet] = useState("")
   const [quantity, setQuantity] = useState(
     type === "single" ? 1 : ''
   );
@@ -76,6 +79,8 @@ const CDProductEntry = ({ type }) => {
     DESCRIPCION: "",
     TYPE: "",
   });
+  const [confirmingClose, setConfirmingClose] = useState(false);
+  const [modal, setModal] = useState(false);
   const [scansData, setScansData] = useState({
     products: "...",
     scans: "...",
@@ -87,24 +92,151 @@ const CDProductEntry = ({ type }) => {
   const refs = {
     code: useRef(null),
     quantity: useRef(null),
+    codePallet: useRef(null),
   };
 
-  const getScansData = async () => {
-    const posicion = cdInfo.posicion || '';
-    const pallet = cdInfo.pallet || '';
-    const caja = cdInfo.caja || '';
-    const area = cdInfo.area || '';
+  const confirmArea = () => {
+    if (area === "") {
+      setSnackbar({
+        visible: true,
+        text: "Ingrese un área",
+        type: "error",
+      });
+      return;
+    }
 
+    setModal(false);
+  };
+
+  const confirmCloseArea = async () => {
+    setDangerModal({
+      visible: true,
+      title: "Cerrar área",
+      text: "¿Está seguro que desea cerrar el área?",
+      buttons: [
+        {
+          text: "Cancelar",
+          onPress: () => {
+            setDangerModal({
+              visible: false,
+              title: "",
+              text: "",
+              buttons: [],
+            });
+          },
+          style: "cancel",
+        },
+        {
+          text: "Cerrar",
+          onPress: async () => {
+            setDangerModal({
+              visible: false,
+              title: "",
+              text: "",
+              buttons: [],
+            });
+            const db = SQLite.openDatabase("Maestro.db");
+
+            ExecuteQuery(
+              db,
+              "SELECT * FROM INVENTARIO_APP WHERE area = ?",
+              [area],
+              (results) => {
+                if (results.rows._array.length === 0) {
+                  setSnackbar({
+                    visible: true,
+                    text: "El área está vacía, no se cerrará",
+                    type: "error",
+                  });
+                  return;
+                }
+
+                if (results.rows._array.length > 0) {
+                  ExecuteQuery(
+                    db,
+                    `UPDATE AREAS SET ESTADO = "CERRADA" WHERE NUM_AREA = "${area}"`,
+                    [],
+                    (result) => {
+                      setSnackbar({
+                        visible: true,
+                        text: "Área cerrada correctamente",
+                        type: "success",
+                      });
+
+                      setDangerModal({
+                        visible: true,
+                        title: "Cargar y Respaldo",
+                        text: "¿Desea Enviar datos al servidor de inmediato?",
+                        bg: "#28a745",
+                        buttons: [
+                          {
+                            text: "NO",
+                            onPress: () => {
+                              setArea("");
+                              setDangerModal({
+                                visible: false,
+                                title: "",
+                                text: "",
+                                buttons: [],
+                              });
+                              navigate(routes.captureMenu);
+                            },
+                            style: "cancel",
+                          },
+                          {
+                            text: "Si",
+                            onPress: () => {
+                              setDangerModal({
+                                visible: false,
+                                title: "",
+                                text: "",
+                                buttons: [],
+                              });
+                              sendArea(areaData, navigate(routes.captureMenu));
+                            },
+                          },
+                        ],
+                      });
+                    },
+                    (error) => {
+                      console.log(error);
+                      setSnackbar({
+                        visible: true,
+                        text: "Error al cerrar el área",
+                        type: "error",
+                      });
+                    }
+                  );
+
+                  setArea("");
+                  navigate(routes.captureMenu);
+                }
+              },
+              (error) => {
+                console.log(error);
+                setSnackbar({
+                  visible: true,
+                  text: "Error al cerrar el área",
+                  type: "error",
+                });
+              }
+            );
+          },
+        },
+      ],
+    });
+  }
+
+  const getScansData = async () => {
     const db = SQLite.openDatabase("Maestro.db");
     const productsDb = [];
-    let query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND posicion = "${posicion}" AND pallet = "${pallet}" AND caja = "${caja}" AND area = "${area}"`;
+    const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND area = "${area}"`;
 
     await ExecuteQuery(
       db,
       query,
       [],
       (results) => {
-        console.log("Results", results.rows._array);
         // * Leemos los scans de la base de datos y contamos los productos no repetidos
         results.rows._array.forEach((product) => {
           if (!productsDb.includes(product.name)) productsDb.push(product.name);
@@ -113,9 +245,7 @@ const CDProductEntry = ({ type }) => {
         let totalProducts = 0;
 
         results.rows._array.forEach((product) => {
-          if(config.index_capt == 2 && product.posicion == cdInfo.posicion) totalProducts += parseFloat(product.quantity);
-          if((config.index_capt == 3 || config.index_capt == 5) && product.area == cdInfo.area) totalProducts += parseFloat(product.quantity);
-          if((config.index_capt == 4 || config.index_capt == 6) && product.caja == cdInfo.caja) totalProducts += parseFloat(product.quantity);
+          if (product.area === area) totalProducts += parseFloat(product.quantity);
         });
 
         setScansData({
@@ -139,16 +269,13 @@ const CDProductEntry = ({ type }) => {
   const addProductToDb = async (product, qty = quantity, additionType) => {
     const db = SQLite.openDatabase("Maestro.db");
     const date = new Date().toISOString();
-    const posicion = cdInfo.posicion;
-    const pallet = config.index_capt == 4 || config.index_capt == 5 ? cdInfo.pallet ? cdInfo.pallet : '' : "";
-    const caja = config.index_capt == 4 || config.index_capt == 6 ? cdInfo.caja ? cdInfo.caja : '' : "";
-    const area = config.index_capt == 3 || config.index_capt == 5 ? cdInfo.area ? cdInfo.area : '' : "";
 
     await ExecuteQuery(
       db,
-      `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND posicion = "${posicion}" AND pallet = "${pallet}" AND caja = "${caja}" AND area = "${area}"`,
+      `SELECT * FROM INVENTARIO_APP WHERE area = "${area}"`,
       [],
       (results) => {
+
         ExecuteQuery(
           db,
           "INSERT INTO INVENTARIO_APP (operator, name, quantity, date, posicion, area, pallet, caja, type, inventario, serie, existe, EstadoTag, CorrelativoApertura, invtype, descripcion, CorrPT) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -157,16 +284,16 @@ const CDProductEntry = ({ type }) => {
             product.COD_PROD,
             config.num_decimales ? parseFloat(qty).toFixed(config.num_decimales) : parseInt(qty),
             date,
-            posicion,
+            "",
             area,
-            pallet,
-            caja,
+            "",
+            "",
             product.type,
             config.inv_activo,
-            serie ? serie : '',
+            serie,
             product.exists ? product.exists : 'S',
-            infoData.ESTADO == 'INI' ? '0' : infoData.ESTADO,
-            infoData.ESTADONUM,
+            areaData.UESTADO == 'INI' ? '0' : areaData.UESTADO,
+            areaData.ESTADOTAG,
             'INV',
             product.DESCRIPCION,
             results.rows._array.length + 1
@@ -174,11 +301,8 @@ const CDProductEntry = ({ type }) => {
           (results) => {
             getScansData();
             setCode("");
-            setLastProduct({ ...product, quantity, type: additionType });
             if (type === 'multi') setQuantity('');
             if (type === 'single') setQuantity(1);
-            refs.code.current.clear();
-            refs.code.current.focus();
           },
           (error) => {
             console.log("Error", error);
@@ -202,190 +326,6 @@ const CDProductEntry = ({ type }) => {
     );
   };
 
-  const validatePesable = (code, codeImplicit) => {
-    const sixDigits = codeImplicit.substring(0, 6);
-    const lastSixDigits = code.substring(config.largo_prod - 6, config.largo_prod - 1);
-
-    const controlDigit = GTIN8Digit(`0${sixDigits}`);
-
-    // * Rellenar con 0 hasta la longitud original del código
-
-    let codeToVerify = sixDigits;
-
-    const codeLength = codeToVerify.length;
-    const codeToAdd = codeImplicit.length - codeLength;
-    for (let i = 0; i < codeToAdd; i++) {
-      codeToVerify = `${codeToVerify}0`;
-    }
-
-    // * Reemplazar el último numero por el dígito de control
-
-    codeToVerify = codeToVerify.slice(0, -1) + controlDigit;
-    const quantity = GtoKG(lastSixDigits);
-
-    // * Si el código no cumple con la configuración, rellenamos el código con 0s a la izquierda
-
-    if (codeToVerify.length < config.largo_prod) {
-      const codeLength = codeToVerify.length;
-      const codeToAdd = config.largo_prod - codeLength;
-      for (let i = 0; i < codeToAdd; i++) {
-        codeToVerify = `0${codeToVerify}`;
-      }
-    }
-
-    console.log("Code to verify", codeToVerify);
-    console.log("Cantidad", quantity);
-
-    const masterDb = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM MAESTRA WHERE COD_PROD = '${codeToVerify}'`;
-
-    ExecuteQuery(
-      masterDb,
-      query,
-      [],
-      (results) => {
-
-        const product = results.rows._array[0];
-
-        if (results.rows._array.length === 0) {
-          return setDangerModal({
-            visible: true,
-            title: "Producto NO Encontrado",
-            bg: "#dc3545",
-            color: "#fff",
-            text: "¿Desea agregarlo igualmente?",
-            buttons: [
-              {
-                text: "NO, NO AGREGAR",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  refs.code.current.focus();
-                  setLastProduct({
-                    ...lastProduct,
-                    DESCRIPCION: "",
-                  });
-                  setCode("");
-                  return;
-                },
-                style: "cancel",
-              },
-              {
-                text: "Sí, agregar",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-
-                  addProductToDb({
-                    COD_PROD: codeToVerify,
-                    exists: 'N',
-                    type: "S",
-                    DESCRIPCION: `PESABLE ${codeToVerify} x ${quantity}kg`,
-                  }, quantity, "PESABLE");
-
-                  return;
-                },
-              },
-            ],
-          });
-        } // * Si el producto no se encuentra en la base de datos, preguntamos si se quiere agregar igualmente
-
-        if (config.catalog_products && product.CATALOGADO == 1) {
-          setDangerModal({
-            visible: true,
-            title: "Producto Catalogado",
-            text: "Este producto es catalogado. Si quiere añadirlo desactive la opción de no catalogados.",
-            buttons: [
-              {
-                text: "Entendido",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  refs.code.current.focus();
-                },
-                style: "cancel",
-              }
-            ],
-          });
-        } // * Si el software está para NO CATALOGADOS, avisamos sobre los que están CATALOGADOS ( CATALOGADO = 1 )
-
-        if (!config.catalog_products && product.CATALOGADO == 0) {
-          setDangerModal({
-            visible: true,
-            title: "Producto NO Catalogado",
-            text: "Este producto NO está catalogado, ¿Desea continuar?",
-            buttons: [
-              {
-                text: "Cancelar",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  setLastProduct({
-                    ...lastProduct,
-                    DESCRIPCION: "",
-                  });
-                  refs.code.current.focus();
-                },
-                style: "cancel",
-              },
-              {
-                text: "Continuar",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  addProductToDb({
-                    ...product,
-                    DESCRIPCION: `${product.DESCRIPCION} x ${quantity}kg`,
-                    type: "S"
-                  }, quantity, "PESABLE");
-                },
-              },
-            ],
-          });
-        } // * Si el software está para CATALOGADOS, avisamos sobre los que están NO CATALOGADOS ( CATALOGADO = 0 )
-
-        if (
-          (config.catalog_products && product.CATALOGADO == 0) ||
-          (!config.catalog_products && product.CATALOGADO == 1)
-        ) {
-          addProductToDb({
-            ...product,
-            DESCRIPCION: `${product.DESCRIPCION} x ${quantity}kg`,
-            type: "S"
-          }, quantity, "PESABLE");
-        }
-      },
-      (error) => {
-        console.log("Error", error);
-        setSnackbar({
-          visible: true,
-          text: "Error al buscar el producto en la base de datos",
-          type: "error",
-        });
-      }
-    );
-  };
-
   const onCodeSubmit = async (sendedBy) => {
     if (!code)
       return setSnackbar({
@@ -394,53 +334,14 @@ const CDProductEntry = ({ type }) => {
         type: "error",
       });
 
-    if(!quantity && sendedBy === "qtyInput") return setSnackbar({
+    if (!quantity && sendedBy === "qtyInput") return setSnackbar({
       visible: true,
       text: "Ingrese una cantidad",
       type: "error",
     });
 
-    let codeImplicit = code;
-    let codeToSend = code;
-    if (codeToSend.length < config.largo_prod) {
-      const codeLength = codeToSend.length;
-      const codeToAdd = config.largo_prod - codeLength;
-      for (let i = 0; i < codeToAdd; i++) {
-        codeToSend = `0${codeToSend}`;
-      }
-      setCode(codeToSend);
-    } // * Si el código no cumple con la configuración, rellenamos el código con 0s a la izquierda
-
-    // * ¿El código empieza con 25?
-
-    const firstTwoDigits = codeImplicit.substring(0, 2);
-
-    if (config.pesables && firstTwoDigits.toString() == "25") return validatePesable(codeToSend, codeImplicit); // * Si el software está para PESABLES, validamos el código
-
-    // if (!config.pesables && firstTwoDigits.toString() == "25") return setDangerModal({
-    //   visible: true,
-    //   title: "Producto PESABLE",
-    //   text: "Este producto es pesable. Si quiere añadirlo active la opción de pesables.",
-    //   buttons: [
-    //     {
-    //       text: "Entendido",
-    //       onPress: () => {
-    //         setDangerModal({
-    //           visible: false,
-    //           title: "",
-    //           text: "",
-    //           buttons: [],
-    //         });
-    //         refs.code.current.focus();
-    //         refs.code.current.clear();
-    //       },
-    //       style: "cancel",
-    //     }
-    //   ],
-    // });
-
     const masterDb = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM MAESTRA WHERE COD_PROD = '${codeToSend}'`;
+    const query = `SELECT * FROM CONGELADOS WHERE CODIGO = '${code}'`;
 
     ExecuteQuery(
       masterDb,
@@ -449,14 +350,23 @@ const CDProductEntry = ({ type }) => {
       (results) => {
         const product = results.rows._array[0];
 
-        console.log("Results", results.rows._array.length);
+        if (type === 'multi' && sendedBy !== 'qtyInput') {
+          return refs.quantity.current.focus();
+        }
+
+        if (!quantity && sendedBy === "qtyInput") return setSnackbar({
+          visible: true,
+          text: "Ingrese una cantidad",
+          type: "error",
+        });
+
         if (results.rows._array.length === 0) {
           return setDangerModal({
             visible: true,
-            title: `Producto ${codeToSend} NO Encontrado`,
+            title: `Caja ${code} NO Encontrada`,
             bg: "#dc3545",
             color: "#fff",
-            text: "¿Desea agregarlo igualmente?",
+            text: "¿Desea agregarla igualmente?",
             buttons: [
               {
                 text: "NO, NO AGREGAR",
@@ -485,20 +395,20 @@ const CDProductEntry = ({ type }) => {
                     buttons: [],
                   });
 
-                  if (type === 'multi' && sendedBy !== 'qtyInput') {
-                    setLastProduct({
-                      DESCRIPCION: `NO ENCONTRADO ${codeToSend}`,
-                    });
-
-                    return refs.quantity.current.focus();
-                  }
-
                   addProductToDb({
-                    COD_PROD: codeToSend,
+                    COD_PROD: code,
                     exists: 'N',
                     type: type === 'single' ? "A" : "S",
-                    DESCRIPCION: codeToSend,
+                    DESCRIPCION: `Caja ${code}`,
                   }, quantity, "1X1");
+
+                  setCode("");
+                  refs.code.current.focus();
+                  setSnackbar({
+                    visible: true,
+                    text: "Caja agregada correctamente",
+                    type: "success",
+                  });
                   return;
                 },
               },
@@ -506,85 +416,24 @@ const CDProductEntry = ({ type }) => {
           });
         } // * Si el producto no se encuentra en la base de datos, preguntamos si se quiere agregar igualmente
 
-        if (type === 'multi' && sendedBy !== 'qtyInput') {
-          setLastProduct({
-            ...product,
-            DESCRIPCION: product.DESCRIPCION,
-          });
+        addProductToDb({
+          COD_PROD: code,
+          exists: 'S',
+          type: type === 'single' ? "A" : "S",
+          DESCRIPCION: product['DESCRIPCIÓN'],
+        }, quantity, "1X1");
 
-          return refs.quantity.current.focus();
-        }
+        setLastProduct({
+          DESCRIPCION: product['DESCRIPCIÓN'],
+        })
 
-        if (config.catalog_products && product.CATALOGADO == 1) {
-          setDangerModal({
-            visible: true,
-            title: "Producto Catalogado",
-            text: "Este producto es catalogado. Si quiere añadirlo desactive la opción de no catalogados.",
-            buttons: [
-              {
-                text: "Entendido",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  refs.code.current.focus();
-                },
-                style: "cancel",
-              }
-            ],
-          });
-        } // * Si el software está para NO CATALOGADOS, avisamos sobre los que están CATALOGADOS ( CATALOGADO = 1 )
-
-        if (!config.catalog_products && product.CATALOGADO == 0) {
-          setDangerModal({
-            visible: true,
-            title: "Producto NO Catalogado",
-            text: "Este producto NO está catalogado, ¿Desea continuar?",
-            buttons: [
-              {
-                text: "Cancelar",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  refs.code.current.focus();
-                },
-                style: "cancel",
-              },
-              {
-                text: "Continuar",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-                  addProductToDb({
-                    ...product,
-                    type: type === 'single' ? "A" : "S"
-                  }, quantity, "1X1");
-                },
-              },
-            ],
-          });
-        } // * Si el software está para CATALOGADOS, avisamos sobre los que están NO CATALOGADOS ( CATALOGADO = 0 )
-
-        if (
-          (config.catalog_products && product.CATALOGADO == 0) ||
-          (!config.catalog_products && product.CATALOGADO == 1)
-        ) {
-          addProductToDb({
-            ...product,
-            type: type === 'single' ? "A" : "S"
-          }, quantity, "1X1");
-        }
+        setCode("");
+        refs.code.current.focus();
+        setSnackbar({
+          visible: true,
+          text: "Caja agregada correctamente",
+          type: "success",
+        });
       },
       (error) => {
         console.log("Error", error);
@@ -597,32 +446,106 @@ const CDProductEntry = ({ type }) => {
     );
   };
 
-  useEffect(() => {
-    getScansData();
-    const posicion = cdInfo.posicion || '';
-    const pallet = cdInfo.pallet || '';
-    const caja = cdInfo.caja || '';
-    const area = cdInfo.area || '';
-
+  const getPalletData = async (sendedBy) => {
     const db = SQLite.openDatabase("Maestro.db");
-    let query = `SELECT * FROM COMBINACIONES_CD WHERE posicion = "${posicion}" AND pallet = "${pallet}" AND caja = "${caja}" AND area = "${area}"`;
+    const query = `SELECT * FROM CONGELADOS WHERE PALLET = '${codePallet}'`;
 
     ExecuteQuery(
       db,
       query,
       [],
-      (res) => {
-        console.log("Combinaciones", res.rows._array);
-        if (!res.rows._array[0]) return setSnackbar({
+      (results) => {
+        if (results.rows._array.length === 0) {
+          refs.code.current.focus();
+          return setSnackbar({
+            visible: true,
+            text: "Pallet no encontrado",
+            type: "error",
+          });
+        }
+
+        if (type === 'multi' && sendedBy !== 'qtyInput') {
+          return refs.quantity.current.focus()
+        }
+
+        if (!quantity && sendedBy === "qtyInput") return setSnackbar({
           visible: true,
-          text: "No se encontró la combinación",
+          text: "Ingrese una cantidad",
           type: "error",
         });
 
-        setInfoData({
-          ESTADONUM: res.rows._array[0].status_num,
-          ESTADO: res.rows._array[0].status_corr,
+        return setDangerModal({
+          visible: true,
+          title: `El pallet ${codePallet} tiene ${results.rows._array.length} caja(s)`,
+          color: "#fff",
+          bg: "#28a745",
+          text: "¿Desea agregar estas cajas al inventario?",
+          buttons: [
+            {
+              text: "NO, NO AGREGAR",
+              onPress: () => {
+                refs.code.current.focus();
+                return;
+              },
+              style: "cancel",
+            },
+            {
+              text: "Sí, agregar",
+              onPress: () => {
+                results.rows._array.forEach((product, index) => {
+                  addProductToDb({
+                    COD_PROD: product.CODIGO,
+                    exists: 'S',
+                    type: type === 'single' ? "A" : "S",
+                    DESCRIPCION: product['DESCRIPCIÓN'],
+                  }, quantity, "1X1");
+
+                  if (index === results.rows._array.length - 1) {
+                    setLastProduct({
+                      DESCRIPCION: `Pallet ${codePallet}`,
+                    });
+                  }
+                });
+
+                setDangerModal({
+                  visible: false,
+                  title: "",
+                  text: "",
+                  buttons: [],
+                });
+                setSnackbar({
+                  visible: true,
+                  text: "Cajas agregadas correctamente",
+                  type: "success",
+                });
+                setCodePallet("");
+                refs.codePallet.current.focus();
+                return;
+              },
+            },
+          ],
         });
+      }
+    );
+  }
+
+  useEffect(() => {
+    getScansData();
+
+    const db = SQLite.openDatabase("Maestro.db");
+    ExecuteQuery(
+      db,
+      "SELECT * FROM AREAS WHERE NUM_AREA = ?",
+      [area],
+      (res) => {
+        if (!res.rows._array[0]) return setSnackbar({
+          visible: true,
+          text: "El área no existe",
+          type: "error",
+        });
+
+        console.log(res.rows._array[0]);
+        setAreaData(res.rows._array[0]);
       },
       (err) => {
         console.log(err)
@@ -638,20 +561,8 @@ const CDProductEntry = ({ type }) => {
       <ScrollView keyboardShouldPersistTaps='handled'>
         <TopBar />
         <SectionBar
-          section={type === "single" ? `Ingreso 1x1 - ${
-            config.index_capt === 2 ? `Pos: ${cdInfo.posicion}` : 
-            config.index_capt === 3 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
-            config.index_capt === 4 ? `Caja: ${cdInfo.caja}` :
-            config.index_capt === 5 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
-            config.index_capt === 6 ? `Caja: ${cdInfo.caja}` : `Pos: ${cdInfo.posicion}`
-          }` : `Ingreso por cantidad - ${
-            config.index_capt === 2 ? `Pos: ${cdInfo.posicion}` :
-            config.index_capt === 3 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
-            config.index_capt === 4 ? `Caja: ${cdInfo.caja}` :
-            config.index_capt === 5 ? `Área: ${cdInfo.area.slice(0, cdInfo.area.length - 1)}-${cdInfo.area.slice(cdInfo.area.length - 1, cdInfo.area.length)}` :
-            config.index_capt === 6 ? `Caja: ${cdInfo.caja}` : `Pos: ${cdInfo.posicion}`
-          }`}
-          backTo={routes.cD}
+          section={type === "single" ? `Ingreso 1x1 - Área: ${area.slice(0, area.length - 1)}-${area.slice(-1)}` : `Ingreso por cantidad - Área: ${area.slice(0, area.length - 1)}-${area.slice(-1)}`}
+          backTo={routes.captureMenu}
         />
 
         <View
@@ -672,7 +583,8 @@ const CDProductEntry = ({ type }) => {
           >
             <TouchableOpacity
               onPress={() => {
-                return navigate(routes.cDEdit);
+                setArea("");
+                return navigate(routes.captureMenu);
               }}
               style={{
                 ...styles.logBtn,
@@ -689,11 +601,11 @@ const CDProductEntry = ({ type }) => {
                 color: "#fff",
                 textAlign: "center",
                 fontSize: 12
-              }}>NUEVOS DATOS</Text>
+              }}>NUEVA ÁREA</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => navigate(routes.cDFastSend)}
+              onPress={() => confirmCloseArea()}
               style={{
                 ...styles.logBtn,
                 width: 120,
@@ -710,8 +622,58 @@ const CDProductEntry = ({ type }) => {
                 color: "#fff",
                 textAlign: "center",
                 fontSize: 12
-              }}>CERRAR DATOS</Text>
+              }}>CERRAR ÁREA</Text>
             </TouchableOpacity>
+          </View>
+
+          <View style={{ width: "80%", justifyContent: "center" }}>
+            <View style={styles.flex_row}>
+              <TouchableOpacity
+                style={{
+                  ...styles.logBtn,
+                  width: 40,
+                  height: 35,
+                  borderRadius: 5,
+                  alignItems: "center",
+                  padding: 0,
+                  justifyContent: "center",
+                }}
+                onPress={() => {
+                  setCodePallet("");
+                  setLastProduct({
+                    DESCRIPCION: "",
+                  });
+                  return refs.codePallet.current.focus();
+                }}
+              >
+                <Text
+                  style={{
+                    ...styles.white,
+                    textAlign: "center",
+                    fontWeight: "bold",
+                    fontSize: 15,
+                  }}
+                >
+                  B
+                </Text>
+              </TouchableOpacity>
+
+              <TextInput
+                style={{
+                  ...styles.input,
+                  width: "70%",
+                  height: 30,
+                  borderBottomColor: "transparent",
+                  fontSize: 20,
+                }}
+                onChangeText={setCodePallet}
+                value={codePallet}
+                ref={refs.codePallet}
+                placeholder="Folio Pallet"
+                onSubmitEditing={() => getPalletData('')}
+                autoFocus
+              />
+            </View>
           </View>
 
           <View style={{ width: "80%", justifyContent: "center" }}>
@@ -757,10 +719,8 @@ const CDProductEntry = ({ type }) => {
                 onChangeText={setCode}
                 value={code}
                 ref={refs.code}
-                placeholder="Código"
+                placeholder="Folio Caja"
                 onSubmitEditing={() => onCodeSubmit()}
-                autoFocus
-                maxLength={parseInt(config.largo_prod)}
               />
             </View>
 
@@ -857,7 +817,9 @@ const CDProductEntry = ({ type }) => {
                       textAlign: "center",
                       color: "#000",
                     }}
-                    onEndEditing={() => onCodeSubmit('qtyInput')}
+                    onEndEditing={() => {
+                      codePallet ? getPalletData('qtyInput') : onCodeSubmit('qtyInput');
+                    }}
                   />
 
                 ) : (
@@ -941,7 +903,7 @@ const CDProductEntry = ({ type }) => {
               }}
               onPress={() =>
                 navigate(
-                  type === "single" ? "/cdReview/single" : "/cdReview/multiple"
+                  type === "single" ? "/review/single" : "/review/multiple"
                 )
               }
             >
@@ -965,7 +927,7 @@ const CDProductEntry = ({ type }) => {
                 borderRadius: 5,
                 alignItems: "center",
               }}
-              onPress={() => navigate(routes.cD)}
+              onPress={() => navigate(routes.captureMenu)}
             >
               <Text
                 style={{
@@ -998,8 +960,69 @@ const CDProductEntry = ({ type }) => {
           setQuantity={setQuantity}
         />
       </ScrollView>
+
+      {confirmingClose && (
+        <ConfirmCloseAreaModal
+          area={area}
+          onClose={() => setConfirmingClose(false)}
+        />
+      )}
+
+      {modal && (
+        <View style={styles.modal}>
+          <View style={styles.modalContent}>
+            <Text
+              style={{
+                fontSize: 16,
+              }}
+            >
+              Ingresar Área
+            </Text>
+
+            <TextInput
+              keyboardType="numeric"
+              style={styles.input}
+              onChangeText={setArea}
+              value={area}
+              ref={refs.area}
+              placeholder="Área"
+              onSubmitEditing={confirmArea}
+            />
+
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+              }}
+            >
+              <TouchableOpacity
+                onPress={confirmArea}
+                style={{
+                  ...styles.logBtn,
+                  width: "40%",
+                }}
+              >
+                <Text style={[styles.white, styles.textCenter]}>INGRESAR</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setModal(false);
+                }}
+                style={{
+                  ...styles.logBtn,
+                  width: "40%",
+                  backgroundColor: "#ccc",
+                }}
+              >
+                <Text style={[styles.white, styles.textCenter]}>VOLVER</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 };
 
-export default CDProductEntry;
+export default FreezedEntry;

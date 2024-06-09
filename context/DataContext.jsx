@@ -30,6 +30,7 @@ export const DataProvider = ({ children }) => {
     catalog_products: true,
     index_capt: 1,
     inv_activo: '',
+    congelados: false,
   })
   const [dangerModal, setDangerModal] = useState({
     visible: false,

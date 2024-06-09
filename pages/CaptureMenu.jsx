@@ -524,7 +524,9 @@ const CaptureMenu = () => {
                 width: '90%',
                 borderRadius: 10
               }]}
-              onPress={() => navigate(routes.singleProductEntry)}
+              onPress={() => {
+                config.congelados ? navigate(routes.singleFreezedEntry) : navigate(routes.singleProductEntry)
+              }}
             >
               <View style={{ flexDirection: "row", justifyContent: "center" }}>
                 <Text style={styles.white}>INGRESO 1 A 1</Text>
@@ -538,7 +540,9 @@ const CaptureMenu = () => {
                 width: '90%',
                 borderRadius: 10
               }]}
-              onPress={() => navigate(routes.multipleProductEntry)}
+              onPress={() => {
+                config.congelados ? navigate(routes.multipleFreezedEntry) : navigate(routes.multipleProductEntry)
+              }}
             >
               <View style={{ flexDirection: "row", justifyContent: "center" }}>
                 <Text style={styles.white}>INGRESO POR CANTIDAD</Text>
@@ -563,9 +567,10 @@ const CaptureMenu = () => {
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
+              justifyContent: "center",
+              flexWrap: "wrap",
               gap: 5,
               marginBottom: 0,
-              height: 40,
               marginTop: 0,
               padding: 0,
             }}
@@ -603,6 +608,23 @@ const CaptureMenu = () => {
               }}
               value={config.pesables}
 
+            />
+
+            <Text>Congelados</Text>
+            <Switch
+              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              onValueChange={() => {
+                if (!user.admin) {
+                  setAuthType("congelados");
+                  setModalSupervisor(true);
+                } else {
+                  setConfig({
+                    ...config,
+                    congelados: !config.congelados,
+                  });
+                }
+              }}
+              value={config.congelados}
             />
           </View>
 

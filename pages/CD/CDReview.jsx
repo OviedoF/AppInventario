@@ -198,8 +198,8 @@ const CDReview = () => {
           section={`Revisión - CD`}
           backTo={
             type === "single"
-              ? routes.cdSingleProductEntry
-              : routes.cdMultipleProductEntry
+              ? config.congelados ? routes.cdSingleFreezedEntry : routes.cdSingleProductEntry
+              : config.congelados ? routes.cdMultipleFreezedEntry : routes.cdMultipleProductEntry
           }
         />
         <View

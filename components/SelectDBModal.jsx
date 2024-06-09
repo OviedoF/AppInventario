@@ -27,7 +27,7 @@ const SelectDBModal = ({ onEnd }) => {
 
     const getInventarios = async () => {
         try {
-            setLoading(true)
+            console.log(`http://${ip}/isam/api/inventarios_disponibles.php`)
 
             const response = await fetch(`http://${ip}/isam/api/inventarios_disponibles.php`, {
                 headers: {
@@ -74,9 +74,7 @@ const SelectDBModal = ({ onEnd }) => {
                         FileSystem.writeAsStringAsync(
                             `${FileSystem.documentDirectory}SQLite/Maestro.db`,
                             base64data,
-                            {
-                                encoding: FileSystem.EncodingType.Base64,
-                            }
+                            { encoding: FileSystem.EncodingType.Base64 }
                         )
                             .then(async () => {
                                 const openDb = SQLite.openDatabase(`Maestro.db`);
@@ -86,6 +84,7 @@ const SelectDBModal = ({ onEnd }) => {
                                     [],
                                     async (res) => {
                                         if (res.rows.length > 0) {
+                                            console.log(res.rows)
                                             await AsyncStorage.setItem(env.asyncStorage.invSelected, `${inventario.id}. ${inventario.description}`)
                                             setInventario(`${inventario.id}. ${inventario.description}`)
                                             setConfig({ ...config, inv_activo: inventario.id })

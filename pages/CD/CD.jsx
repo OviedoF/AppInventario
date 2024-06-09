@@ -1038,10 +1038,6 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
     }
   }, [modal]);
 
-  useEffect(() => {
-    console.log(disabled)
-  }, [disabled])
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -1147,7 +1143,9 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
                 width: '90%',
                 borderRadius: 10
               }]}
-              onPress={() => navigate(routes.cdSingleProductEntry)}
+              onPress={() => {
+                config.congelados ? navigate(routes.cdSingleFreezedEntry) : navigate(routes.cdSingleProductEntry)
+              }}
             >
               <View style={{ flexDirection: "row", justifyContent: "center" }}>
                 <Text style={styles.white}>INGRESO 1 A 1</Text>
@@ -1161,7 +1159,9 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
                 width: '90%',
                 borderRadius: 10
               }]}
-              onPress={() => navigate(routes.cdMultipleProductEntry)}
+              onPress={() => {
+                config.congelados ? navigate(routes.cdMultipleFreezedEntry) : navigate(routes.cdMultipleProductEntry)
+              }}
             >
               <View style={{ flexDirection: "row", justifyContent: "center" }}>
                 <Text style={styles.white}>INGRESO POR CANTIDAD</Text>
@@ -1186,9 +1186,10 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
+              justifyContent: "center",
+              flexWrap: "wrap",
               gap: 5,
               marginBottom: 0,
-              height: 40,
               marginTop: 0,
               padding: 0,
             }}
@@ -1226,6 +1227,23 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
               }}
               value={config.pesables}
 
+            />
+
+            <Text>Congelados</Text>
+            <Switch
+              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              onValueChange={() => {
+                if (!user.admin) {
+                  setAuthType("congelados");
+                  setModalSupervisor(true);
+                } else {
+                  setConfig({
+                    ...config,
+                    congelados: !config.congelados,
+                  });
+                }
+              }}
+              value={config.congelados}
             />
           </View>
 

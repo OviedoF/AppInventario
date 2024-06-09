@@ -12,6 +12,8 @@ import AdminMenu from "../pages/AdminMenu";
 import AreaView from "../pages/AreaView";
 import CDView from "../pages/CD/CDView";
 import CDWifiSend from "../pages/CD/CDWifiSend";
+import CDFreezedEntry from "../pages/CD/CDFreezedEntry";
+import FreezedEntry from "../pages/FreezedEntry";
 
 const AppRouter = () => {
   return (
@@ -32,6 +34,16 @@ const AppRouter = () => {
         exact
         path={routes.multipleProductEntry}
         element={<ProductEntry type="multi" />}
+      />
+      <Route
+        exact
+        path={routes.singleFreezedEntry}
+        element={<FreezedEntry type="single" />}
+      />
+      <Route
+        exact
+        path={routes.multipleFreezedEntry}
+        element={<FreezedEntry type="multi" />}
       />
       <Route exact path={routes.sentWifi} element={<SendWIFI />} />
       {/* ---------------- CD ---------------- */}
@@ -54,6 +66,17 @@ const AppRouter = () => {
         exact
         path={routes.cdMultipleProductEntry}
         element={<CDProductEntry type="multi" />}
+      />
+
+      <Route
+        exact
+        path={routes.cdSingleFreezedEntry}
+        element={<CDFreezedEntry type="single" />}
+      />
+      <Route
+        exact
+        path={routes.cdMultipleFreezedEntry}
+        element={<CDFreezedEntry type="multi" />}
       />
       <Route exact path={routes.cdReview} element={<CDReview />} />
     </Routes>

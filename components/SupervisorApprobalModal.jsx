@@ -60,6 +60,13 @@ const SupervisorApprobalModal = ({
           catalog_products: !config.catalog_products,
         });
       }
+      
+      if (authType === "congelados") {
+        setConfig({
+          ...config,
+          congelados: !config.congelados,
+        });
+      }
 
       if (authType === "new_db") {
         setSelectDBModal(true);
