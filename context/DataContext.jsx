@@ -185,7 +185,7 @@ export const DataProvider = ({ children }) => {
       const Area = area.NUM_AREA
       const FechaEnvio = formatDate(new Date());
 
-      const token = await axios.post(`http://${ip}/isam/api/auth.php`, {
+      const token = await axios.post(`http://${ip}/isam_inventoriesv2/api/auth.php`, {
         id
       }).then(response => response.data.result.token)
         .catch(error => {
@@ -239,7 +239,7 @@ export const DataProvider = ({ children }) => {
 
           console.log('data', data)
 
-          const sendedArea = await axios.post(`http://${ip}/isam/api/recepcion_areas.php`, data)
+          const sendedArea = await axios.post(`http://${ip}/isam_inventoriesv2/api/recepcion_areas.php`, data)
           if (sendedArea.data.status !== 'error') {
             await writeTxtFile(data)
             setLoading(false)

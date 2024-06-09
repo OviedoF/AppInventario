@@ -221,7 +221,7 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
               const Posicion = comb.posicion;
               const FechaEnvio = formatDate(new Date());
 
-              const token = await axios.post(`http://${ip}/isam/api/auth.php`, {
+              const token = await axios.post(`http://${ip}/isam_inventoriesv2/api/auth.php`, {
                 id
               }).then(response => response.data.result.token)
                 .catch(error => {
@@ -273,7 +273,7 @@ const CaptureMenu = ({ clear, fastSend, fastEdit }) => {
 
                   setLoading(false)
 
-                  const sendedArea = await axios.post(`http://${ip}/isam/api/recepcion_areas.php`, data)
+                  const sendedArea = await axios.post(`http://${ip}/isam_inventoriesv2/api/recepcion_areas.php`, data)
                   if (sendedArea.data.status !== 'error') {
                     await writeTxtFile(data)
                     setLoading(false)

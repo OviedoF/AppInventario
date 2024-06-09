@@ -27,9 +27,9 @@ const SelectDBModal = ({ onEnd }) => {
 
     const getInventarios = async () => {
         try {
-            console.log(`http://${ip}/isam/api/inventarios_disponibles.php`)
+            console.log(`http://${ip}/isam_inventoriesv2/api/inventarios_disponibles.php`)
 
-            const response = await fetch(`http://${ip}/isam/api/inventarios_disponibles.php`, {
+            const response = await fetch(`http://${ip}/isam_inventoriesv2/api/inventarios_disponibles.php`, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -61,7 +61,7 @@ const SelectDBModal = ({ onEnd }) => {
 
             setLoading(true)
 
-            await fetch(`http://${ip}/isam/api/descargar_maestroInv.php`, {
+            await fetch(`http://${ip}/isam_inventoriesv2/api/descargar_maestroInv.php`, {
                 headers: {
                     "id": invSeleccionado,
                 },
