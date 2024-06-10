@@ -27,7 +27,6 @@ const SelectDBModal = ({ onEnd }) => {
 
     const getInventarios = async () => {
         try {
-            console.log(`http://${ip}/isam_inventoriesv2/api/inventarios_disponibles.php`)
 
             const response = await fetch(`http://${ip}/isam_inventoriesv2/api/inventarios_disponibles.php`, {
                 headers: {

@@ -5,16 +5,13 @@ import {
   View,
   TouchableOpacity,
   StyleSheet,
-  TextInput,
 } from "react-native";
 import styles from "../styles/styles";
 import { dataContext } from "../context/dataContext";
 import env from "../env";
-import { useNavigate } from "react-router-native";
 import * as SQLite from "expo-sqlite";
 import ExecuteQuery from "../helpers/ExecuteQuery";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import routes from "../router/routes";
 
 const PickInventoryModal = ({ setModalVisible, modalVisible }) => {
   const [inventories, setInventories] = useState([]);

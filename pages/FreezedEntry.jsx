@@ -269,6 +269,15 @@ const FreezedEntry = ({ type }) => {
   const addProductToDb = async (product, qty = quantity, additionType) => {
     const db = SQLite.openDatabase("Maestro.db");
     const date = new Date().toISOString();
+    // * Rellenar con 0s el product.COD_PROD hasta el largo de config.largo_prod
+    const codeLength = product.COD_PROD.length;
+
+    if (codeLength < parseInt(config.largo_prod)) {
+      const codeToAdd = parseInt(config.largo_prod) - codeLength;
+      for (let i = 0; i < codeToAdd; i++) {
+        product.COD_PROD = `0${product.COD_PROD}`;
+      }
+    } 
 
     await ExecuteQuery(
       db,
@@ -721,6 +730,7 @@ const FreezedEntry = ({ type }) => {
                 ref={refs.code}
                 placeholder="Folio Caja"
                 onSubmitEditing={() => onCodeSubmit()}
+                maxLength={parseInt(config.largo_prod)}
               />
             </View>
 

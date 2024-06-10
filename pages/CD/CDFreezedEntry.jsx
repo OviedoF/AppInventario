@@ -145,6 +145,16 @@ const CDFreezedEntry = ({ type }) => {
     const caja = config.index_capt == 4 || config.index_capt == 6 ? cdInfo.caja ? cdInfo.caja : '' : "";
     const area = config.index_capt == 3 || config.index_capt == 5 ? cdInfo.area ? cdInfo.area : '' : "";
 
+    // * Rellenar con 0s el product.COD_PROD hasta el largo de config.largo_prod
+    const codeLength = product.COD_PROD.length;
+
+    if (codeLength < parseInt(config.largo_prod)) {
+      const codeToAdd = parseInt(config.largo_prod) - codeLength;
+      for (let i = 0; i < codeToAdd; i++) {
+        product.COD_PROD = `0${product.COD_PROD}`;
+      }
+    } 
+
     await ExecuteQuery(
       db,
       `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND posicion = "${posicion}" AND pallet = "${pallet}" AND caja = "${caja}" AND area = "${area}"`,
@@ -612,6 +622,7 @@ const CDFreezedEntry = ({ type }) => {
                 ref={refs.code}
                 placeholder="Folio Caja"
                 onSubmitEditing={() => onCodeSubmit()}
+                maxLength={parseInt(config.largo_prod)}
               />
             </View>
 
