@@ -266,7 +266,7 @@ const FreezedEntry = ({ type }) => {
     );
   };
 
-  const addProductToDb = async (product, qty = quantity, additionType) => {
+  const addProductToDb = async (product, qty = quantity, corrPT) => {
     const db = SQLite.openDatabase("Maestro.db");
     const date = new Date().toISOString();
     // * Rellenar con 0s el product.COD_PROD hasta el largo de config.largo_prod
@@ -277,11 +277,11 @@ const FreezedEntry = ({ type }) => {
       for (let i = 0; i < codeToAdd; i++) {
         product.COD_PROD = `0${product.COD_PROD}`;
       }
-    } 
+    }
 
     await ExecuteQuery(
       db,
-      `SELECT * FROM INVENTARIO_APP WHERE area = "${area}"`,
+      `SELECT * FROM INVENTARIO_APP WHERE area = "${area}" AND invtype = "INV" AND CorrelativoApertura = "${areaData.ESTADOTAG}" ORDER BY id DESC`,
       [],
       (results) => {
 
@@ -305,7 +305,7 @@ const FreezedEntry = ({ type }) => {
             areaData.ESTADOTAG,
             'INV',
             product.DESCRIPCION,
-            results.rows._array.length + 1
+            corrPT || results.rows._array.length + 1
           ],
           (results) => {
             getScansData();
@@ -409,7 +409,7 @@ const FreezedEntry = ({ type }) => {
                     exists: 'N',
                     type: type === 'single' ? "A" : "S",
                     DESCRIPCION: `Caja ${code}`,
-                  }, quantity, "1X1");
+                  }, quantity);
 
                   setCode("");
                   refs.code.current.focus();
@@ -430,7 +430,7 @@ const FreezedEntry = ({ type }) => {
           exists: 'S',
           type: type === 'single' ? "A" : "S",
           DESCRIPCION: product['DESCRIPCIÓN'],
-        }, quantity, "1X1");
+        }, quantity);
 
         setLastProduct({
           DESCRIPCION: product['DESCRIPCIÓN'],
@@ -500,36 +500,56 @@ const FreezedEntry = ({ type }) => {
             },
             {
               text: "Sí, agregar",
-              onPress: () => {
-                results.rows._array.forEach((product, index) => {
-                  addProductToDb({
-                    COD_PROD: product.CODIGO,
-                    exists: 'S',
-                    type: type === 'single' ? "A" : "S",
-                    DESCRIPCION: product['DESCRIPCIÓN'],
-                  }, quantity, "1X1");
+              onPress: async () => {
+                ExecuteQuery(
+                  db,
+                  `SELECT * FROM INVENTARIO_APP WHERE area = "${area}" AND invtype = "INV" AND CorrelativoApertura = "${areaData.ESTADOTAG}" ORDER BY id DESC`,
+                  [],
+                  (result_inv) => {
+                    results.rows._array.forEach((product, index) => {
+                      addProductToDb({
+                        COD_PROD: product.CODIGO,
+                        exists: 'S',
+                        type: type === 'single' ? "A" : "S",
+                        DESCRIPCION: product['DESCRIPCIÓN'],
+                      },
+                        quantity,
+                        result_inv.rows._array.length + (index + 1)
+                      );
 
-                  if (index === results.rows._array.length - 1) {
-                    setLastProduct({
-                      DESCRIPCION: `Pallet ${codePallet}`,
+                      if (index === results.rows._array.length - 1) {
+                        setLastProduct({
+                          DESCRIPCION: `Pallet ${codePallet}`,
+                        });
+                      }
                     });
-                  }
-                });
 
-                setDangerModal({
-                  visible: false,
-                  title: "",
-                  text: "",
-                  buttons: [],
-                });
-                setSnackbar({
-                  visible: true,
-                  text: "Cajas agregadas correctamente",
-                  type: "success",
-                });
-                setCodePallet("");
-                refs.codePallet.current.focus();
-                return;
+                    setDangerModal({
+                      visible: false,
+                      title: "",
+                      text: "",
+                      buttons: [],
+                    });
+                    setSnackbar({
+                      visible: true,
+                      text: "Cajas agregadas correctamente",
+                      type: "success",
+                    });
+                    setCodePallet("");
+                    refs.codePallet.current.focus();
+                    return;
+
+                  },
+                  (error) => {
+                    setSnackbar({
+                      visible: true,
+                      text: "Error al obtener los datos de los escaneos",
+                      type: "error",
+                    });
+                    console.log(error);
+                    return false;
+                  }
+                );
               },
             },
           ],
@@ -552,8 +572,7 @@ const FreezedEntry = ({ type }) => {
           text: "El área no existe",
           type: "error",
         });
-
-        console.log(res.rows._array[0]);
+        
         setAreaData(res.rows._array[0]);
       },
       (err) => {

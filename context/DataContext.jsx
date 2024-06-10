@@ -182,7 +182,7 @@ export const DataProvider = ({ children }) => {
       const codCapturador = await SecureStore.getItemAsync('codCapturador')
       const CodEmpresa = '1';
       const CodInv = config.inv_activo;
-      const Area = area.NUM_AREA
+      const Area = area.NUM_AREA.slice(0, -1);
       const FechaEnvio = formatDate(new Date());
 
       const token = await axios.post(`http://${ip}/isam_inventoriesv2/api/auth.php`, {
@@ -217,8 +217,8 @@ export const DataProvider = ({ children }) => {
 
       ExecuteQuery(
         db,
-        "SELECT * FROM INVENTARIO_APP WHERE area = ?",
-        [area.NUM_AREA],
+        "SELECT * FROM INVENTARIO_APP WHERE area = ? AND CorrelativoApertura = ?",
+        [area.NUM_AREA, area.ESTADOTAG],
         async (res) => {
           res.rows._array.forEach(item => {
             data.Lecturas.push({

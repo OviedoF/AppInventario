@@ -151,13 +151,13 @@ const SendWIFI = () => {
     const db = SQLite.openDatabase("Maestro.db");
     ExecuteQuery(
       db,
-      "SELECT area, quantity FROM INVENTARIO_APP",
+      "SELECT area, quantity, CorrelativoApertura FROM INVENTARIO_APP",
       [],
       (res) => {
 
         // Mapear el array de áreas y agregar la variable "totalProd" a cada objeto
         const areasConTotalProd = areas.map(area => {
-          const totalProd = res.rows._array.filter(item => item.area === area.NUM_AREA).reduce((acc, item) => acc + item.quantity, 0);
+          const totalProd = res.rows._array.filter(item => (item.area === area.NUM_AREA) && (item.CorrelativoApertura === area.ESTADOTAG)).reduce((acc, item) => acc + item.quantity, 0);
           return { ...area, totalProd };
         });
 
@@ -210,7 +210,7 @@ const SendWIFI = () => {
       const codCapturador = await SecureStore.getItemAsync('codCapturador')
       const CodEmpresa = '1';
       const CodInv = config.inv_activo;
-      const Area = area.NUM_AREA
+      const Area = area.NUM_AREA.slice(0, -1);
       const FechaEnvio = formatDate(new Date());
 
       const token = await axios.post(`http://${ip}/isam_inventoriesv2/api/auth.php`, {
@@ -245,8 +245,8 @@ const SendWIFI = () => {
 
       ExecuteQuery(
         db,
-        "SELECT * FROM INVENTARIO_APP WHERE area = ?",
-        [area.NUM_AREA],
+        "SELECT * FROM INVENTARIO_APP WHERE area = ? AND CorrelativoApertura = ? ORDER BY id DESC",
+        [area.NUM_AREA, area.ESTADOTAG],
         async (res) => {
           res.rows._array.forEach(item => {
             data.Lecturas.push({

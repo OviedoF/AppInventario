@@ -213,7 +213,6 @@ const Login = () => {
             ? 4
             : parseInt(config[2].LARGO_CAMPO),
           catalog_products: config[3].LARGO_CAMPO === "N" ? false : true,
-          //index_capt: config[4].LARGO_CAMPO ? config[4].LARGO_CAMPO : 1,
           index_capt: config[4].LARGO_CAMPO || 3, // ! CAMBIAR 
           pesables: config[5]
             ? config[5].LARGO_CAMPO === "N"
@@ -221,6 +220,7 @@ const Login = () => {
               : true
             : false,
           num_decimales: config[7] ? config[7].LARGO_CAMPO : 0,
+          congelados: config[8] ? config[8].LARGO_CAMPO === "N" ? false : true : false,
           inv_activo: invSelected ? invSelected.split('.')[0] : null,
         });
 

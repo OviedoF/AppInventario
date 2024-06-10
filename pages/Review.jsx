@@ -149,24 +149,42 @@ const CDReview = () => {
 
   const getCDProducts = async () => {
     const db = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND area = "${area}" ORDER BY id DESC`;
-    await ExecuteQuery(
+    ExecuteQuery(
       db,
-      query,
-      [],
-      (results) => {
-        /* console.log("Query completed");
-        console.log(results.rows._array); */
-        console.log(results.rows._array);
-        return setProducts(results.rows._array);
+      "SELECT * FROM AREAS WHERE NUM_AREA = ?",
+      [area],
+      (res) => {
+        if (!res.rows._array[0]) return setSnackbar({
+          visible: true,
+          text: "El área no existe",
+          type: "error",
+        });
+
+        const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND area = "${area}" AND CorrelativoApertura = "${res.rows._array[0]["ESTADOTAG"]}" ORDER BY id DESC`;
+        console.log('area:', res.rows._array[0])
+        ExecuteQuery(
+          db,
+          query,
+          [],
+          (results) => {
+            /* console.log("Query completed");
+            console.log(results.rows._array); */
+            console.log(results.rows._array);
+            return setProducts(results.rows._array);
+          },
+          (error) => {
+            console.log("Error");
+            console.log(error);
+            return false;
+          }
+        );
       },
-      (error) => {
-        console.log("Error");
-        console.log(error);
-        return false;
+      (err) => {
+        console.log(err)
       }
-    );
+    )
   };
+
   useEffect(() => {
     getCDProducts();
   }, []);
@@ -254,7 +272,7 @@ const CDReview = () => {
               <Text
                 style={{ width: "10%", fontSize: 12, paddingHorizontal: 5 }}
               >
-                {parseInt(item.CorrPT)}
+                {(id - products.length) * -1}
               </Text>
               <Text
                 style={{ width: "55%", fontSize: 12, paddingHorizontal: 5 }}
