@@ -145,8 +145,8 @@ const ProductEntry = ({ type }) => {
 
             ExecuteQuery(
               db,
-              "SELECT * FROM INVENTARIO_APP WHERE area = ?",
-              [area],
+              "SELECT * FROM INVENTARIO_APP WHERE area = ? AND CorrelativoApertura = ?",
+              [area, areaData.ESTADOTAG],
               (results) => {
                 if (results.rows._array.length === 0) {
                   setSnackbar({
@@ -236,7 +236,7 @@ const ProductEntry = ({ type }) => {
   const getScansData = async () => {
     const db = SQLite.openDatabase("Maestro.db");
     const productsDb = [];
-    const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND area = "${area}"`;
+    const query = `SELECT * FROM INVENTARIO_APP WHERE invtype = "INV" AND area = "${area}" AND CorrelativoApertura = "${areaData.ESTADOTAG}"`;
 
     await ExecuteQuery(
       db,
@@ -278,7 +278,7 @@ const ProductEntry = ({ type }) => {
 
     await ExecuteQuery(
       db,
-      `SELECT * FROM INVENTARIO_APP WHERE area = "${area}"`,
+      `SELECT * FROM INVENTARIO_APP WHERE area = "${area}" AND CorrelativoApertura = "${areaData.ESTADOTAG}"`,
       [],
       (results) => {
 

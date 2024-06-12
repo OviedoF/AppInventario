@@ -23,6 +23,10 @@ const AppRouter = () => {
       {/* ---------------- USER ---------------- */}
       <Route exact path={routes.menuAdmin} element={<AdminMenu />} />
       <Route exact path={routes.captureMenu} element={<CaptureMenu />} />
+      <Route exact path={routes.captureMenu1x1} element={<CaptureMenu redirectTo={routes.singleProductEntry} />} />
+      <Route exact path={routes.captureMenuFreezed1x1} element={<CaptureMenu redirectTo={routes.singleFreezedEntry} />} />
+      <Route exact path={routes.captureMenuFreezedMulti} element={<CaptureMenu redirectTo={routes.multipleFreezedEntry}/>} />
+      <Route exact path={routes.captureMenuMulti} element={<CaptureMenu />} redirectTo={routes.multipleProductEntry} />
       <Route exact path={routes.review} element={<Review />} />
       <Route exact path={routes.view} element={<AreaView />} />
       <Route

@@ -130,8 +130,8 @@ const CDReview = () => {
 
               navigate(
                 type === "single"
-                  ? routes.singleProductEntry
-                  : routes.multipleProductEntry
+                  ? config.congelados ? routes.singleFreezedEntry : routes.singleProductEntry
+                  : config.congelados ? routes.multipleFreezedEntry : routes.multipleProductEntry
               );
             },
           },

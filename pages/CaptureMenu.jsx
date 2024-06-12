@@ -22,7 +22,7 @@ import ExecuteQuery from "../helpers/ExecuteQuery";
 import SupervisorApprobalModal from "../components/SupervisorApprobalModal";
 import { Alert } from "react-native";
 
-const CaptureMenu = () => {
+const CaptureMenu = ({redirectTo}) => {
   const navigate = useNavigate();
   const { area, setArea, config, setConfig, setSnackbar, user, setDangerModal, setSerie, sendArea } =
     useContext(dataContext);
@@ -132,7 +132,6 @@ const CaptureMenu = () => {
 
               setSerie(serie);
               setArea(area.NUM_AREA);
-              console.log(area.ESTADO);
 
               if (area.ESTADO === "CERRADA") {
                 setDangerModal({
@@ -191,6 +190,7 @@ const CaptureMenu = () => {
                           }
                         );
                         setModal(false);
+                        if(redirectTo) navigate(redirectTo);
                       },
                     }, {
                       text: 'Retomar',
@@ -256,6 +256,7 @@ const CaptureMenu = () => {
                         );
 
                         setModal(false);
+                        if(redirectTo) navigate(redirectTo);
                       }
                     }, {
                       text: "Volver",
@@ -271,6 +272,7 @@ const CaptureMenu = () => {
               }
 
               setModal(false);
+              if(redirectTo) navigate(redirectTo);
             },
             (error) => {
               console.log(error);

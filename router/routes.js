@@ -1,7 +1,13 @@
 const routes = {
   login: "/",
   home: "/home",
+  
   captureMenu: "/capture",
+  captureMenu1x1: "/capture1x1",
+  captureMenuMulti: "/captureMulti",
+  captureMenuFreezed1x1: "/captureMulti1x1",
+  captureMenuFreezedMulti: "/captureMultiMulti",
+
   singleFreezedEntry: "/singleFreezedEntry",
   singleProductEntry: "/singleProductEntry",
   multipleFreezedEntry: "/multipleFreezedEntry",

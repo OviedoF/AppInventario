@@ -86,6 +86,7 @@ const FreezedEntry = ({ type }) => {
     scans: "...",
     totalOfArea: "...",
   });
+  const [disabledPallet, setDisabledPallet] = useState(false)
 
   const navigate = useNavigate();
 
@@ -139,8 +140,8 @@ const FreezedEntry = ({ type }) => {
 
             ExecuteQuery(
               db,
-              "SELECT * FROM INVENTARIO_APP WHERE area = ?",
-              [area],
+              "SELECT * FROM INVENTARIO_APP WHERE area = ? AND invtype = 'INV' AND CorrelativoApertura = ?",
+              [area, areaData.ESTADOTAG],
               (results) => {
                 if (results.rows._array.length === 0) {
                   setSnackbar({
@@ -179,7 +180,11 @@ const FreezedEntry = ({ type }) => {
                                 text: "",
                                 buttons: [],
                               });
-                              navigate(routes.captureMenu);
+                              navigate(
+                                config.congelados ?
+                                  type === "single" ? routes.captureMenuFreezed1x1 : routes.captureMenu1x1
+                                  : type === "multi" ? routes.captureMenuFreezedMulti : routes.captureMenuMulti
+                              );
                             },
                             style: "cancel",
                           },
@@ -192,7 +197,12 @@ const FreezedEntry = ({ type }) => {
                                 text: "",
                                 buttons: [],
                               });
-                              sendArea(areaData, navigate(routes.captureMenu));
+                              sendArea(areaData,
+                                navigate(
+                                  config.congelados ?
+                                    type === "single" ? routes.captureMenuFreezed1x1 : routes.captureMenu1x1
+                                    : type === "multi" ? routes.captureMenuFreezedMulti : routes.captureMenuMulti
+                                ));
                             },
                           },
                         ],
@@ -350,35 +360,36 @@ const FreezedEntry = ({ type }) => {
     });
 
     const masterDb = SQLite.openDatabase("Maestro.db");
-    const query = `SELECT * FROM CONGELADOS WHERE CODIGO = '${code}'`;
 
+
+    // * Rellenar con 0s el product.COD_PROD hasta el largo de config.largo_prod
+    const codeLength = code.length;
+    let codeProduct = code;
+
+    if (codeLength < parseInt(config.largo_prod)) {
+      const codeToAdd = parseInt(config.largo_prod) - codeLength;
+      for (let i = 0; i < codeToAdd; i++) {
+        codeProduct = `0${codeProduct}`;
+      }
+    }
+
+    // * Validar si el código está repetido en la base de datos con el mismo correlativo de apertura
+    console.log(`SELECT * FROM INVENTARIO_APP WHERE name = "${codeProduct}" AND area = "${area}" AND CorrelativoApertura = "${areaData.ESTADOTAG}"`)
     ExecuteQuery(
       masterDb,
-      query,
+      `SELECT * FROM INVENTARIO_APP WHERE name = "${codeProduct}" AND area = "${area}" AND CorrelativoApertura = "${areaData.ESTADOTAG}"`,
       [],
       (results) => {
-        const product = results.rows._array[0];
-
-        if (type === 'multi' && sendedBy !== 'qtyInput') {
-          return refs.quantity.current.focus();
-        }
-
-        if (!quantity && sendedBy === "qtyInput") return setSnackbar({
-          visible: true,
-          text: "Ingrese una cantidad",
-          type: "error",
-        });
-
-        if (results.rows._array.length === 0) {
+        if (results.rows._array.length > 0) {
           return setDangerModal({
             visible: true,
-            title: `Caja ${code} NO Encontrada`,
+            title: "Caja ya escaneada",
+            text: "No se puede agregar la misma caja dos veces",
             bg: "#dc3545",
             color: "#fff",
-            text: "¿Desea agregarla igualmente?",
             buttons: [
               {
-                text: "NO, NO AGREGAR",
+                text: "Continuar",
                 onPress: () => {
                   setDangerModal({
                     visible: false,
@@ -386,63 +397,119 @@ const FreezedEntry = ({ type }) => {
                     text: "",
                     buttons: [],
                   });
-                  refs.code.current.focus();
-                  setLastProduct({
-                    DESCRIPCION: "",
-                  });
-                  return;
-                },
-                style: "cancel",
-              },
-              {
-                text: "Sí, agregar",
-                onPress: () => {
-                  setDangerModal({
-                    visible: false,
-                    title: "",
-                    text: "",
-                    buttons: [],
-                  });
-
-                  addProductToDb({
-                    COD_PROD: code,
-                    exists: 'N',
-                    type: type === 'single' ? "A" : "S",
-                    DESCRIPCION: `Caja ${code}`,
-                  }, quantity);
 
                   setCode("");
                   refs.code.current.focus();
-                  setSnackbar({
-                    visible: true,
-                    text: "Caja agregada correctamente",
-                    type: "success",
-                  });
                   return;
                 },
               },
             ],
           });
-        } // * Si el producto no se encuentra en la base de datos, preguntamos si se quiere agregar igualmente
+        }
+        console.log('results.rows._array', results.rows._array)
 
-        addProductToDb({
-          COD_PROD: code,
-          exists: 'S',
-          type: type === 'single' ? "A" : "S",
-          DESCRIPCION: product['DESCRIPCIÓN'],
-        }, quantity);
+        const query = `SELECT * FROM CONGELADOS WHERE CODIGO = '${code}'`;
+        ExecuteQuery(
+          masterDb,
+          query,
+          [],
+          (results) => {
+            const product = results.rows._array[0];
 
-        setLastProduct({
-          DESCRIPCION: product['DESCRIPCIÓN'],
-        })
+            if (type === 'multi' && sendedBy !== 'qtyInput') {
+              return refs.quantity.current.focus();
+            }
 
-        setCode("");
-        refs.code.current.focus();
-        setSnackbar({
-          visible: true,
-          text: "Caja agregada correctamente",
-          type: "success",
-        });
+            if (!quantity && sendedBy === "qtyInput") return setSnackbar({
+              visible: true,
+              text: "Ingrese una cantidad",
+              type: "error",
+            });
+
+            if (results.rows._array.length === 0) {
+              return setDangerModal({
+                visible: true,
+                title: `Caja ${code} NO Encontrada`,
+                bg: "#dc3545",
+                color: "#fff",
+                text: "¿Desea agregarla igualmente?",
+                buttons: [
+                  {
+                    text: "NO, NO AGREGAR",
+                    onPress: () => {
+                      setDangerModal({
+                        visible: false,
+                        title: "",
+                        text: "",
+                        buttons: [],
+                      });
+                      refs.code.current.focus();
+                      setLastProduct({
+                        DESCRIPCION: "",
+                      });
+                      return;
+                    },
+                    style: "cancel",
+                  },
+                  {
+                    text: "Sí, agregar",
+                    onPress: () => {
+                      setDangerModal({
+                        visible: false,
+                        title: "",
+                        text: "",
+                        buttons: [],
+                      });
+
+                      addProductToDb({
+                        COD_PROD: code,
+                        exists: 'N',
+                        type: type === 'single' ? "A" : "S",
+                        DESCRIPCION: `Caja ${code}`,
+                      }, quantity);
+
+                      setCode("");
+                      refs.code.current.focus();
+                      setSnackbar({
+                        visible: true,
+                        text: "Caja agregada correctamente",
+                        type: "success",
+                      });
+                      return;
+                    },
+                  },
+                ],
+              });
+            } // * Si el producto no se encuentra en la base de datos, preguntamos si se quiere agregar igualmente
+
+            addProductToDb({
+              COD_PROD: code,
+              exists: 'S',
+              type: type === 'single' ? "A" : "S",
+              DESCRIPCION: product['DESCRIPCIÓN'],
+            }, quantity);
+
+            setLastProduct({
+              DESCRIPCION: product['DESCRIPCIÓN'],
+            })
+
+            setCode("");
+            refs.code.current.focus();
+            setSnackbar({
+              visible: true,
+              text: "Caja agregada correctamente",
+              type: "success",
+            });
+          },
+          (error) => {
+            console.log("Error", error);
+            setSnackbar({
+              visible: true,
+              text: "Error al buscar el producto en la base de datos",
+              type: "error",
+            });
+          }
+        );
       },
       (error) => {
         console.log("Error", error);
@@ -466,10 +533,29 @@ const FreezedEntry = ({ type }) => {
       (results) => {
         if (results.rows._array.length === 0) {
           refs.code.current.focus();
-          return setSnackbar({
+          return setDangerModal({
             visible: true,
-            text: "Pallet no encontrado",
-            type: "error",
+            title: `Pallet ${codePallet} NO Encontrado`,
+            bg: "#dc3545",
+            color: "#fff",
+            buttons: [
+              {
+                text: "Continuar a caja",
+                onPress: () => {
+                  setDangerModal({
+                    visible: false,
+                    title: "",
+                    text: "",
+                    buttons: [],
+                  });
+                  setCodePallet("");
+                  setDisabledPallet(true);
+
+                  refs.code.current.focus();
+                  return;
+                },
+              },
+            ],
           });
         }
 
@@ -572,7 +658,7 @@ const FreezedEntry = ({ type }) => {
           text: "El área no existe",
           type: "error",
         });
-        
+
         setAreaData(res.rows._array[0]);
       },
       (err) => {
@@ -667,6 +753,7 @@ const FreezedEntry = ({ type }) => {
                   justifyContent: "center",
                 }}
                 onPress={() => {
+                  setDisabledPallet(false);
                   setCodePallet("");
                   setLastProduct({
                     DESCRIPCION: "",
@@ -693,9 +780,10 @@ const FreezedEntry = ({ type }) => {
                   height: 30,
                   borderBottomColor: "transparent",
                   fontSize: 20,
+                  opacity: disabledPallet ? 0.5 : 1,
                 }}
-                onChangeText={setCodePallet}
-                value={codePallet}
+                onChangeText={disabledPallet ? () => { } : setCodePallet}
+                value={disabledPallet ? "" : codePallet}
                 ref={refs.codePallet}
                 placeholder="Folio Pallet"
                 onSubmitEditing={() => getPalletData('')}
@@ -865,23 +953,6 @@ const FreezedEntry = ({ type }) => {
                       {quantity > 0 && "+"}
                       {quantity}
                     </Text>
-
-                    <TouchableOpacity
-                      onPress={() => {
-                        quantity === 1 ? setQuantity(-1) : setQuantity(1);
-                      }}
-                      style={{
-                        backgroundColor: "transparent",
-                        width: 30,
-                        padding: 5,
-                        margin: 5,
-                      }}
-                    >
-                      <Image
-                        style={{ width: 30, height: 30 }}
-                        source={reverse_icon}
-                      />
-                    </TouchableOpacity>
                   </>
                 )}
 
